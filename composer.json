@@ -1,0 +1,18 @@
+{
+    "name": "millermedia/wplibs",
+    "description": "Miller Media Wordpress Plugin Helpers",
+    "authors": [
+        {
+            "name": "kcarwile",
+            "email": "kcarwile@gmail.com"
+        }
+    ],
+    "require": {
+        "doctrine/orm": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Modern\\Wordpress\\": "lib/"
+        }
+    }
+}
