@@ -30,7 +30,7 @@ class WordpressAPI extends Singleton
 	 */
 	protected function __construct()
 	{
-		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "../cache", $debug = true );
+		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../cache", defined( 'MODERN_WORDPRESS_DEBUG' ) and MODERN_WORDPRESS_DEBUG );
 		parent::__construct();
 	}
 	
@@ -66,6 +66,22 @@ class WordpressAPI extends Singleton
 				else if ( $annotation instanceof \Wordpress\Shortcode )
 				{
 					add_shortcode( $annotation->name, array( $instance, $method->name ) );
+				}
+				
+				/* Wordpress Post Type */
+				else if ( $annotation instanceof \Wordpress\PostType )
+				{
+					add_action( 'init', function() use ( $annotation, $instance, $method )
+					{
+						/* Register Post Type */
+						register_post_type( $annotation->name, call_user_func( array( $instance, $method->name ) ) );
+						
+						/* Add Post Type Support */
+						if ( ! empty( $annotation->supports ) )
+						{
+							add_post_type_support( $annotation->name, $annotation->supports );
+						}
+					});
 				}
 			}
 		}
