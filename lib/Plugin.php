@@ -11,15 +11,8 @@ use \Modern\Wordpress\Pattern\Singleton;
 /**
  * Plugin Class
  */
-class Plugin extends Singleton
+abstract class Plugin extends Singleton
 {
-	/**
-	 * Instance Cache - Required for all singleton subclasses
-	 *
-	 * @var	self
-	 */
-	protected static $_instance;
-
 	/**
 	 * @var string 	Plugin Path
 	 */
@@ -48,40 +41,81 @@ class Plugin extends Singleton
 	 */
 	public function addSettings( $settings )
 	{
-		$this->settings[ $settings->id ] = $settings;
+		$this->settings[ $settings->key ] = $settings;
 		$settings->setPlugin( $this );
 	}
 	
 	/** 
 	 * Get Settings
 	 *
-	 * @param	string|NULL		$id			The settings id to get
-	 * @return	array|Settings|NULL
+	 * @param	string|NULL		$key		The settings access key
+	 * @return	Settings|array|NULL
 	 */
-	public function getSettings( $id=NULL )
+	public function getSettings( $key='main' )
 	{
 		/* Return a specific settings id */
-		if ( isset( $id ) )
+		if ( $key !== NULL )
 		{
-			if ( isset( $this->settings[ $id ] ) )
+			if ( isset( $this->settings[ $key ] ) )
 			{
-				return $this->settings[ $id ];
+				return $this->settings[ $key ];
 			}
 			
 			return NULL;
 		}
 		
-		/* If no id specified and only one settings page, return it */
-		if ( count( $this->settings ) == 1 )
+		/* Return all settings */
+		return $this->settings;
+	}
+	
+	/**
+	 * Get Setting
+	 *
+	 * @param	string		$name		Setting name
+	 * @param	string		$key		Optional key of settings to look in
+	 * @return	mixed|NULL
+	 */
+	public function getSetting( $name, $key=NULL )
+	{
+		/* Get from specific settings page */
+		if ( $key !== NULL )
 		{
-			foreach( $this->settings as $settings )
+			return $this->getSettings( $key )->getSetting( $name );
+		}
+		
+		/* Search all settings */
+		foreach( $this->getSettings( NULL ) as $settings )
+		{
+			$value = $settings->getSetting( $name );
+			if ( $value !== NULL )
 			{
-				return $settings;
+				return $value;
 			}
 		}
 		
-		/* Return all settings */
-		return $this->settings;
+		return NULL;
+	}
+	
+	/**
+	 * Set Setting
+	 *
+	 * @param	string		$name			Setting name
+	 * @param	mixed		$val			Setting value
+	 * @param	string		$key			Settings key
+	 * @return	Settings
+	 * @throws	ErrorException
+	 */
+	public function setSetting( $name, $val, $key='main' )
+	{
+		if ( $settings = $this->getSettings( $key ) )
+		{
+			$settings->setSetting( $name, $val );
+			return $settings;
+		}
+		else
+		{
+			throw new ErrorException( 'Invalid settings key "' . $key . '". Does not exist!' );
+		}
 	}
 	
 	/**

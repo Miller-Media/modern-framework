@@ -21,6 +21,11 @@ abstract class Settings extends Singleton
 	protected static $_instance;
 	
 	/**
+	 * @var string	Settings Access Key
+	 */
+	public $key = 'main';
+	
+	/**
 	 * @var array 	Plugin Settings
 	 */
 	protected $settings;
@@ -31,9 +36,9 @@ abstract class Settings extends Singleton
 	protected $plugin;
 	
 	/**
-	 * @var string	Plugin Settings ID
+	 * @var	string
 	 */
-	public $id;
+	protected $storageId;
 	
 	/**
 	 * Constructor
@@ -42,9 +47,9 @@ abstract class Settings extends Singleton
 	 */
 	protected function __construct()
 	{
-		if ( ! isset( $this->id ) )
+		if ( ! isset( $this->storageId ) )
 		{
-			$this->id = strtolower( str_replace( '\\', '_', get_class( $this ) ) );
+			$this->storageId = strtolower( str_replace( '\\', '_', get_class( $this ) ) );
 		}
 		
 		parent::__construct();
@@ -71,20 +76,62 @@ abstract class Settings extends Singleton
 	}
 	
 	/**
-	 * Settings Getter
+	 * Get Storage ID
 	 *
-	 * @param	string		$setting		The setting to get
+	 * @return	string
+	 */
+	public function getStorageId()
+	{
+		return $this->storageId;
+	}
+	 
+	/**
+	 * Get A Setting
+	 *
+	 * @param	string		$name		The setting name
 	 * @return	mixed
 	 */
-	public function getSetting( $setting )
+	public function getSetting( $name )
 	{
 		if ( ! isset( $this->settings ) )
 		{
-			$settingsID = $this->id ?: strtolower( str_replace( '\\', '_', get_class( $this ) ) );
-			$this->settings = get_option( $settingsID, array() );
+			$this->settings = get_option( $this->storageId, array() );
 		}
 		
-		return isset( $this->settings[ $setting ] ) ? $this->settings[ $setting ] : NULL;
+		return isset( $this->settings[ $name ] ) ? $this->settings[ $name ] : NULL;
+	}
+	
+	/**
+	 * Set A Setting
+	 *
+	 * @param	string		$name		The setting name
+	 * @param	mixed		$val		The setting value
+	 * @return	this
+	 */
+	public function setSetting( $name, $val )
+	{
+		if ( ! isset( $this->settings ) )
+		{
+			$this->settings = get_option( $this->storageId, array() );
+		}
+		
+		return $this;
+	}
+	
+	/**
+	 * Persist settings to the database
+	 *
+	 * @return	this
+	 */
+	public function saveSettings()
+	{
+		if ( ! isset( $this->settings ) )
+		{
+			$this->settings = get_option( $this->storageId, array() );
+		}
+		
+		update_option( $this->storageId, $this->settings );
+		return $this;
 	}
 	
 	/**
