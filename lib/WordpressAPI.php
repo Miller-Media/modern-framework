@@ -9,14 +9,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 use \Doctrine\Common\Annotations\AnnotationReader;
 use \Doctrine\Common\Annotations\FileCacheReader;
 
-use \Modern\Wordpress\Pattern\Singleton;
-
 /**
  * Wordpress API Class
  */
-class WordpressAPI extends Singleton
+class WordpressAPI extends Plugin
 {
-
 	/**
 	 * Instance Cache - Required for all singleton subclasses
 	 *
@@ -49,12 +46,14 @@ class WordpressAPI extends Singleton
 		$reflClass = new \ReflectionClass( get_class( $instance ) );
 			
 		/**
-		 * Class
+		 * Class Annotations
 		 */
 		$classAnnotations = $this->reader->getClassAnnotations( $reflClass );
 		foreach( $classAnnotations as $annotation )
 		{
-			/* Wordpress Options Page */
+			/**
+			 * @Wordpress\Options
+			 */
 			if ( $annotation instanceof \Wordpress\Options )
 			{
 				if ( $instance instanceof \Modern\Wordpress\Plugin\Settings )
@@ -62,20 +61,13 @@ class WordpressAPI extends Singleton
 					$menu 	= $annotation->menu ?: $instance->getPlugin()->name;
 					$title 	= $annotation->title ?: $menu . ' ' . __( 'Options' );
 					$capability = $annotation->capability;
-					$page_id = $instance->id;
+					$page_id = $instance->getStorageId();
 					
 					add_action( 'admin_menu', function() use ( $title, $menu, $capability, $page_id, $instance, $annotation )
 					{
 						add_options_page( $title, $menu, $capability, $page_id, function() use ( $title, $page_id )
 						{
-							echo '<div class="wrap">' .
-									'<h1>' . $title . '</h1>' .
-									'<form action="options.php" method="post">';
-									settings_fields( $page_id );
-									do_settings_sections( $page_id );
-									submit_button();
-							echo 	'</form>' .
-								 '</div>';
+							echo \Modern\Wordpress\WordpressAPI::instance()->getTemplateContent( 'admin/settings/form', array( 'title' => $title, 'page_id' => $page_id ) );
 						});
 					});
 					
@@ -86,6 +78,9 @@ class WordpressAPI extends Singleton
 				}
 			}
 			
+			/**
+			 * @Wordpress\Options\Section
+			 */
 			else if ( $annotation instanceof \Wordpress\Options\Section )
 			{
 				if ( $instance instanceof \Modern\Wordpress\Plugin\Settings and isset( $page_id ) )
@@ -98,6 +93,9 @@ class WordpressAPI extends Singleton
 				}
 			}
 			
+			/**
+			 * @Wordpress\Options\Field
+			 */
 			else if ( $annotation instanceof \Wordpress\Options\Field )
 			{
 				if ( $instance instanceof \Modern\Wordpress\Plugin\Settings and isset( $page_id ) and isset( $section_id ) )
@@ -106,7 +104,7 @@ class WordpressAPI extends Singleton
 					{
 						add_settings_field( md5( $page_id . $annotation->name ), $annotation->title, function() use ( $page_id, $section_id, $annotation, $instance )
 						{
-							echo call_user_func( array( $annotation, 'getFieldHtml' ), $page_id, $instance->getSetting( $annotation->name ) );
+							echo call_user_func( array( $annotation, 'getFieldHtml' ), $instance );
 						}
 						, $page_id, $section_id );
 					});
@@ -115,7 +113,7 @@ class WordpressAPI extends Singleton
 		}
 		
 		/**
-		 * Properties
+		 * Property Annotations
 		 */
 		foreach ( $reflClass->getProperties() as $property ) 
 		{
@@ -123,7 +121,9 @@ class WordpressAPI extends Singleton
 			
 			foreach ( $propAnnotations as $annotation ) 
 			{
-				/* Wordpress Post Type */
+				/**
+				 * @Wordpress\PostType
+				 */
 				if ( $annotation instanceof \Wordpress\PostType )
 				{
 					add_action( 'init', function() use ( $annotation, $instance, $property )
@@ -142,7 +142,7 @@ class WordpressAPI extends Singleton
 		}		
 		
 		/**
-		 * Methods
+		 * Method Annotations
 		 */
 		foreach ( $reflClass->getMethods() as $method ) 
 		{
@@ -150,19 +150,39 @@ class WordpressAPI extends Singleton
 			
 			foreach ( $methodAnnotations as $annotation ) 
 			{
-				/* Wordpress Action */
-			    if ( $annotation instanceof \Wordpress\Action ) 
+				/**
+				 * @Wordpress\Plugin
+				 */
+				if ( $annotation instanceof \Wordpress\Plugin )
+				{
+					switch( $annotation->on )
+					{
+						case 'activation':
+							
+							register_activation_hook( $reflClass->getFileName(), array( $instance, $method->name ) );
+							break;
+					}
+				}
+				
+				/**
+				 * @Wordpress\Action
+				 */
+			    else if ( $annotation instanceof \Wordpress\Action ) 
 			    {
 					add_action( $annotation->for, array( $instance, $method->name ), $annotation->priority, $annotation->args );
 			    } 
 				
-				/* Wordpress Filter */
+				/**
+				 * @Wordpress\Filter
+				 */
 			    else if ( $annotation instanceof \Wordpress\Filter ) 
 			    {
 					add_filter( $annotation->for, array( $instance, $method->name ), $annotation->priority, $annotation->args );
 			    }
 				
-				/* Wordpress Shortcode */
+				/**
+				 * @Wordpress\Shortcode
+				 */
 				else if ( $annotation instanceof \Wordpress\Shortcode )
 				{
 					add_shortcode( $annotation->name, array( $instance, $method->name ) );

@@ -27,13 +27,17 @@ class Field
 	public $type;
 	
 	/**
+	 * @var mixed
+	 */
+	public $options;
+	
+	/**
 	 * Get Field
 	 *
-	 * @param	string		$settings_id 		The settings id
+	 * @param	\Modern\Wordpress\Plugin\Settings		$settings 			The settings store
 	 */
-	public function getFieldHtml( $settings_id, $currentValue=NULL )
+	public function getFieldHtml( $settings )
 	{
-		global $modernwordpress;
-		return $modernwordpress->getTemplateContent( 'admin/settings/text-field', array( 'field' => $this, 'currentValue' => $currentValue, 'settings_id' => $settings_id ) );
+		return \Modern\Wordpress\WordpressAPI::instance()->getTemplateContent( 'admin/settings/' . $this->type . '-field', array( 'field' => $this, 'settings' => $settings ) );
 	}
 }

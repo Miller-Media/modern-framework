@@ -21,6 +21,7 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 		include_once __DIR__ . '/dev_config.php'; 
 	}
 
+	AnnotationRegistry::registerFile( __DIR__ . "/annotations/Plugin.php" );
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/Action.php" );
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/Filter.php" );
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/Shortcode.php" );
@@ -33,14 +34,12 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 	{
 		public static function init()
 		{
-			/* Plugin Core */
-			$plugin			= \Modern\Wordpress\Plugin::instance();		
-			$plugin->setPath( rtrim( plugin_dir_path( __FILE__ ), '/' ) );
-			
-			global $modernwordpress;
-			$modernwordpress = $plugin;
+			/* FAAP: Framework As A Plugin */
+			$framework = \Modern\Wordpress\WordpressAPI::instance();		
+			$framework->setPath( rtrim( plugin_dir_path( __FILE__ ), '/' ) );			
 		}
 	}
 	
 	ModernWordpressFramework::init();
+	
 }
