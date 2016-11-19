@@ -2,16 +2,73 @@
 
 namespace Modern\Wordpress\Plugin;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Access denied.' );
+}
+
+use \Modern\Wordpress\Pattern\Singleton;
+
 /**
  * Plugin Settings
  */
-class Settings
+abstract class Settings extends Singleton
 {
+	
+	/**
+	 * Instance Cache - Required for singleton
+	 * @var	self
+	 */
+	protected static $_instance;
 	
 	/**
 	 * @var array 	Plugin Settings
 	 */
 	protected $settings;
+	
+	/**
+	 * @var	Plugin
+	 */
+	protected $plugin;
+	
+	/**
+	 * @var string	Plugin Settings ID
+	 */
+	public $id;
+	
+	/**
+	 * Constructor
+	 *
+	 * @return	void
+	 */
+	protected function __construct()
+	{
+		if ( ! isset( $this->id ) )
+		{
+			$this->id = strtolower( str_replace( '\\', '_', get_class( $this ) ) );
+		}
+		
+		parent::__construct();
+	}
+	
+	/**
+	 * Set Plugin
+	 *
+	 * @return	void
+	 */
+	public function setPlugin( \Modern\Wordpress\Plugin $plugin )
+	{
+		$this->plugin = $plugin;
+	}
+	
+	/**
+	 * Get Plugin
+	 *
+	 * @return	Plugin
+	 */
+	public function getPlugin()
+	{
+		return $this->plugin;
+	}
 	
 	/**
 	 * Settings Getter
@@ -23,30 +80,22 @@ class Settings
 	{
 		if ( ! isset( $this->settings ) )
 		{
-			$this->settings = get_option( strtolower( str_replace( '\\', '_', get_class( $this ) ) ), array() );
+			$settingsID = $this->id ?: strtolower( str_replace( '\\', '_', get_class( $this ) ) );
+			$this->settings = get_option( $settingsID, array() );
 		}
 		
 		return isset( $this->settings[ $setting ] ) ? $this->settings[ $setting ] : NULL;
 	}
 	
 	/**
-	 * Register settings page
+	 * Validate Settings
 	 *
-	 * @return	void
+	 * @param	array		$data			Input data
+	 * @return	array
 	 */
-	public function registerPage()
+	public function validate( $data=array() )
 	{
-
-	}
-	
-	/**
-	 * Register settings fields
-	 *
-	 * @return	void
-	 */
-	public function registerFields()
-	{
-
+		return $data;
 	}
 	
 }

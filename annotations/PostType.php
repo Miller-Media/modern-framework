@@ -4,7 +4,7 @@ namespace Wordpress;
 
 /**
  * @Annotation 
- * @Target( "METHOD" )
+ * @Target( "PROPERTY" )
  */
 class PostType
 {

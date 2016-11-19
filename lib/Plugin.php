@@ -2,6 +2,10 @@
 
 namespace Modern\Wordpress;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Access denied.' );
+}
+
 use \Modern\Wordpress\Pattern\Singleton;
 
 /**
@@ -22,9 +26,9 @@ class Plugin extends Singleton
 	protected $path;
 	
 	/**
-	 * @var Settings
+	 * @var array
 	 */
-	protected $settings;
+	protected $settings = array();
 	
 	/** 
 	 * Set Plugin Path
@@ -42,18 +46,41 @@ class Plugin extends Singleton
 	 * @param	Settings		$settings		The settings object
 	 * @return	void
 	 */
-	public function setSettings( $settings )
+	public function addSettings( $settings )
 	{
-		$this->settings = $settings;
+		$this->settings[ $settings->id ] = $settings;
+		$settings->setPlugin( $this );
 	}
 	
 	/** 
 	 * Get Settings
 	 *
-	 * @return	Settings
+	 * @param	string|NULL		$id			The settings id to get
+	 * @return	array|Settings|NULL
 	 */
-	public function getSettings()
+	public function getSettings( $id=NULL )
 	{
+		/* Return a specific settings id */
+		if ( isset( $id ) )
+		{
+			if ( isset( $this->settings[ $id ] ) )
+			{
+				return $this->settings[ $id ];
+			}
+			
+			return NULL;
+		}
+		
+		/* If no id specified and only one settings page, return it */
+		if ( count( $this->settings ) == 1 )
+		{
+			foreach( $this->settings as $settings )
+			{
+				return $settings;
+			}
+		}
+		
+		/* Return all settings */
 		return $this->settings;
 	}
 	
