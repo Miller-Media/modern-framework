@@ -5,7 +5,7 @@ namespace Modern\Wordpress\Pattern;
 /**
  * Singleton 
  */
-class Singleton
+abstract class Singleton
 {
 	/**
 	 * @var	Instance Cache
@@ -35,11 +35,12 @@ class Singleton
 	 *
 	 * @return	self
 	 */
-	public function instance()
+	public static function instance()
 	{
-		if ( ! isset( static::$_instance ) )
+		if ( static::$_instance === NULL )
 		{
-			static::$_instance = new static();
+			$classname = get_called_class();
+			static::$_instance = new $classname;
 		}
 		
 		return static::$_instance;
