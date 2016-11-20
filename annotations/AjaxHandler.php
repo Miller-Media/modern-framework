@@ -6,22 +6,17 @@ namespace Wordpress;
  * @Annotation 
  * @Target( "METHOD" )
  */
-class Action extends \Modern\Wordpress\Annotation
+class AjaxHandler extends \Modern\Wordpress\Annotation
 {
 	/**
 	 * @var string
 	 */
-	public $for;
+	public $action;
 	
 	/**
-	 * @var integer
+	 * @var array
 	 */
-	public $priority;
-	
-	/**
-	 * @var integer
-	 */
-	public $args;
+	public $for = array( 'users', 'guests' );
 	
 	/**
 	 * Apply to Method
@@ -33,7 +28,15 @@ class Action extends \Modern\Wordpress\Annotation
 	 */
 	public function applyToMethod( $instance, $method, $vars )
 	{
-		add_action( $this->for, array( $instance, $method->name ), $this->priority, $this->args );
+		if ( in_array( 'users', $this->for ) )
+		{
+			add_action( 'wp_ajax_' . $this->action, array( $instance, $method->name ) );
+		}
+		
+		if ( in_array( 'guests', $this->for ) )
+		{
+			add_action( 'wp_ajax_nopriv_' . $this->action, array( $instance, $method->name ) );
+		}
 	}	
 	
 }

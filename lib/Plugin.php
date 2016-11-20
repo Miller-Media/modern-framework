@@ -34,6 +34,14 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+	 * Get Plugin Path
+	 */
+	public function getPath()
+	{
+		return $this->path;
+	}
+	
+	/**
 	 * Set Settings
 	 *
 	 * @param	Settings		$settings		The settings object
@@ -142,6 +150,50 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+	 * Use Script
+	 *
+	 * @param	string		$script				The script to use
+	 * @param	array		$localization		Localization data to pass to the script
+	 * @return	void
+	 */
+	public function useScript( $script, $localization=array() )
+	{
+		static $usedScripts = array();
+		$fileHash = md5( $this->fileUrl( $script ) );
+		
+		if ( ! isset( $usedScripts[ $fileHash ] ) )
+		{
+			$localization = array_merge( array
+			(
+				'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			)
+			, $localization );
+			
+			wp_localize_script( $fileHash, 'mw_localized_data', $localization );			
+			wp_enqueue_script( $fileHash );
+			$usedScripts[ $fileHash ] = TRUE;
+		}
+	}
+	
+	/**
+	 * Use Stylesheet
+	 *
+	 * @param	string		$style				The stylesheet to use
+	 * @return	void
+	 */
+	public function useStyle( $style )
+	{
+		static $usedStyles = array();
+		$fileHash = md5( $this->fileUrl( $style ) );
+		
+		if ( ! isset( $usedStyles[ $fileHash ] ) )
+		{
+			wp_enqueue_style( $fileHash );
+			$usedStyles[ $fileHash ] = TRUE;
+		}
+	}
+
+	/**
 	 * Get Template
 	 *
 	 * @param	string		$template 			Plugin template to look for (without file extension)
@@ -158,9 +210,17 @@ abstract class Plugin extends Singleton
 		else 
 		{
 			// If neither the child nor parent theme have overridden the template,
-			// we load the template from the 'templates' sub-directory of the directory this file is in
-			return $this->pluginFile( 'templates/' . $template );
-		}		
+			// we load the template from the 'templates' directory of this plugin,
+			// or alternatively fall back to the modern wordpress framework template
+			$templateFile = $this->pluginFile( 'templates/' . $template );
+			
+			if ( file_exists( $templateFile ) )
+			{			
+				return $this->pluginFile( 'templates/' . $template );
+			}
+			
+			return \Modern\Wordpress\Framework::instance()->pluginFile( 'templates/' . $template );
+		}
 	}
 
 	/**
@@ -172,25 +232,21 @@ abstract class Plugin extends Singleton
 	 */
 	public function getTemplateContent( $template, $vars=array() )
 	{
-		global $posts, $post, $wp_did_header, $wp_query, $wp_rewrite, $wpdb, $wp_version, $wp, $id, $comment, $user_ID;
+		$templateFile = $this->getTemplate( $template );
 		
-		if ( is_array( $wp_query->query_vars ) ) 
+		if ( ! file_exists( $templateFile ) )
 		{
-			extract( $wp_query->query_vars, EXTR_SKIP );
+			return NULL;
 		}
 		
 		if ( is_array( $vars ) )
 		{
+			unset( $vars[ 'templateFile' ] );
 			extract( $vars, EXTR_SKIP );
 		}
 
-		if ( isset( $s ) ) 
-		{
-			$s = esc_attr( $s );
-		}
-		
 		ob_start();
-		require $this->getTemplate( $template );
+		include $templateFile;
 		return ob_get_clean();
 	}
 	

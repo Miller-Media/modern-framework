@@ -6,7 +6,7 @@ namespace Wordpress\Options;
  * @Annotation 
  * @Target( "CLASS" )
  */
-class Field
+class Field extends \Modern\Wordpress\Annotation
 {
     /**
      * @var string
@@ -38,6 +38,32 @@ class Field
 	 */
 	public function getFieldHtml( $settings )
 	{
-		return \Modern\Wordpress\WordpressAPI::instance()->getTemplateContent( 'admin/settings/' . $this->type . '-field', array( 'field' => $this, 'settings' => $settings ) );
+		return $settings->getPlugin()->getTemplateContent( 'admin/settings/' . $this->type . '-field', array( 'field' => $this, 'settings' => $settings ) );
 	}
+	
+	/**
+	 * Apply to Object
+	 *
+	 * @param	object		$instance		The object which is documented with this annotation
+	 * @param	array		$vars			Persisted variables returned by previous annotations
+	 * @return	array|NULL
+	 */
+	public function applyToObject( $instance, $vars )
+	{
+		extract( $vars );
+		
+		if ( $instance instanceof \Modern\Wordpress\Plugin\Settings and isset( $page_id ) and isset( $section_id ) )
+		{
+			$self = $this;
+			add_action( 'admin_init', function() use ( $page_id, $section_id, $self, $instance )
+			{
+				add_settings_field( md5( $page_id . $self->name ), $self->title, function() use ( $page_id, $section_id, $self, $instance )
+				{
+					echo call_user_func( array( $self, 'getFieldHtml' ), $instance );
+				}
+				, $page_id, $section_id );
+			});
+		}		
+	}
+	
 }
