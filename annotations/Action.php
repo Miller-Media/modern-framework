@@ -16,12 +16,12 @@ class Action extends \Modern\Wordpress\Annotation
 	/**
 	 * @var integer
 	 */
-	public $priority;
+	public $priority = 10;
 	
 	/**
 	 * @var integer
 	 */
-	public $args;
+	public $args = 1;
 	
 	/**
 	 * Apply to Method
