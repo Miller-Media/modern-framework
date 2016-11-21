@@ -1,7 +1,8 @@
 <?php
 /*
 Plugin Name: Modern Wordpress Plugin Framework
-Description: Provides a standard framework for modern wordpress plugins to run on.
+Provides: lib-modern-wordpresss
+Description: Provides a standard framework that other plugins may depend on.
 Author: Miller Media
 Author URI: http://www.miller-media.com/
 */
@@ -37,9 +38,10 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 	{
 		public static function init()
 		{
-			/* FAAP: Framework As A Plugin */
+			/* FAAP: Framework As A Plugin :) */
 			$framework = \Modern\Wordpress\Framework::instance();		
-			$framework->setPath( rtrim( plugin_dir_path( __FILE__ ), '/' ) );			
+			$framework->setPath( rtrim( plugin_dir_path( __FILE__ ), '/' ) );
+			do_action( 'modern_wordpress_init' );
 		}
 	}
 	
