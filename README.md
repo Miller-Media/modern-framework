@@ -39,6 +39,8 @@ The modern wordpress framework leverages the annotation reader library from the 
 **Example: Adding a function for the core wordpress '*init*' action**
 
 ```php
+namespace MyNamespace\MyPackage;
+
 class MyPlugin extends \Modern\Wordpress\Plugin
 {
 	/**
@@ -72,4 +74,3 @@ $framework->attach( $myPlugin );
 
 ## Base Classes
 
-### Modern\Wordpress\F
