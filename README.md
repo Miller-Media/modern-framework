@@ -3,24 +3,23 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 
 # Table of Contents
 
-- [Modern Wordpress Plugin Framework](#)
-	- [Main features](#)
-	- [Framework Objectives](#)
-	- [Annotations](#)
-		- [Supported Annotations: Class Methods](#)
-				- [@Wordpress\Action](#)
-				- [@Wordpress\Filter](#)
-				- [@Wordpress\Shortcode](#)
-				- [@Wordpress\AjaxHandler](#)
-		- [Supported Annotations: Class Properties](#)
-				- [@Wordpress\PostType](#)
-				- [@Wordpress\Script](#)
-				- [@Wordpress\Style](#)
-		- [Supported Annotations: Classes](#)
-				- [@Wordpress\Options](#)
-				- [@Wordpress\OptionsSection](#)
-				- [@Wordpress\OptionsField](#)
-	- [Base Classes](#)
+- [Main features](#main-features)
+- [Framework Objectives](#framework-objectives)
+- [Annotations](#annotations)
+	- Supported Annotations: Class Methods
+	- [@Wordpress\Action](#wordpressaction)
+	- [@Wordpress\Filter](#wordpressfilter)
+	- [@Wordpress\Shortcode](#wordpressshortcode)
+	- [@Wordpress\AjaxHandler](#wordpressajaxhandler)
+	- Supported Annotations: Class Properties
+	- [@Wordpress\PostType](#wordpressposttype)
+	- [@Wordpress\Script](#wordpressscript)
+	- [@Wordpress\Style](#wordpressstyle)
+	- Supported Annotations: Classes
+	- [@Wordpress\Options](#wordpressoptions)
+	- [@Wordpress\OptionsSection](#wordpressoptionssection)
+	- [@Wordpress\OptionsField](#wordpressoptionsfield)
+- [Base Classes](#base-classes)
 	
 	
 **How to get started:**
