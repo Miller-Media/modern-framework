@@ -1,6 +1,28 @@
 # Modern Wordpress Plugin Framework
 This "plugin" provides a modern foundation of object oriented design patterns and api abstractions for other plugins to build on.
 
+# Table of Contents
+
+- [Modern Wordpress Plugin Framework](#)
+	- [Main features](#)
+	- [Framework Objectives](#)
+	- [Annotations](#)
+		- [Supported Annotations: Class Methods](#)
+				- [@Wordpress\Action](#)
+				- [@Wordpress\Filter](#)
+				- [@Wordpress\Shortcode](#)
+				- [@Wordpress\AjaxHandler](#)
+		- [Supported Annotations: Class Properties](#)
+				- [@Wordpress\PostType](#)
+				- [@Wordpress\Script](#)
+				- [@Wordpress\Style](#)
+		- [Supported Annotations: Classes](#)
+				- [@Wordpress\Options](#)
+				- [@Wordpress\OptionsSection](#)
+				- [@Wordpress\OptionsField](#)
+	- [Base Classes](#)
+	
+	
 **How to get started:**
 
 1. Install the plugin
@@ -13,16 +35,6 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 * Develop rapidly by extending base classes that bootstrap your plugin, settings pages, widgets, post types, and more.
 * Easily encapsulate your html into re-usable templates that can be overridden by other plugins and themes.
 
-### @TODO DOC
-
-* Basic Framework Usage
-  - Annotations
-* Base classes documentaton
-  - Modern\Wordpress\Framework  
-  - Modern\Wordpress\Plugin
-  - Modern\Wordpress\Plugin\Settings
-  - Modern\Wordpress\Plugin\Widget
-  - Modern\Wordpress\Pattern\Singleton
 
 ## Framework Objectives
 
