@@ -14,13 +14,12 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 	- Supported Annotations: Class Properties
 	- [@Wordpress\PostType](#wordpressposttype)
 	- [@Wordpress\Script](#wordpressscript)
-	- [@Wordpress\Style](#wordpressstyle)
+	- [@Wordpress\Stylesheet](#wordpressstylesheet)
 	- Supported Annotations: Classes
 	- [@Wordpress\Options](#wordpressoptions)
 	- [@Wordpress\OptionsSection](#wordpressoptionssection)
 	- [@Wordpress\OptionsField](#wordpressoptionsfield)
 - [Base Classes](#base-classes)
-	
 	
 **How to get started:**
 
@@ -34,7 +33,6 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 * Develop rapidly by extending base classes that bootstrap your plugin, settings pages, widgets, post types, and more.
 * Easily encapsulate your html into re-usable templates that can be overridden by other plugins and themes.
 
-
 ## Framework Objectives
 
 The objective of this framework is to ease the development of new wordpress plugins and to encourage good design practices through the use of modern object oriented design patterns and paradigms. Using this framework, you can expect to:
@@ -45,6 +43,7 @@ The objective of this framework is to ease the development of new wordpress plug
 * Keep all plugin assets in an organized heirarchy and use autoloading of classes instead of manually including them.
 
 ## Annotations
+
 The first thing to understand is that the modern wordpress framework leverages an annotation reading library from the [Doctrine Project](http://www.doctrine-project.org/) to read docblocks on classes, methods, and properties that you create. This allows the framework to automatially register your methods to core wordpress based on the documentation you write.
 
 **Example #1: Adding a function to the core wordpress '*init*' action**
@@ -87,14 +86,14 @@ $framework->attach( $myPlugin );
 --------------------------------------------------
 The following annotations can be used to document class methods.
 
-##### @Wordpress\Action
+#### @Wordpress\Action
 
 `@Wordpress\Action( for="action_name", priority=10, args=1 )`
 Using this annotation will add your function as a callback for a core wordpress action. It is analogous to using [`add_action()`](https://developer.wordpress.org/reference/functions/add_action/) in wordpress.
 
 **Params**:
-> `for="action_name"`: (required) - The core wordpress action to attach the method to
-> `priority=10`: (optional) / {*default: 10*} - The priority of your callback
+> `for="action_name"`: (required) - The core wordpress action to attach the method to<br>
+> `priority=10`: (optional) / {*default: 10*} - The priority of your callback<br>
 > `args=1`: (optional) / {*default: 1*} - The number of arguments your callback expects
 
 **Example**:
@@ -122,14 +121,14 @@ public function examinePost( $post_ID, $post_after, $post_before )
 ```
 ----------------------------------------
 
-##### @Wordpress\Filter
+#### @Wordpress\Filter
 
 `@Wordpress\Filter( for="filter_name", priority=10, args=1 )`
 Using this annotation will add your function as a callback for a core wordpress filter. It is analogous to using [`add_filter()`](https://developer.wordpress.org/reference/functions/add_filter/) in wordpress.
 
 **Params**:
-> `for="action_name"`: (required) - The core wordpress action to attach the method to
-> `priority=10`: (optional) / {*default: 10*} - The priority of your callback
+> `for="action_name"`: (required) - The core wordpress action to attach the method to<br>
+> `priority=10`: (optional) / {*default: 10*} - The priority of your callback<br>
 > `args=1`: (optional) / {*default: 1*} - The number of arguments your callback expects
 
 **Example**:
@@ -149,7 +148,7 @@ public function addBodyClass( $classes )
 ```
 ----------------------------------------
 
-##### @Wordpress\Shortcode
+#### @Wordpress\Shortcode
 
 `@Wordpress\Shortcode( name="shortcode_tag" )`
 Using this annotation will register your function as a callback for a wordpress shortcode of the name you specify. It is analogous to using [`add_shortcode()`](https://developer.wordpress.org/reference/functions/add_shortcode/) in wordpress.
@@ -175,13 +174,13 @@ public function makeEmphatic( $atts, $content )
 ```
 ----------------------------------------
 
-##### @Wordpress\AjaxHandler
+#### @Wordpress\AjaxHandler
 
 `@Wordpress\AjaxHandler( action="ajax_action_name", for={"users","guests"} )`
 Using this annotation will register your function as a callback for an ajax call. It can be configured to respond to both logged in and guest users.
 
 **Params**:
-> `action="ajax_action_name"`: (required) - The action parameter that should be used in the ajax call
+> `action="ajax_action_name"`: (required) - The action parameter that should be used in the ajax call<br>
 > `for={"users","guests"}`: (optional) / {*default: "users", "guests"*} - The type of users the callback should respond to.
 
 **Example**:
@@ -200,35 +199,156 @@ public function respondWithUserID()
 ```
 ----------------------------------------
 
+#### @Wordpress\Plugin
+
+`@Wordpress\Plugin( on="activation|deactivation", file="plugin.php" )`
+Using this annotation will register your function as a callback to when the plugin is activacted or deactivated on the site.
+
+**Params**:
+> `on="activation|deactivation|uninstall"`: (required) - The event for which the function will be executed. Must be one of ('activation,'deactivation')<br>
+> `file="plugin.php"`: (required) - The filename of your base plugin file inside your plugin directory. 
+
+**Example**:
+```php
+/**
+ * Create a default page on first activation
+ * 
+ * @Wordpress\Plugin( on="activation", file="plugin.php" )
+ *
+ * @return	void
+ */
+public function pluginActivated()
+{
+	if ( ! $this->getSetting( 'plugin_page' ) )
+	{
+		$page_id = wp_insert_post( array
+			(
+				'post_title'    => 'My Plugin Page',
+				'post_content'  => '',
+				'post_status'   => 'publish',
+				'post_author'   => get_current_user_id(),
+				'post_type'     => 'page',
+			) 
+		);
+		
+		$this->setSetting( 'plugin_page', $page_id )->saveSettings();
+	}
+}
+```
+----------------------------------------
+
 ### Supported Annotations: Class Properties
 --------------------------------------------------
 The following annotations can be used to document class properties.
 
-##### @Wordpress\PostType
+#### @Wordpress\PostType
 
+`@Wordpress\PostType( name="customtype" )`
+Using this annotation will register a new post type to wordpress using the values provided in your property. Your post type will be registered with the core wordpress function [`register_post_type()`](https://codex.wordpress.org/Function_Reference/register_post_type)
+
+**Params**:
+> `name="customtype"`: (required) - The name of your post type
+
+**Example**:
+```php
+/**
+ * Custom Post Type
+ *
+ * @Wordpress\PostType( name="custompost" )
+ *
+ * @var array
+ */
+public $myPostType = array
+(
+	'labels'      	=> array( 'name' => 'Custom Posts', 'singular_name' => 'Custom Post' ),
+	'public'      	=> true,
+	'has_archive' 	=> false,
+	'supports' 		=> array( 'title', 'editor', 'comments', 'post-templates', 'thumbnail' ),
+);
+```
 ----------------------------------------
 
-##### @Wordpress\Script
+#### @Wordpress\Script
 
+`@Wordpress\Script( deps={"jquery"}, ver=false, footer=false, always=false )`
+Using this annotation will register a script from your plugin to be used on wordpress pages. The script will be registered with the core wordpress function [`wp_enqueue_script()`](https://developer.wordpress.org/reference/functions/wp_enqueue_script/). The value of the annotated property should be the relative path from your plugin basedir to the script resource.
+
+**Params**:
+> `deps={"jquery"}`: (optional) / {*default: {}*} - Array of the names of any dependencies that this script has<br>
+> `ver=false`: (optional) / {*default: false*} - String specifying script version number, or false to generate automatically<br>
+> `footer=false`: (optional) / {*default: false*} - Whether to enqueue the script in the footer of the page instead of in the head<br>
+> `always=false`: (optional) / {*default: false*} - If set to true, this script will be included on every page on the site automatically. Otherwise, you must issue the command to use the script at some other point in your code.
+
+**Example**:
+```php
+/**
+ * @Wordpress\Script( deps={"jquery"}, ver=false, footer=false, always=false )
+ * @var string
+ */
+public $mainScript = "assets/js/main-module.js";
+
+/**
+ * @Wordpress\Action( for="wp_enqueue_scripts" )
+ * 
+ * @return	void
+ */
+public function enqueueScripts()
+{
+	if ( is_page( $this->getSetting( 'plugin_page' ) ) || is_singular( 'custompost' ) )
+	{
+		$this->useScript( $this->mainScript );
+	}	
+}
+```
 ----------------------------------------
 
-##### @Wordpress\Style
+#### @Wordpress\Stylesheet
 
+`@Wordpress\Stylesheet( deps={}, ver=false, footer=false, always=false )`
+Using this annotation will register a script from your plugin to be used on wordpress pages. The script will be registered with the core wordpress function [`wp_enqueue_style()`](https://developer.wordpress.org/reference/functions/wp_enqueue_style/). The value of the annotated property should be the relative path from your plugin basedir to the stylesheet resource.
+
+**Params**:
+> `deps={}`: (optional) / {*default: {}*} - Array of the names of any dependencies that this stylesheet has<br>
+> `ver=false`: (optional) / {*default: false*} - String specifying script version number, or false to generate automatically<br>
+> `media={"all"}`: (optional) / {*default: {"all"}*} - Which media types this stylesheet should apply to<br>
+> `always=false`: (optional) / {*default: false*} - If set to true, this stylesheet will be included on every page on the site automatically. Otherwise, you must issue the command to use the stylesheet at some other point in your code.
+
+**Example**:
+```php
+/**
+ * @Wordpress\Stylesheet
+ * @var string
+ */
+public $mainStyles = "assets/css/styles.css";
+
+/**
+ * @Wordpress\Action( for="wp_enqueue_scripts" )
+ * 
+ * @return	void
+ */
+public function enqueueStyles()
+{
+	if ( is_page( $this->getSetting( 'plugin_page' ) ) || is_singular( 'custompost' ) )
+	{
+		$this->useStyle( $this->mainStyles );
+	}	
+}
+```
 ----------------------------------------
 
 ### Supported Annotations: Classes
 --------------------------------------------------
 The following annotations can be used to document entire classes.
 
-##### @Wordpress\Options
+#### @Wordpress\Options
 
 ----------------------------------------
 
-##### @Wordpress\OptionsSection
+#### @Wordpress\OptionsSection
 
 ----------------------------------------
 
-##### @Wordpress\OptionsField
+#### @Wordpress\OptionsField
 
 ----------------------------------------
 
