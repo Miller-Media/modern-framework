@@ -6,21 +6,28 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 - [Main features](#main-features)
 - [Framework Objectives](#framework-objectives)
 - [Annotations](#annotations)
-	- Supported Annotations: Class Methods
+	- **Supported Annotations: Class Methods**
 	- [@Wordpress\Action](#wordpressaction)
 	- [@Wordpress\Filter](#wordpressfilter)
 	- [@Wordpress\Shortcode](#wordpressshortcode)
 	- [@Wordpress\AjaxHandler](#wordpressajaxhandler)
-	- Supported Annotations: Class Properties
+	- **Supported Annotations: Class Properties**
 	- [@Wordpress\PostType](#wordpressposttype)
 	- [@Wordpress\Script](#wordpressscript)
 	- [@Wordpress\Stylesheet](#wordpressstylesheet)
-	- Supported Annotations: Classes
+	- **Supported Annotations: Classes**
 	- [@Wordpress\Options](#wordpressoptions)
 	- [@Wordpress\OptionsSection](#wordpressoptionssection)
 	- [@Wordpress\OptionsField](#wordpressoptionsfield)
 - [Base Classes](#base-classes)
-	
+	- [Modern\Wordpress\Plugin](#modernwordpressplugin)
+	- [Modern\Wordpress\Plugin\Settings](#modernwordpresspluginsettings)
+	- [Modern\Wordpress\Plugin\Widget](#modernwordpresspluginwidget)
+- [Utitlity Classes](#utility-classes)
+	- [Modern\Wordpress\Framework](#modernwordpressframework)
+- [Pattern Classes](#pattern-classes)
+	- [Modern\Wordpress\Pattern\Singleton](#modernwordpresspatternsingleton)
+
 **How to get started:**
 
 1. Install the plugin
@@ -338,20 +345,104 @@ public function enqueueStyles()
 
 ### Supported Annotations: Classes
 --------------------------------------------------
-The following annotations can be used to document entire classes.
+The following annotations can be used to document on the class level.
 
 #### @Wordpress\Options
 
+`@Wordpress\Options( menu="My Plugin", title="My Plugin Options", capability="manage_options" )`
+This annotation is used to designate an options page to manage settings for a plugin. The class it is used on should be an extension of the Modern\Wordpress\Plugin\Settings class, which will be the settings object used to access and set the settings found on the designated options page. The annotation itself will provision the page for the settings, but additional annotations are needed to specify the options groups and options fields used on the page.
+
+**Params**:
+> `menu="My Plugin"`: (optional) / {*default: %Plugin Name%*} - The name of the menu link for the settings page. Defaults to the plugin name if not provided.<br>
+> `title="My Plugin Options"`: (optional) / {*default: %Plugin Name% + Options*} - The title of the settings page. Defaults to the plugin name + ' Options' if not provided.<br>
+> `capability="manage_options"`: (optional) / {*default: "manage_options"*} - The administrative capability required to access the settings page.
+
+**Example**:
+> See example at end of section.
 ----------------------------------------
 
 #### @Wordpress\OptionsSection
 
+`@Wordpress\OptionsSection( title="General Settings", description="Manage general settings for this plugin." )`
+This annotation is used on a class that extends Modern\Wordpress\Plugin\Settings, and must be placed after the @Wordpress\Options annotation. It triggers the grouping of options fields on the settings page. Any options fields that are specified after a @Wordpress\OptionsSection annotation will be grouped into the same section.
+
+**Params**:
+> `title="General Settings"`: (required) - The title of the settings section.<br>
+> `description="Description string"`: (optional) / {*default: null*} - A description for the settings section.
+
+**Example**:
+> See example at end of section.
 ----------------------------------------
 
 #### @Wordpress\OptionsField
 
+`@Wordpress\OptionsField( name="field_name", title="Field Title", type="select", options={ "value1":"Option 1", "value2": "Option 2" } )`
+This annotation is used to specify individual settings fields which can be managed on the settings page, and which will store values which can be retrieved by the settings class in the plugin.
+
+**Params**:
+> `name="field_name"`: (required) - Specifies the name of the option. This is the name that the setting will be accessible by from the settings class.<br>
+> `title="Field Title"`: (required) - The title of the form field<br>
+> `type="select"`: (required) / - The type of form element to use for the option field<br>
+> `options={}`: (optional) / {*default: {}*} - For fields that utilize options (such as select, radio, checkboxes, etc), this is a static array of the options that are available, or a string which contains a method name in the class which can be called to return an array of values to use for the field options.
+
+**Example**:
+```php
+/**
+ * Plugin Settings
+ *
+ * @Wordpress\Options
+ * @Wordpress\Options\Section( title="General Settings" )
+ * @Wordpress\Options\Field( name="plugin_title", type="text", title="Plugin Title" )
+ * @Wordpress\Options\Field( name="plugin_page", type="select", title="Forums Page", options="forumsPageOptions" )
+ */
+class Settings extends \Modern\Wordpress\Plugin\Settings
+{
+	
+	/**
+	 * Instance Cache - Required for singleton
+	 * @var	self
+	 */
+	protected static $_instance;
+	
+	/**
+	 * Get Plugin Page Select Options
+	 *
+	 * @param		string			$currentValue			The current settings value
+	 * @return		array
+	 */
+	public function pluginPageOptions( $currentValue=NULL )
+	{
+		$options = array();
+		
+		/* Create list of wordpress pages */
+		foreach( get_pages() as $page )
+		{
+			$post_title = htmlentities( $page->post_title );
+			$post_name = htmlentities( $page->post_name );
+			$options[ $page->ID ] = "{$post_name} ({$post_title})";
+		}
+		
+		return $options;
+	}	
+	
+}
+```
 ----------------------------------------
 
 ## Base Classes
-The following classes can be extended to inherit complete sets of functionality.
+The following classes can be extended to bootstrap functionality.
+
+### Modern\Wordpress\Plugin
+
+### Modern\Wordpress\Plugin\Settings
+
+### Modern\Wordpress\Plugin\Widget
+
+## Utility Classes
+
+### Modern\Wordpress\Framework
+
+## Pattern Classes
+
+### Modern\Wordpress\Pattern\Singleton
 
