@@ -79,9 +79,9 @@ class MyPlugin extends \Modern\Wordpress\Plugin
 
 In the example above, the modern wordpress framework will read the annotations on your class method, see the one called @Wordpress\Action, and attach the method to the wordpress action for "init". There are a handful of other annotations (such as @Wordpress\Filter) that you can also use to register your plugin functions to core wordpress, which we will detail later. 
 
-For now, you can see that you will always have accurate inline documentation for your wordpress callbacks, it will save you from having to register the functions in separate methods which will undoubtedly lead to "what was this method for again?" syndrome, and you can easily refactor function names without the need to track down and change any associated registration calls.
+For now, the main takeaway is that you will be maintaining accurate inline documentation for your wordpress callbacks, which will save you from having to register the functions in separate methods that will undoubtedly lead to "what was this method for again?" syndrome, and you can easily refactor function names without the need to track down and change any associated registration calls.
 
-The only other thing that needs to be done to complete this example is to instantiate your plugin and attach it to core wordpress. Normally, you just do this in your plugin's primary php file when it is loaded.
+The only other thing that would need to be done to complete this example is to instantiate your plugin and attach it to core wordpress. Normally, you just do this in your plugin's primary php file when it is loaded.
 
 ```php
 // file: your-plugin/plugin.php
@@ -137,7 +137,7 @@ public function examinePost( $post_ID, $post_after, $post_before )
 Using this annotation will add your function as a callback for a core wordpress filter. It is analogous to using [`add_filter()`](https://developer.wordpress.org/reference/functions/add_filter/) in wordpress.
 
 **Params**:
-> `for="action_name"`: (required) - The core wordpress action to attach the method to<br>
+> `for="filter_name"`: (required) - The core wordpress filter to attach the method to<br>
 > `priority=10`: (optional) / {*default: 10*} - The priority of your callback<br>
 > `args=1`: (optional) / {*default: 1*} - The number of arguments your callback expects
 
@@ -215,7 +215,7 @@ public function respondWithUserID()
 Using this annotation will register your function as a callback to when the plugin is activacted or deactivated on the site.
 
 **Params**:
-> `on="activation|deactivation|uninstall"`: (required) - The event for which the function will be executed. Must be one of ('activation,'deactivation')<br>
+> `on="activation|deactivation"`: (required) - The event for which the function will be executed. Must be one of ('activation,'deactivation')<br>
 > `file="plugin.php"`: (required) - The filename of your base plugin file inside your plugin directory. 
 
 **Example**:
@@ -315,11 +315,11 @@ public function enqueueScripts()
 #### @Wordpress\Stylesheet
 
 `@Wordpress\Stylesheet( deps={}, ver=false, footer=false, always=false )`
-Using this annotation will register a script from your plugin to be used on wordpress pages. The script will be registered with the core wordpress function [`wp_enqueue_style()`](https://developer.wordpress.org/reference/functions/wp_enqueue_style/). The value of the annotated property should be the relative path from your plugin basedir to the stylesheet resource.
+Using this annotation will register a stylesheet from your plugin to be used on wordpress pages. The stylesheet will be registered with the core wordpress function [`wp_enqueue_style()`](https://developer.wordpress.org/reference/functions/wp_enqueue_style/). The value of the annotated property should be the relative path from your plugin basedir to the stylesheet resource.
 
 **Params**:
 > `deps={}`: (optional) / {*default: {}*} - Array of the names of any dependencies that this stylesheet has<br>
-> `ver=false`: (optional) / {*default: false*} - String specifying script version number, or false to generate automatically<br>
+> `ver=false`: (optional) / {*default: false*} - String specifying stylesheet version number, or false to generate automatically<br>
 > `media={"all"}`: (optional) / {*default: {"all"}*} - Which media types this stylesheet should apply to<br>
 > `always=false`: (optional) / {*default: false*} - If set to true, this stylesheet will be included on every page on the site automatically. Otherwise, you must issue the command to use the stylesheet at some other point in your code.
 
