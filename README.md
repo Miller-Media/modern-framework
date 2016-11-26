@@ -98,7 +98,7 @@ The following annotations can be used to document class methods.
 
 #### @Wordpress\Action
 
-`@Wordpress\Action( for="action_name", priority=10, args=1 )`
+`@Wordpress\Action( for="action_name", priority=10, args=1 )`<br>
 Using this annotation will add your function as a callback for a core wordpress action. It is analogous to using [`add_action()`](https://developer.wordpress.org/reference/functions/add_action/) in wordpress.
 
 **Params**:
@@ -133,7 +133,7 @@ public function examinePost( $post_ID, $post_after, $post_before )
 
 #### @Wordpress\Filter
 
-`@Wordpress\Filter( for="filter_name", priority=10, args=1 )`
+`@Wordpress\Filter( for="filter_name", priority=10, args=1 )`<br>
 Using this annotation will add your function as a callback for a core wordpress filter. It is analogous to using [`add_filter()`](https://developer.wordpress.org/reference/functions/add_filter/) in wordpress.
 
 **Params**:
@@ -160,7 +160,7 @@ public function addBodyClass( $classes )
 
 #### @Wordpress\Shortcode
 
-`@Wordpress\Shortcode( name="shortcode_tag" )`
+`@Wordpress\Shortcode( name="shortcode_tag" )`<br>
 Using this annotation will register your function as a callback for a wordpress shortcode of the name you specify. It is analogous to using [`add_shortcode()`](https://developer.wordpress.org/reference/functions/add_shortcode/) in wordpress.
 
 **Params**:
@@ -186,7 +186,7 @@ public function makeEmphatic( $atts, $content )
 
 #### @Wordpress\AjaxHandler
 
-`@Wordpress\AjaxHandler( action="ajax_action_name", for={"users","guests"} )`
+`@Wordpress\AjaxHandler( action="ajax_action_name", for={"users","guests"} )`<br>
 Using this annotation will register your function as a callback for an ajax call. It can be configured to respond to both logged in and guest users.
 
 **Params**:
@@ -211,7 +211,7 @@ public function respondWithUserID()
 
 #### @Wordpress\Plugin
 
-`@Wordpress\Plugin( on="activation|deactivation", file="plugin.php" )`
+`@Wordpress\Plugin( on="activation|deactivation", file="plugin.php" )`<br>
 Using this annotation will register your function as a callback to when the plugin is activacted or deactivated on the site.
 
 **Params**:
@@ -253,7 +253,7 @@ The following annotations can be used to document class properties.
 
 #### @Wordpress\PostType
 
-`@Wordpress\PostType( name="customtype" )`
+`@Wordpress\PostType( name="customtype" )`<br>
 Using this annotation will register a new post type to wordpress using the values provided in your property. Your post type will be registered with the core wordpress function [`register_post_type()`](https://codex.wordpress.org/Function_Reference/register_post_type)
 
 **Params**:
@@ -280,7 +280,7 @@ public $myPostType = array
 
 #### @Wordpress\Script
 
-`@Wordpress\Script( deps={"jquery"}, ver=false, footer=false, always=false )`
+`@Wordpress\Script( deps={"jquery"}, ver=false, footer=false, always=false )`<br>
 Using this annotation will register a script from your plugin to be used on wordpress pages. The script will be registered with the core wordpress function [`wp_enqueue_script()`](https://developer.wordpress.org/reference/functions/wp_enqueue_script/). The value of the annotated property should be the relative path from your plugin basedir to the script resource.
 
 **Params**:
@@ -314,7 +314,7 @@ public function enqueueScripts()
 
 #### @Wordpress\Stylesheet
 
-`@Wordpress\Stylesheet( deps={}, ver=false, footer=false, always=false )`
+`@Wordpress\Stylesheet( deps={}, ver=false, footer=false, always=false )`<br>
 Using this annotation will register a stylesheet from your plugin to be used on wordpress pages. The stylesheet will be registered with the core wordpress function [`wp_enqueue_style()`](https://developer.wordpress.org/reference/functions/wp_enqueue_style/). The value of the annotated property should be the relative path from your plugin basedir to the stylesheet resource.
 
 **Params**:
@@ -352,7 +352,7 @@ The following annotations can be used to document on the class level.
 
 #### @Wordpress\Options
 
-`@Wordpress\Options( menu="My Plugin", title="My Plugin Options", capability="manage_options" )`
+`@Wordpress\Options( menu="My Plugin", title="My Plugin Options", capability="manage_options" )`<br>
 This annotation is used to designate an options page to manage settings for a plugin. The class it is used on should be an extension of the Modern\Wordpress\Plugin\Settings class, which will be the settings object used to access and set the settings found on the designated options page. The annotation itself will provision the page for the settings, but additional annotations are needed to specify the options groups and options fields used on the page.
 
 **Params**:
@@ -366,7 +366,7 @@ This annotation is used to designate an options page to manage settings for a pl
 
 #### @Wordpress\OptionsSection
 
-`@Wordpress\OptionsSection( title="General Settings", description="Manage general settings for this plugin." )`
+`@Wordpress\OptionsSection( title="General Settings", description="Manage general settings for this plugin." )`<br>
 This annotation is used on a class that extends Modern\Wordpress\Plugin\Settings, and must be placed after the @Wordpress\Options annotation. It triggers the grouping of options fields on the settings page. Any options fields that are specified after a @Wordpress\OptionsSection annotation will be grouped into the same section.
 
 **Params**:
@@ -379,7 +379,7 @@ This annotation is used on a class that extends Modern\Wordpress\Plugin\Settings
 
 #### @Wordpress\OptionsField
 
-`@Wordpress\OptionsField( name="field_name", title="Field Title", type="select", options={ "value1":"Option 1", "value2": "Option 2" } )`
+`@Wordpress\OptionsField( name="field_name", title="Field Title", type="select", options={ "value1":"Option 1", "value2": "Option 2" } )`<br>
 This annotation is used to specify individual settings fields which can be managed on the settings page, and which will store values which can be retrieved by the settings class in the plugin.
 
 **Params**:
