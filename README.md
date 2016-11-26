@@ -30,9 +30,12 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 
 **How to get started:**
 
-1. Install the plugin
-2. Enable developer mode
-3. Begin building your own new plugin from scratch, or customize a [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate).
+1. Install the plugin -or- Clone this repository
+2. Enable developer mode (create a dev_config.php file in the plugin directory and add `define( MODERN_WORDPRESS_DEBUG, TRUE );` )
+3. Begin building your own new plugin from scratch, or customize the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate).
+
+**Note**: If you want to begin by cloning this repository instead of installing a packaged version of this plugin, you will need to install the composer dependencies manually after downloading.
+Do `composer install` on the command line from the plugin dir.
 
 ## Main features
 
