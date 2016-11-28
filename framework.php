@@ -42,9 +42,9 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 			/* FAAP: Framework As A Plugin :) */
 			$framework = \Modern\Wordpress\Framework::instance();		
 			$framework->setPath( rtrim( plugin_dir_path( __FILE__ ), '/' ) );
+			$framework->attach( $framework );
 			do_action( 'modern_wordpress_init' );
 		}
 	}
-	
 	ModernWordpressFramework::init();
 }

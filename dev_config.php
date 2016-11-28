@@ -1,3 +1,3 @@
 <?php
 
-define( MODERN_WORDPRESS_DEBUG, TRUE );
+define( MODERN_WORDPRESS_DEV, TRUE );

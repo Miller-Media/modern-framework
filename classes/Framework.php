@@ -31,8 +31,11 @@ class Framework extends Plugin
 	 */
 	protected function __construct()
 	{
-		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../cache", defined( 'MODERN_WORDPRESS_DEBUG' ) and MODERN_WORDPRESS_DEBUG );
-		parent::__construct();
+		/* Load Annotation Reader */
+		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../cache", defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV );
+		
+		/* Init Parent */
+		parent::__construct();		
 	}
 	
 	/**
@@ -98,6 +101,51 @@ class Framework extends Plugin
 		}
 		
 		return $this;
+	}
+	
+	/**
+	 * @Wordpress\Filter( for="cron_schedules" )
+	 *
+	 * @param	array		$schedules		Array of schedule frequencies
+	 * @return	array
+	 */
+	public function cronSchedules( $schedules )
+	{
+		$schedules['minutely'] = array(
+			'interval' => 60,
+			'display' => __( 'Once Per Minute' )
+		);
+		
+		return $schedules;
+	}
+	
+	/**
+	 * @Wordpress\Plugin( on="activation", file="framework.php" )
+	 *
+	 * @return	void
+	 */
+	public function frameworkActivated()
+	{
+		wp_clear_scheduled_hook( 'modern_wordpress_task_run' );
+		wp_schedule_event( time(), 'minutely', 'modern_wordpress_task_run' );
+	}
+	
+	/**
+	 * @Wordpress\Plugin( on="deactivation", file="framework.php" )
+	 *
+	 * @return	void
+	 */
+	public function frameworkDeactivated()
+	{
+		wp_clear_scheduled_hook( 'modern_wordpress_task_run' );
+	}
+	
+	/**
+	 * @Wordpress\Action( for="modern_wordpress_task_run" )
+	 */
+	public function runTasks()
+	{
+		
 	}
 	
 }

@@ -1,10 +1,10 @@
 {
-    "name": "millermedia/wplibs",
-    "description": "Miller Media Wordpress Plugin Helpers",
+    "name": "millermedia/modern-wordpress",
+    "description": "Modern Wordpress Plugin Framework",
     "authors": [
         {
-            "name": "kcarwile",
-            "email": "kcarwile@gmail.com"
+            "name": "Kevin Carwile",
+            "email": "kevin@miller-media.com"
         }
     ],
     "require": {
@@ -12,7 +12,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Modern\\Wordpress\\": "lib/"
+            "Modern\\Wordpress\\": "classes/"
         }
     }
 }
