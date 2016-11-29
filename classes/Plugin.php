@@ -127,6 +127,49 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+	 * Get data from persistent store
+	 *
+	 * @param	string		$key		The data key to load
+	 * @return	mixed|NULL
+	 */
+	public function getData( $key )
+	{
+		if ( file_exists( $this->fileUrl( 'data/' . $key . '.php' ) ) )
+		{
+			$data = include $this->fileUrl( 'data/' . $key . '.php' );
+			if ( $data )
+			{
+				return json_decode( $data, TRUE );
+			}
+		}
+		
+		return NULL;
+	}
+	
+	/**
+	 * Alias for getData()
+	 *
+	 * @param	string		$key		The data key to load
+	 * @return	mixed|NULL
+	 */ 
+	public function data( $key )
+	{
+		return $this->getData( $key );
+	}
+	
+	/**
+	 * Save data to persistent store
+	 *
+	 * @param	string		$key		The data key to save
+	 * @param	mixed		$data		The data to save
+	 * @return	mixed|NULL
+	 */
+	public function setData( $key, $data )
+	{
+		file_put_contents( $this->fileUrl( 'data/' . $key . '.php' ), "<?php\nreturn <<<'JSON'\n" . json_encode( $data, JSON_PRETTY_PRINT ) . "\nJSON;" );
+	}
+	
+	/**
 	 * Get a plugin file path
 	 *
 	 * @param	string				$pathfile		The file path and name
