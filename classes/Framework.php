@@ -39,10 +39,12 @@ class Framework extends Plugin
 	}
 	
 	/**
-	 * Attach instance methods to wordpress api
+	 * Attach instances to wordpress
+	 *
+	 * @api
 	 *
 	 * @param	object		$instance		An object instance to attach to wordpress 
-	 * @return	object
+	 * @return	this
 	 */
 	public function attach( $instance )
 	{
@@ -104,6 +106,26 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Get all modern wordpress plugins
+	 *
+	 * @api
+	 *
+	 * @param	bool		$recache		Force recaching of plugins
+	 * @return	array
+	 */
+	public function getPlugins( $recache=FALSE )
+	{
+		static $plugins;
+		
+		if ( ! isset( $plugins ) or $recache )
+		{
+			$plugins = apply_filters( 'modern_wordpress_find_plugins', array() );
+		}
+		
+		return $plugins;
+	}
+	
+	/**
 	 * @Wordpress\Filter( for="cron_schedules" )
 	 *
 	 * @param	array		$schedules		Array of schedule frequencies
@@ -147,5 +169,109 @@ class Framework extends Plugin
 	{
 		
 	}
+	
+	/**
+	 * Generate a new plugin from the boilerplate
+	 *
+	 * @api
+	 *
+	 * @param	array		$data		New plugin data
+	 * @return	this
+	 * @throws	\InvalidArgumentException	Throws exception when invalid plugin data is provided
+	 * @throws	\ErrorException			Throws an error when the plugin data conflicts with another plugin
+	 */
+	public function createPlugin( $data )
+	{
+		$plugin_dir = $data[ 'dir' ];
+		$plugin_name = $data[ 'name' ];
+		$plugin_vendor = $data[ 'vendor' ];
+		$plugin_namespace = $data[ 'namespace' ];
+		
+		if ( ! $data[ 'dir' ] )       { throw new \InvalidArgumentException( 'Invalid plugin directory' ); }
+		if ( ! $data[ 'name' ] )      { throw new \InvalidArgumentException( 'No plugin name provided' );  }
+		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided' );  }
+		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided' );    }
+		
+		if ( is_dir( WP_PLUGIN_DIR . '/' . $plugin_dir ) )
+		{
+			throw new \ErrorException( 'Plugin directory is already being used.' );
+		}
+		
+		$this->makeCopy( $this->getPath() . '/boilerplate', WP_PLUGIN_DIR . '/' . $plugin_dir, $data );
+		
+		return $this;
+	}
+	
+	/**
+	 * Copy boilerplate plugin and customize the metadata
+	 *
+	 * @param       string   $source    Source path
+	 * @param       string   $dest      Destination path
+	 * @return      bool     Returns TRUE on success, FALSE on failure
+	 */
+	protected function makeCopy( $source, $dest, $data )
+	{
+		// Simple copy for a file
+		if ( is_file( $source ) ) 
+		{
+			if ( ! in_array( basename( $source ), array( 'README.md', '.gitignore' ) ) )
+			{
+				copy( $source, $dest );
+				
+				$pathinfo = pathinfo( $dest );
+				if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json' ) ) )
+				{
+					$file_contents = file_get_contents( $dest );
+					$file_contents = strtr( $file_contents, array
+					( 
+						'b7f88d4569eea7ab0b52f6a8c0e0e90c'  => md5( $data[ 'dir' ] ),
+						'MillerMedia\Boilerplate'           => $data[ 'namespace' ],
+						'MillerMedia\\\Boilerplate'         => str_replace( '\\', '\\\\', $data[ 'namespace' ] ),
+						'millermedia/boilerplate'           => strtolower( str_replace( '\\', '/', $data[ 'namespace' ] ) ),
+						'BoilerplatePlugin'                 => str_replace( '\\', '', $data[ 'namespace'] ) . 'Plugin',
+						'{vendor_name}'                     => $data[ 'vendor' ],
+						'{plugin_name}'                     => $data[ 'name' ],
+						'{plugin_description}'              => $data[ 'description' ],
+						'{plugin_dir}'                      => $data[ 'dir' ],
+						'{plugin_author}'                   => $data[ 'author' ],
+						'{plugin_author_url}'               => $data[ 'author_url' ],
+						'{date_time}'                       => $data[ 'date' ],						
+					) );
+					file_put_contents( $dest, $file_contents );
+				}
+				
+				return true;
+			}
+			
+			return false;
+		}
+
+		// Make destination directory
+		if ( ! is_dir( $dest ) ) 
+		{
+			mkdir( $dest );
+		}
+
+		// Loop through the folder
+		$dir = dir( $source );
+		while ( false !== $entry = $dir->read() ) 
+		{
+			// Skip pointers & special dirs
+			if ( in_array( $entry, array( '.', '..', '.git' ) ) )
+			{
+				continue;
+			}
+
+			// Deep copy directories
+			if ( $dest !== "$source/$entry" ) 
+			{
+				$this->makeCopy( "$source/$entry", "$dest/$entry", $data );
+			}
+		}
+
+		// Clean up
+		$dir->close();
+		return true;
+	} 	
 	
 }

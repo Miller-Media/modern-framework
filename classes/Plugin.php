@@ -24,8 +24,11 @@ abstract class Plugin extends Singleton
 	protected $settings = array();
 	
 	/** 
-	 * Set Plugin Path
+	 * Set the base plugin path
 	 *
+	 * @api
+	 *
+	 * @param	string		$path		The plugin base path
 	 * @return	void
 	 */
 	public function setPath( $path )
@@ -34,7 +37,11 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Get Plugin Path
+	 * Get the base plugin path
+	 *
+	 * @api
+	 *
+	 * @return	string
 	 */
 	public function getPath()
 	{
@@ -42,7 +49,9 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Set Settings
+	 * Add a settings store to the plugin
+	 *
+	 * @api
 	 *
 	 * @param	Settings		$settings		The settings object
 	 * @return	void
@@ -54,7 +63,9 @@ abstract class Plugin extends Singleton
 	}
 	
 	/** 
-	 * Get Settings
+	 * Get one or more plugin settings stores
+	 *
+	 * @api
 	 *
 	 * @param	string|NULL		$key		The settings access key
 	 * @return	Settings|array|NULL
@@ -77,7 +88,9 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Get Setting
+	 * Get a plugin setting by name (search if necessary)
+	 *
+	 * @api
 	 *
 	 * @param	string		$name		Setting name
 	 * @param	string		$key		Optional key of settings to look in
@@ -105,7 +118,9 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Set Setting
+	 * Set the value of a settings option
+	 *
+	 * @api
 	 *
 	 * @param	string		$name			Setting name
 	 * @param	mixed		$val			Setting value
@@ -128,6 +143,8 @@ abstract class Plugin extends Singleton
 	
 	/**
 	 * Get data from persistent store
+	 * 
+	 * @api
 	 *
 	 * @param	string		$key		The data key to load
 	 * @return	mixed|NULL
@@ -160,6 +177,8 @@ abstract class Plugin extends Singleton
 	/**
 	 * Save data to persistent store
 	 *
+	 * @api
+	 *
 	 * @param	string		$key		The data key to save
 	 * @param	mixed		$data		The data to save
 	 * @return	mixed|NULL
@@ -171,6 +190,8 @@ abstract class Plugin extends Singleton
 	
 	/**
 	 * Get a plugin file path
+	 *
+	 * @api
 	 *
 	 * @param	string				$pathfile		The file path and name
 	 * @param	string|FALSE		$type			The file type or FALSE if file type is included in $pathfile
@@ -184,6 +205,8 @@ abstract class Plugin extends Singleton
 	/**
 	 * Get a plugin file url
 	 *
+	 * @api
+	 *
 	 * @param	string		$filename		The file path and name (including extension)
 	 * @return	string
 	 */
@@ -193,7 +216,9 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Use Script
+	 * Use a registered script
+	 *
+	 * @api
 	 *
 	 * @param	string		$script				The script to use
 	 * @param	array		$localization		Localization data to pass to the script
@@ -219,7 +244,9 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Use Stylesheet
+	 * Use a registered stylesheet
+	 *
+	 * @api
 	 *
 	 * @param	string		$style				The stylesheet to use
 	 * @return	void
@@ -237,7 +264,9 @@ abstract class Plugin extends Singleton
 	}
 
 	/**
-	 * Get Template
+	 * Get the location of a template file
+	 *
+	 * @api
 	 *
 	 * @param	string		$template 			Plugin template to look for (without file extension)
 	 * @return	string
@@ -267,7 +296,9 @@ abstract class Plugin extends Singleton
 	}
 
 	/**
-	 * Get Template Content
+	 * Get the content of a template
+	 *
+	 * @api
 	 *
 	 * @param	string		$template 			Plugin template to load (without file extension)
 	 * @param	array		$vars				Variables to extract and make available to template
@@ -291,6 +322,20 @@ abstract class Plugin extends Singleton
 		ob_start();
 		include $templateFile;
 		return ob_get_clean();
+	}
+	
+	/**
+	 * Internal: Framework Plugin Finder
+	 *
+	 * @Wordpress\Filter( for="modern_wordpress_find_plugins" )
+	 *
+	 * @param	array		$plugins		Found plugins
+	 * @return	array
+	 */
+	public function rollCall( $plugins )
+	{
+		$plugins[] = $this;
+		return $plugins;
 	}
 	
 }
