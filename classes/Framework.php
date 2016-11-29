@@ -192,12 +192,17 @@ class Framework extends Plugin
 		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided' );  }
 		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided' );    }
 		
+		if ( ! is_dir( $this->getPath() . '/boilerplate' ) )
+		{
+			throw new \ErrorException( "Boilerplate plugin not present. Can't create a new one." );
+		}
+		
 		if ( is_dir( WP_PLUGIN_DIR . '/' . $plugin_dir ) )
 		{
 			throw new \ErrorException( 'Plugin directory is already being used.' );
 		}
 		
-		$this->makeCopy( $this->getPath() . '/boilerplate', WP_PLUGIN_DIR . '/' . $plugin_dir, $data );
+		$this->copyPlugin( $this->getPath() . '/boilerplate', WP_PLUGIN_DIR . '/' . $plugin_dir, $data );
 		
 		return $this;
 	}
@@ -209,7 +214,7 @@ class Framework extends Plugin
 	 * @param       string   $dest      Destination path
 	 * @return      bool     Returns TRUE on success, FALSE on failure
 	 */
-	protected function makeCopy( $source, $dest, $data )
+	protected function copyPlugin( $source, $dest, $data )
 	{
 		// Simple copy for a file
 		if ( is_file( $source ) ) 
@@ -265,7 +270,7 @@ class Framework extends Plugin
 			// Deep copy directories
 			if ( $dest !== "$source/$entry" ) 
 			{
-				$this->makeCopy( "$source/$entry", "$dest/$entry", $data );
+				$this->copyPlugin( "$source/$entry", "$dest/$entry", $data );
 			}
 		}
 

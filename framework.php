@@ -3,7 +3,7 @@
 Plugin Name: Modern Wordpress Plugin Framework
 Version: 0.1.0
 Provides: lib-modern-wordpresss
-Description: Provides a standard framework that other plugins may depend on.
+Description: Provides a modern framework to power modern wordpress plugins.
 Author: Miller Media
 Author URI: http://www.miller-media.com/
 */
