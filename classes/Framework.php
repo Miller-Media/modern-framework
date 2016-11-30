@@ -34,6 +34,11 @@ class Framework extends Plugin
 		/* Load Annotation Reader */
 		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../cache", defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV );
 		
+		/* Register WP CLI */
+		if ( defined( '\WP_CLI' ) && \WP_CLI ) {
+			\WP_CLI::add_command( 'mwp', 'Modern\Wordpress\CLI' );
+		}
+		
 		/* Init Parent */
 		parent::__construct();		
 	}
@@ -187,10 +192,15 @@ class Framework extends Plugin
 		$plugin_vendor = $data[ 'vendor' ];
 		$plugin_namespace = $data[ 'namespace' ];
 		
-		if ( ! $data[ 'dir' ] )       { throw new \InvalidArgumentException( 'Invalid plugin directory' ); }
-		if ( ! $data[ 'name' ] )      { throw new \InvalidArgumentException( 'No plugin name provided' );  }
-		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided' );  }
-		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided' );    }
+		if ( ! isset( $data[ 'date' ] ) )
+		{
+			$data[ 'date' ] = date( 'M j, Y' );
+		}
+		
+		if ( ! $data[ 'dir' ] )       { throw new \InvalidArgumentException( 'Invalid plugin directory.' ); }
+		if ( ! $data[ 'name' ] )      { throw new \InvalidArgumentException( 'No plugin name provided.' );  }
+		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided.' );  }
+		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided.' );    }
 		
 		if ( ! is_dir( $this->getPath() . '/boilerplate' ) )
 		{
