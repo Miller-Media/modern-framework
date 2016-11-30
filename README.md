@@ -28,14 +28,20 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 - [Pattern Classes](#pattern-classes)
 	- [Modern\Wordpress\Pattern\Singleton](#modernwordpresspatternsingleton)
 
-**How to get started:**
+##How to get started:
 
 1. Install the plugin -or- Clone this repository
-2. Enable developer mode (create a dev_config.php file in the plugin directory and add `define( MODERN_WORDPRESS_DEV, TRUE );` )
-3. Begin building your own new plugin from scratch, or customize the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate).
+2. Enable developer mode (create a dev_config.php file in the modern-wordpress/ directory and add `define( MODERN_WORDPRESS_DEV, TRUE );` )
 
 **Note**: If you want to begin by cloning this repository instead of installing a packaged version of this plugin, you will need to install the composer dependencies manually after downloading.
 Do `composer install` on the command line from the plugin dir.
+
+###Creating A Plugin
+Begin building your own new plugin from scratch or customize the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate).
+You can also create a new plugin from the boilerplate automatically using [WP CLI](https://wp-cli.org/):
+'''
+$ wp mwp create-plugin "Awesome New Plugin" --vendor="My Company" --author="My Name"
+'''
 
 ## Main features
 
