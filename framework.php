@@ -18,7 +18,10 @@ use Doctrine\Common\Annotations\AnnotationRegistry;
 /* Load Only Once */
 if ( ! class_exists( 'ModernWordpressFramework' ) )
 {
-	require_once 'vendor/autoload.php';
+	/* Include packaged autoloader if present */
+	if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
+		require_once 'vendor/autoload.php';
+	}
 
 	/* Optional config file (for development overrides) */
 	if ( file_exists( __DIR__ . '/dev_config.php' ) ) {
