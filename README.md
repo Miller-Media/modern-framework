@@ -42,6 +42,7 @@ Do `composer install` on the command line from the plugin dir.
 ###Creating A Plugin
 Begin building your own new plugin from scratch by customizing the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate), or you can create a new modern wordpress plugin using [WP CLI](https://wp-cli.org/):
 ```
+$ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip
 $ wp mwp create-plugin "Awesome New Plugin" --vendor="My Company" --author="My Name"
 ```
 **Note**: By using the WP CLI to create your plugin, the boilerplate is automatically cloned, customized, and used as the skeleton for your new plugin.
