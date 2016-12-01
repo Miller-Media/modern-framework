@@ -25,7 +25,7 @@ class CLI extends \WP_CLI_Command {
 	 * [--namespace=<namespace>]
 	 * : The Vendor\Package namespace for the plugin.
 	 *
-	 * [--dir=<dir>]
+	 * [--slug=<slug>]
 	 * : The directory name that the plugin will be created in.
 	 *
 	 * [--description=<description>]
@@ -43,7 +43,7 @@ class CLI extends \WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Create a new plugin
-	 *     $ wp mwp create "My New Plugin" --vendor="My Company" --dir="example-plugin-dir" --namespace="MyCompany\MyPlugin" --description="A new plugin to customize."
+	 *     $ wp mwp create "My New Plugin" --vendor="My Company" --slug="example-plugin-dir" --namespace="MyCompany\MyPlugin" --description="A new plugin to customize."
 	 *     Success: Plugin successfully created in 'example-plugin-dir'.
 	 *
 	 * @subcommand create-plugin
@@ -109,9 +109,9 @@ class CLI extends \WP_CLI_Command {
 			$assoc[ 'namespace' ] = "$vendorSpace\\$packageSpace";
 		}
 		
-		if ( ! isset( $assoc[ 'dir' ] ) )
+		if ( ! isset( $assoc[ 'slug' ] ) )
 		{
-			$assoc[ 'dir' ] = strtolower( preg_replace( '|\\\|', '-', $assoc[ 'namespace' ] ) );
+			$assoc[ 'slug' ] = strtolower( preg_replace( '|\\\|', '-', $assoc[ 'namespace' ] ) );
 		}
 		
 		try
@@ -120,10 +120,21 @@ class CLI extends \WP_CLI_Command {
 		}
 		catch( \Exception $e )
 		{
+			if ( $e->getCode() == 1 )
+			{
+				// No boilerplate present
+				\WP_CLI::error( $e->getMessage() . "\nSuggestion: Try using: $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip" );
+			}
+			else if ( $e->getCode() == 2 )
+			{
+				// Plugin directory already used
+				\WP_CLI::error( $e->getMessage() . "\nSuggestion: Try using: $ wp mwp create-plugin \"{$assoc['name']}\" --slug='my-custom-dir' to force a different install directory" );
+			}
+			
 			\WP_CLI::error( $e->getMessage() );
 		}
 		
-		\WP_CLI::success( "Plugin successfully created in '{$assoc[ 'dir' ]}'." );
+		\WP_CLI::success( "Plugin successfully created in '{$assoc[ 'slug' ]}'." );
 	}
 	
 	/**

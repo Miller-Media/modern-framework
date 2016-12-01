@@ -187,7 +187,7 @@ class Framework extends Plugin
 	 */
 	public function createPlugin( $data )
 	{
-		$plugin_dir = $data[ 'dir' ];
+		$plugin_dir = $data[ 'slug' ];
 		$plugin_name = $data[ 'name' ];
 		$plugin_vendor = $data[ 'vendor' ];
 		$plugin_namespace = $data[ 'namespace' ];
@@ -197,22 +197,27 @@ class Framework extends Plugin
 			$data[ 'date' ] = date( 'M j, Y' );
 		}
 		
-		if ( ! $data[ 'dir' ] )       { throw new \InvalidArgumentException( 'Invalid plugin directory.' ); }
+		if ( ! $data[ 'slug' ] )       { throw new \InvalidArgumentException( 'Invalid plugin directory.' ); }
 		if ( ! $data[ 'name' ] )      { throw new \InvalidArgumentException( 'No plugin name provided.' );  }
 		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided.' );  }
 		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided.' );    }
 		
 		if ( ! is_dir( $this->getPath() . '/boilerplate' ) )
 		{
-			throw new \ErrorException( "Boilerplate plugin not present. Can't create a new one." );
+			throw new \ErrorException( "Boilerplate plugin not present. Can't create a new one.", 1 );
 		}
 		
 		if ( is_dir( WP_PLUGIN_DIR . '/' . $plugin_dir ) )
 		{
-			throw new \ErrorException( 'Plugin directory is already being used.' );
+			throw new \ErrorException( 'Plugin directory is already being used.', 2 );
 		}
 		
 		$this->copyPlugin( $this->getPath() . '/boilerplate', WP_PLUGIN_DIR . '/' . $plugin_dir, $data );
+		
+		/* Create an alias file for the test suite, etc... */
+		$fh = fopen( WP_PLUGIN_DIR . '/' . $plugin_dir . '/' . $data[ 'slug' ] . '.php', 'w+' );
+		fwrite( $fh, "<?php\n\nrequire_once 'plugin.php';" );
+		fclose( $fh );
 		
 		return $this;
 	}
