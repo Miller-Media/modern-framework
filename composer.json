@@ -1,6 +1,7 @@
 {
     "name": "millermedia/modern-wordpress",
     "description": "Modern Wordpress Plugin Framework",
+    "type": "wordpress-plugin",
     "authors": [
         {
             "name": "Kevin Carwile",
@@ -8,7 +9,8 @@
         }
     ],
     "require": {
-        "doctrine/orm": "^2.5"
+        "doctrine/orm": "^2.5",
+	"composer/installers": "~1.0"
     },
     "autoload": {
         "psr-4": {
