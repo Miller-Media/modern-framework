@@ -1,7 +1,8 @@
 {
     "name": "millermedia/modern-wordpress",
-    "description": "Modern Wordpress Plugin Framework",
+    "description": "Provides a modern object oriented wordpress plugin development framework.",
     "type": "wordpress-plugin",
+    "license": "GNU General Public License (GPL) v3.0",
     "authors": [
         {
             "name": "Kevin Carwile",
