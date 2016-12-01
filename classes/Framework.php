@@ -197,7 +197,7 @@ class Framework extends Plugin
 			$data[ 'date' ] = date( 'M j, Y' );
 		}
 		
-		if ( ! $data[ 'slug' ] )       { throw new \InvalidArgumentException( 'Invalid plugin directory.' ); }
+		if ( ! $data[ 'slug' ] )      { throw new \InvalidArgumentException( 'Invalid plugin directory.' ); }
 		if ( ! $data[ 'name' ] )      { throw new \InvalidArgumentException( 'No plugin name provided.' );  }
 		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided.' );  }
 		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided.' );    }

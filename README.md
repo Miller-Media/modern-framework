@@ -33,7 +33,7 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 1. Install the plugin -or- Clone this repository
 2. Enable developer mode - Create or edit your dev_config.php file in the modern-wordpress/ directory and add:
 ```
-define( MODERN_WORDPRESS_DEV, TRUE );
+define( 'MODERN_WORDPRESS_DEV', TRUE );
 ```
 
 **Note**: If you want to begin by cloning this repository instead of installing a packaged version of this plugin, you will need to install the composer dependencies manually after downloading.
