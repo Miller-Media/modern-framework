@@ -33,9 +33,11 @@ If you have WP CLI installed:
 $ wp plugin install modern-wordpress --activate
 ```
 
-**or** from your wordpress site:
+-- **or** -- from your wordpress site:
 
-*WP Admin > Plugins > Add New > Search for Modern Wordpress > Install*
+```
+WP Admin > Plugins > Add New > Search for "Modern Wordpress" > Install
+```
 
 1.b) **Download/clone this repository**
 
