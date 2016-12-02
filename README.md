@@ -26,18 +26,18 @@ The objective of this framework is to ease the development of new wordpress plug
 
 ## How to get started:
 
-1. a) **Install the packaged plugin (not currently available)**
+1.a) **Install the packaged plugin (not currently available)**
 
 If you have WP CLI installed:
 ```
 $ wp plugin install modern-wordpress --activate
 ```
 
-**or**
+**or** from your wordpress site:
 
-*WP Admin > Plugins > Add New > Search for Modern Wordpress*
+*WP Admin > Plugins > Add New > Search for Modern Wordpress > Install*
 
-1. b) **Download/clone this repository**
+1.b) **Download/clone this repository**
 
 **Note**: When you begin by cloning this repository instead of installing the packaged version of this plugin, you will also need to install the composer dependencies manually after downloading. These instructions assume you have the following already on your system:
 * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
