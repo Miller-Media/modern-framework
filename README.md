@@ -27,7 +27,7 @@ The objective of this framework is to ease the development of new wordpress plug
 
 ## How to get started:
 
-1.a) **Install the packaged plugin (not currently available)**
+1.a) **Install the packaged plugin** (not currently available in the directory)
 
 If you have WP CLI installed:
 ```
@@ -37,7 +37,7 @@ $ wp plugin install modern-wordpress --activate
 -- **or** -- from your wordpress site:
 
 ```
-WP Admin > Plugins > Add New > Search for "Modern Wordpress" > Install
+WP Admin > Plugins > Add New > Search for "Modern Wordpress" > Install Now > Activate
 ```
 
 1.b) **Download/clone this repository**
