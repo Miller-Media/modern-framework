@@ -54,6 +54,7 @@ $ cd modern-wordpress
 $ composer install
 $ wp plugin activate modern-wordpress
 ```
+You can get away without having git installed by [downloading the archive](https://github.com/Miller-Media/modern-wordpress/archive/master.zip) and extracting it to your plugins folder. And you can get away with not having WP CLI installed by activating the plugin via your wordpress admin. But you will still need [composer](https://getcomposer.org/doc/00-intro.md) to install the dependencies.
 
 2) Enable developer mode 
 
