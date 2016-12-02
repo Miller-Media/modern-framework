@@ -1,9 +1,16 @@
 <?php
+/**
+ * Singleton
+ *
+ * @package 	Modern Wordpress Framework
+ * @author	Kevin Carwile
+ * @since	Nov 20, 2016
+ */
 
 namespace Modern\Wordpress\Pattern;
 
 /**
- * Singleton 
+ * Implements singleton design pattern
  */
 abstract class Singleton
 {

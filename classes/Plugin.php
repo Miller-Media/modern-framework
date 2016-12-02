@@ -1,4 +1,11 @@
 <?php
+/**
+ * Plugin Base Class (Singleton)
+ *
+ * @package 	Modern Wordpress Framework
+ * @author	Kevin Carwile
+ * @since	Nov 20, 2016
+ */
 
 namespace Modern\Wordpress;
 
@@ -9,17 +16,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 use \Modern\Wordpress\Pattern\Singleton;
 
 /**
- * Plugin Class
+ * All modern wordpress plugins should extend this class.
  */
 abstract class Plugin extends Singleton
 {
 	/**
-	 * @var string 	Plugin Path
+	 * @var string 	Plugin path
 	 */
 	protected $path;
 	
 	/**
-	 * @var array
+	 * @var array 	Settings cache
 	 */
 	protected $settings = array();
 	

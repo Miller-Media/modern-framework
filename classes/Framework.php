@@ -1,4 +1,11 @@
 <?php
+/**
+ * Framework Class (Singleton)
+ * 
+ * @package 	Modern Wordpress Framework
+ * @author	Kevin Carwile
+ * @since	Nov 20, 2016
+ */
 
 namespace Modern\Wordpress;
 
@@ -10,7 +17,7 @@ use \Doctrine\Common\Annotations\AnnotationReader;
 use \Doctrine\Common\Annotations\FileCacheReader;
 
 /**
- * Framework Class
+ * Provides access to core framework methods and features. 
  */
 class Framework extends Plugin
 {
@@ -131,6 +138,8 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Add a one minute time period to the wordpress cron schedule
+	 *
 	 * @Wordpress\Filter( for="cron_schedules" )
 	 *
 	 * @param	array		$schedules		Array of schedule frequencies
@@ -147,30 +156,36 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Setup the queue schedule on framework activation
+	 *
 	 * @Wordpress\Plugin( on="activation", file="framework.php" )
 	 *
 	 * @return	void
 	 */
 	public function frameworkActivated()
 	{
-		wp_clear_scheduled_hook( 'modern_wordpress_task_run' );
-		wp_schedule_event( time(), 'minutely', 'modern_wordpress_task_run' );
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
+		wp_schedule_event( time(), 'minutely', 'modern_wordpress_queue_run' );
 	}
 	
 	/**
+	 * Clear the queue schedule on framework deactivation
+	 *
 	 * @Wordpress\Plugin( on="deactivation", file="framework.php" )
 	 *
 	 * @return	void
 	 */
 	public function frameworkDeactivated()
 	{
-		wp_clear_scheduled_hook( 'modern_wordpress_task_run' );
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
 	}
 	
 	/**
-	 * @Wordpress\Action( for="modern_wordpress_task_run" )
+	 * Run any queued tasks (future use)
+	 *
+	 * @Wordpress\Action( for="modern_wordpress_queue_run" )
 	 */
-	public function runTasks()
+	public function runQueue()
 	{
 		
 	}
@@ -227,6 +242,7 @@ class Framework extends Plugin
 	 *
 	 * @param       string   $source    Source path
 	 * @param       string   $dest      Destination path
+	 * @param	array    $data      Plugin metadata
 	 * @return      bool     Returns TRUE on success, FALSE on failure
 	 */
 	protected function copyPlugin( $source, $dest, $data )

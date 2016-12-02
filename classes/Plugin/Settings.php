@@ -1,4 +1,11 @@
 <?php
+/**
+ * Settings Class (Singleton)
+ * 
+ * @package 	Modern Wordpress Framework
+ * @author	Kevin Carwile
+ * @since	Nov 20, 2016
+ */
 
 namespace Modern\Wordpress\Plugin;
 
@@ -9,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 use \Modern\Wordpress\Pattern\Singleton;
 
 /**
- * Plugin Settings
+ * Provides base class to easily define new plugin settings.
  */
 abstract class Settings extends Singleton
 {
@@ -31,12 +38,12 @@ abstract class Settings extends Singleton
 	protected $settings;
 	
 	/**
-	 * @var	Plugin
+	 * @var	Plugin	Plugin Reference
 	 */
 	protected $plugin;
 	
 	/**
-	 * @var	string
+	 * @var	string	The database option_name used to store these settings
 	 */
 	protected $storageId;
 	
@@ -58,6 +65,7 @@ abstract class Settings extends Singleton
 	/**
 	 * Set Plugin
 	 *
+	 * @param	\Modern\Wordpress\Plugin	$plugin		The plugin associated with these settings
 	 * @return	void
 	 */
 	public function setPlugin( \Modern\Wordpress\Plugin $plugin )

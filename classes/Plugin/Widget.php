@@ -1,4 +1,11 @@
 <?php
+/**
+ * Widget Class (WP_Widget)
+ *
+ * @package 	Modern Wordpress Framework
+ * @author	Kevin Carwile
+ * @since	Nov 20, 2016
+ */
 
 namespace Modern\Wordpress\Plugin;
 
@@ -7,38 +14,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Plugin Widget
+ * Provides a base class to support rapid development of widgets.
  */
 abstract class Widget extends \WP_Widget
 {
 	/**
-	 * @var	string
+	 * @var	string	Plugin name
 	 */
 	public $name = 'Modern Wordpress Widget';
 	
 	/**
-	 * @var	string
+	 * @var	string	Plugin description
 	 */
 	public $description = 'A modern wordpress widget';
 	
 	/**
-	 * @var string
+	 * @var string	HTML class to apply to widget
 	 */
 	public $classname;
 	
  	/**
-	 * @var	Plugin
+	 * @var	Plugin	The associated plugin
 	 */
 	protected static $plugin;
 		
 	/**
-	 * @var array
+	 * @var array	Settings cache
 	 */
 	public $settings = array();
 
 	/**
 	 * Set Plugin
 	 *
+	 * @param	\Modern\Wordpress\Plugin	$plugin		The plugin associated with these settings
 	 * @return	void
 	 */
 	public function setPlugin( \Modern\Wordpress\Plugin $plugin )
@@ -74,6 +82,13 @@ abstract class Widget extends \WP_Widget
 	
 	/**
 	 * Constructor
+	 *
+	 * @param	string		$id_base		Root ID for all widgets of this type
+	 * @param	string		$name			Name for this widget
+	 * @param	array		$widget_options		Option array passed to wp_register_sidebar_widget()
+	 * @param	array		$control_options	Option array passed to wp_register_widget_control()
+	 * @return	void
+	 * @see: https://developer.wordpress.org/reference/classes/wp_widget/
 	 */
 	public function __construct( $id_base=NULL, $name=NULL, $widget_options = array(), $control_options = array() )
 	{
@@ -101,7 +116,7 @@ abstract class Widget extends \WP_Widget
 	}
 	
 	/**
-	 * Widget Settings Form
+	 * Creates a settings form for the widget
 	 *
 	 * @param	array		$instance			The widget instance settings
 	 * @return	string
@@ -126,15 +141,16 @@ abstract class Widget extends \WP_Widget
 		}
 	}
 	
-    /**
-     * Echoes the widget content.
+	/**
+	 * Echoes the widget content.
 	 *
-     * @param 	array 	$args     	Display arguments including 'before_title', 'after_title', 'before_widget', and 'after_widget'.
-     * @param 	array 	$instance 	The settings for the particular instance of the widget.
-     */
-    public function widget( $args, $instance ) 
+	 * @param 	array 	$args     	Display arguments including 'before_title', 'after_title', 'before_widget', and 'after_widget'.
+	 * @param 	array 	$instance 	The settings for the particular instance of the widget.
+	 * @return	void
+	 */
+	public function widget( $args, $instance ) 
 	{
-        echo $this->getPlugin()->getTemplateContent( 'widget/layout/standard', array( 'args' => $args, 'title' => 'Modern Wordpress Widget', 'content' => 'Override the WP_Widget::widget() method in your widget class to output customized content.' ) );
-    }	
+		echo $this->getPlugin()->getTemplateContent( 'widget/layout/standard', array( 'args' => $args, 'title' => 'Modern Wordpress Widget', 'content' => 'Override the WP_Widget::widget() method in your widget class to output customized content.' ) );
+	}	
 	
 }

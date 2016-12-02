@@ -1,4 +1,11 @@
 <?php
+/**
+ * Annotation Class
+ *
+ * @package 	Modern Wordpress Framework
+ * @author	Kevin Carwile
+ * @since	Nov 20, 2016
+ */
 
 namespace Modern\Wordpress;
 
@@ -6,9 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
-
 /**
- * Annotation Base Class
+ * Provides placeholder methods for annotations.
  */
 abstract class Annotation
 {

@@ -1,4 +1,11 @@
 <?php
+/**
+ * WP CLI Command Class (WP_CLI_Command)
+ * 
+ * @package 	Modern Wordpress Framework
+ * @author	Kevin Carwile
+ * @since	Nov 20, 2016
+ */
 
 namespace Modern\Wordpress;
 
@@ -7,12 +14,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Implements example command.
+ * Implements commands that can be executed from the WP CLI.
  */
 class CLI extends \WP_CLI_Command {
 
 	/**
 	 * Creates a new boilerplate modern wordpress plugin.
+	 *
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
 	 *
 	 * ## OPTIONS
 	 *
@@ -139,6 +149,9 @@ class CLI extends \WP_CLI_Command {
 	
 	/**
 	 * Update the wordpress plugin boilerplate
+	 *
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
 	 *
 	 * ## OPTIONS
 	 *
