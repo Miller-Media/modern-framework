@@ -1,3 +1,5 @@
 vendor/*
 cache/*
 boilerplate
+phpdoc
+modern-wordpress.wiki
