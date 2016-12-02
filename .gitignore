@@ -1,5 +1,6 @@
 vendor/*
 cache/*
 boilerplate
-phpdoc
+docs
 modern-wordpress.wiki
+builddoc.bat
