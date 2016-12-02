@@ -3,8 +3,7 @@ Modern Wordpress Plugin Framework
 
 This "plugin" provides a modern foundation of object oriented design patterns and api abstractions that enable rapid development of new wordpress plugins.
 
-Documentation
-=============
+## Documentation
 
 - [Annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations)
 - [Framework API Doc](https://github.com/Miller-Media/modern-wordpress/wiki)
