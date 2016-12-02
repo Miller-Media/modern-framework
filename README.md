@@ -36,7 +36,7 @@ define( 'MODERN_WORDPRESS_DEV', TRUE );
 
 **Note**: If you begin by cloning this repository instead of installing the packaged version of this plugin, you will also need to install the composer dependencies manually after downloading. Do `composer install` on the command line from the plugin dir.
 
-### Creating A Plugin
+### Create A New Plugin
 Begin building your own new plugin from scratch by customizing the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate), or you can create a new modern wordpress plugin using [WP CLI](https://wp-cli.org/):
 ```
 $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip
@@ -44,5 +44,8 @@ $ wp mwp create-plugin "Awesome New Plugin" --vendor="My Company" --author="My N
 ```
 **Note**: By using the WP CLI to create your plugin, the boilerplate is automatically cloned, customized, and used as the skeleton for your new plugin!
 
+### Make It Do Something
+To begin programming the functionality of your new plugin, start adding methods to the *`./your-plugin-dir/classes/Plugin.php`* class file, taking care to [hook them into wordpress using @annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations).
 
+Thats it. Have fun!
 
