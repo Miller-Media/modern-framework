@@ -35,7 +35,10 @@ $ wp plugin install modern-wordpress --activate
 
 **1. b)** Download/clone this repository
 
-**Note**: When you begin by cloning this repository instead of installing the packaged version of this plugin, you will also need to install the composer dependencies manually after downloading. Do `composer install` on the command line from the plugin dir.
+**Note**: When you begin by cloning this repository instead of installing the packaged version of this plugin, you will also need to install the composer dependencies manually after downloading. These instructions assume you have the following already on your system:
+* [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+* [composer](https://getcomposer.org/doc/00-intro.md)
+* [WP CLI](https://wp-cli.org/docs/installing/)
 
 ```
 $ cd wp-content/plugins
