@@ -58,7 +58,7 @@ You can get away without having git installed by [downloading the archive](https
 
 2) Enable developer mode 
 
-> To enable developer mode: Create or edit the **dev_config.php** file in the *modern-wordpress/* directory and add:
+> To enable developer mode: Create or edit the **dev_config.php** file in the *wp-content/plugins/modern-wordpress/* directory and add:
 ```
 define( 'MODERN_WORDPRESS_DEV', TRUE );
 ```
