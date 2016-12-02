@@ -23,6 +23,7 @@ The objective of this framework is to ease the development of new wordpress plug
 * Eliminate the need to manually 'include' any php files.
 * Keep all html templates seperate from functional code.
 * Keep all plugin assets in an organized heirarchy.
+* Have fun!
 
 ## How to get started:
 
@@ -41,7 +42,7 @@ WP Admin > Plugins > Add New > Search for "Modern Wordpress" > Install
 
 1.b) **Download/clone this repository**
 
-**Note**: When you begin by cloning this repository instead of installing the packaged version of this plugin, you will also need to install the composer dependencies manually after downloading. These instructions assume you have the following already on your system:
+**Note**: When you begin by cloning this repository rather than installing the packaged version of the plugin, you will also need to install the composer dependencies manually after downloading. These instructions assume you already have the following programs on your system:
 * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * [composer](https://getcomposer.org/doc/00-intro.md)
 * [WP CLI](https://wp-cli.org/docs/installing/)
