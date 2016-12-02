@@ -1,0 +1,14 @@
+<phpdoc>
+  <title>Modern Wordpress Plugin Framework</title>
+  <parser>
+    <target>docs</target>
+  </parser>
+  <transformer>
+    <target>docs</target>
+  </transformer>
+  <files>
+    <file>classes/*.php</file>
+    <file>classes/Plugin/*.php</file>
+    <file>classes/Pattern/*.php</file>
+  </files>
+</phpdoc>
