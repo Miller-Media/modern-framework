@@ -26,15 +26,31 @@ The objective of this framework is to ease the development of new wordpress plug
 
 ## How to get started:
 
-1. Install the packaged plugin **-or-** download/clone this repository
-2. Enable developer mode 
+**1. a)** Install the packaged plugin (not currently available)
 
-> To enable developer mode: Create or edit the **dev_config.php** file in the *modern-wordpress/* directory and add:
-> ```
-define( 'MODERN_WORDPRESS_DEV', TRUE );
+```
+$ wp plugin install modern-wordpress --activate
+```
+**OR**
+
+**1. b)** Download/clone this repository
+
+**Note**: When you begin by cloning this repository instead of installing the packaged version of this plugin, you will also need to install the composer dependencies manually after downloading. Do `composer install` on the command line from the plugin dir.
+
+```
+$ cd wp-content/plugins
+$ git clone https://github.com/Miller-Media/modern-wordpress
+$ cd modern-wordpress
+$ composer install
+$ wp plugin activate modern-wordpress
 ```
 
-**Note**: If you begin by cloning this repository instead of installing the packaged version of this plugin, you will also need to install the composer dependencies manually after downloading. Do `composer install` on the command line from the plugin dir.
+2) Enable developer mode 
+
+> To enable developer mode: Create or edit the **dev_config.php** file in the *modern-wordpress/* directory and add:
+```
+define( 'MODERN_WORDPRESS_DEV', TRUE );
+```
 
 ### Create A New Plugin
 Begin building your own new plugin from scratch by customizing the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate), or you can create a new modern wordpress plugin using [WP CLI](https://wp-cli.org/):
