@@ -39,7 +39,7 @@ class Framework extends Plugin
 	protected function __construct()
 	{
 		/* Load Annotation Reader */
-		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../cache", defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV );
+		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../annotations/cache", defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV );
 		
 		/* Register WP CLI */
 		if ( defined( '\WP_CLI' ) && \WP_CLI ) {
@@ -308,6 +308,6 @@ class Framework extends Plugin
 		// Clean up
 		$dir->close();
 		return true;
-	} 	
+	}
 	
 }
