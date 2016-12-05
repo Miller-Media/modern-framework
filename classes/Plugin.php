@@ -74,7 +74,7 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Plugin has been updated
+	 * Run updates when new plugin version is uploaded
 	 *
 	 * @return	void
 	 */
@@ -108,24 +108,20 @@ abstract class Plugin extends Singleton
 	 */
 	public function uninstall()
 	{
-		$schema = $this->data( 'schema' );
-		if ( is_array( $schema ) )
+		$install = $this->data( 'install-meta' ) ?: array();
+		
+		if ( is_array( $install[ 'schema' ] ) )
 		{
-			if ( is_array( $schema[ 'tables' ] ) )
+			if ( is_array( $install[ 'schema' ][ 'tables' ] ) )
 			{
-				global $wpdb;
-				foreach( $schema[ 'tables' ] as $table_name => $table )
+				foreach( $install[ 'schema' ][ 'tables' ] as $table )
 				{
-					if ( $table_name )
-					{
-						$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}{$table_name}" );
-					}
+					$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}{$table['name']}" );
 				}
 			}
 		}
 		
-		/* Reset current plugin data */
-		$this->setData( 'current', NULL );
+		$this->setData( 'install-meta', NULL );
 	}
 	
 	/**
