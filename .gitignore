@@ -1,5 +1,5 @@
 vendor/*
-cache/*
+annotations/cache
 boilerplate
 docs
 modern-wordpress.wiki
