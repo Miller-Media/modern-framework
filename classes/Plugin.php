@@ -56,6 +56,79 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+	 * Check if plugin update is required
+	 *
+	 * @Wordpress\Action( for="init" )
+	 *
+	 * @return	void
+	 */
+	public function checkIfUpdateNeeded()
+	{
+		$build = $this->data( 'build-meta' );
+		$install = $this->data( 'install-meta' );
+		
+		if ( ! is_array( $installed ) or version_compare( $install[ 'version' ], $build[ 'version' ] ) == -1 )
+		{
+			$this->update();
+		}
+	}
+	
+	/**
+	 * Plugin has been updated
+	 *
+	 * @return	void
+	 */
+	public function update()
+	{
+		$build = $this->data( 'build-meta' );
+		$install = $this->data( 'install-meta' ) ?: array();
+		
+		if ( is_array( $build[ 'schema' ] ) )
+		{
+			if ( is_array( $build[ 'schema' ][ 'tables' ] ) )
+			{
+				$dbHelper = \Modern\Wordpress\DbHelper::instance()
+				foreach( $schema[ 'tables' ] as $table )
+				{
+					$tableSql = $dbHelper->buildTableSQL( $table );
+					dbDelta( $tableSql );
+				}
+			}
+		}
+		
+		$install[ 'schema' ] = $build[ 'schema' ];
+		$install[ 'version' ] = $build[ 'version' ];
+		$this->setData( 'install-meta', $install );
+	}
+	
+	/**
+	 * Uninstall routine
+	 *
+	 * @return	void
+	 */
+	public function uninstall()
+	{
+		$schema = $this->data( 'schema' );
+		if ( is_array( $schema ) )
+		{
+			if ( is_array( $schema[ 'tables' ] ) )
+			{
+				global $wpdb;
+				foreach( $schema[ 'tables' ] as $table_name => $table )
+				{
+					if ( $table_name )
+					{
+						$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}{$table_name}" );
+					}
+				}
+			}
+		}
+		
+		/* Reset current plugin data */
+		$this->setData( 'current', NULL );
+	}
+	
+	/**
 	 * Add a settings store to the plugin
 	 *
 	 * @api
@@ -154,9 +227,10 @@ abstract class Plugin extends Singleton
 	 * @api
 	 *
 	 * @param	string		$key		The data key to load
+	 * @param	string|NULL	$subdir		The subdirectory to load the data key from or NULL for base /data dir
 	 * @return	mixed|NULL
 	 */
-	public function getData( $key )
+	public function getData( $key, $subdir=NULL )
 	{
 		if ( file_exists( $this->fileUrl( 'data/' . $key . '.php' ) ) )
 		{
@@ -174,9 +248,10 @@ abstract class Plugin extends Singleton
 	 * Alias for getData()
 	 *
 	 * @param	string		$key		The data key to load
+	 * @param	string|NULL	$subdir		The subdirectory to load the data key from or NULL for base /data dir
 	 * @return	mixed|NULL
 	 */ 
-	public function data( $key )
+	public function data( $key, $subdir=NULL )
 	{
 		return $this->getData( $key );
 	}
@@ -188,10 +263,21 @@ abstract class Plugin extends Singleton
 	 *
 	 * @param	string		$key		The data key to save
 	 * @param	mixed		$data		The data to save
+	 * @param	string|NULL	$subdir		The subdirectory to save the data to or NULL for base /data dir
 	 * @return	mixed|NULL
+	 * @throws 	\ErrorException
 	 */
-	public function setData( $key, $data )
+	public function setData( $key, $data, $subdir=NULL )
 	{
+		$data_dir = $this->getPath() . '/data' . ( $subdir !== NULL ? '/' . $subdir : '' );
+		if ( ! is_dir( $data_dir ) )
+		{
+			if ( mkdir( $data_dir ) === FALSE )
+			{
+				throw new \ErrorException( 'Unable to create the plugin data directory.' );
+			}
+		}
+		
 		file_put_contents( $this->fileUrl( 'data/' . $key . '.php' ), "<?php\nreturn <<<'JSON'\n" . json_encode( $data, JSON_PRETTY_PRINT ) . "\nJSON;" );
 	}
 	
