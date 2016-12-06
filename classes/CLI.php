@@ -221,4 +221,52 @@ class CLI extends \WP_CLI_Command {
 		
 		\WP_CLI::success( 'Boilerplate successfully updated.' );
 	}
+	
+	/**
+	 * Add a new javascript module
+	 * 
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The slug of the modern wordpress plugin
+	 * 
+	 * <name>
+	 * : The name of the javascript module
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Update the boilerplate
+	 *     $ wp mwp add-js my-plugin testmodule
+	 *     Success: Javascript module added.
+	 *
+	 * @subcommand add-js
+	 * @when after_wp_load
+	 */
+	function createJavascriptModule( $args, $assoc )
+	{
+		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js' ) )
+		{
+			\WP_CLI::error( "The boilerplate plugin is not present.\nTry using: $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip" );
+		}
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js' ) )
+		{
+			\WP_CLI::error( 'Javascript directory is not valid: ' . WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js' );
+		}
+		
+		if ( file_exists( WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' ) )
+		{
+			\WP_CLI::error( "The javascript file already exists: " . WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' );
+		}
+		
+		if ( ! copy( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js', WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' ) )
+		{
+			\WP_CLI::error( 'Error copying file to destination: ' . WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' );
+		}
+		
+		\WP_CLI::success( 'Javascript module added.' );
+	}
 }
