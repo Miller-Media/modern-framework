@@ -87,7 +87,7 @@ abstract class Plugin extends Singleton
 		{
 			if ( is_array( $build[ 'schema' ][ 'tables' ] ) )
 			{
-				$dbHelper = \Modern\Wordpress\DbHelper::instance()
+				$dbHelper = \Modern\Wordpress\DbHelper::instance();
 				foreach( $schema[ 'tables' ] as $table )
 				{
 					$tableSql = $dbHelper->buildTableSQL( $table );
@@ -228,9 +228,9 @@ abstract class Plugin extends Singleton
 	 */
 	public function getData( $key, $subdir=NULL )
 	{
-		if ( file_exists( $this->fileUrl( 'data/' . $key . '.php' ) ) )
+		if ( file_exists( $this->getPath() . 'data/' . $key . '.php' ) )
 		{
-			$data = include $this->fileUrl( 'data/' . $key . '.php' );
+			$data = include $this->getPath() . 'data/' . $key . '.php';
 			if ( $data )
 			{
 				return json_decode( $data, TRUE );
@@ -274,7 +274,7 @@ abstract class Plugin extends Singleton
 			}
 		}
 		
-		file_put_contents( $this->fileUrl( 'data/' . $key . '.php' ), "<?php\nreturn <<<'JSON'\n" . json_encode( $data, JSON_PRETTY_PRINT ) . "\nJSON;" );
+		file_put_contents( $data_dir . '/' . $key . '.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $data, JSON_PRETTY_PRINT ) . "\nJSON;" );
 	}
 	
 	/**
