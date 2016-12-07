@@ -234,11 +234,11 @@ class CLI extends \WP_CLI_Command {
 	 * : The slug of the modern wordpress plugin
 	 * 
 	 * <name>
-	 * : The name of the javascript module
+	 * : The name of the javascript file (no extension)
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     # Update the boilerplate
+	 *     # Add a new javascript module
 	 *     $ wp mwp add-js my-plugin testmodule
 	 *     Success: Javascript module added.
 	 *
@@ -247,26 +247,95 @@ class CLI extends \WP_CLI_Command {
 	 */
 	function createJavascriptModule( $args, $assoc )
 	{
-		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js' ) )
-		{
-			\WP_CLI::error( "The boilerplate plugin is not present.\nTry using: $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip" );
-		}
+		$framework = \Modern\Wordpress\Framework::instance();
 		
-		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js' ) )
+		try
 		{
-			\WP_CLI::error( 'Javascript directory is not valid: ' . WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js' );
+			$framework->createJavascript( $args[0], $args[1] );
 		}
-		
-		if ( file_exists( WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' ) )
+		catch( \ErrorException $e )
 		{
-			\WP_CLI::error( "The javascript file already exists: " . WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' );
-		}
-		
-		if ( ! copy( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js', WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' ) )
-		{
-			\WP_CLI::error( 'Error copying file to destination: ' . WP_PLUGIN_DIR . '/' . $args[0] . '/assets/js/' . $args[1] . '.js' );
+			\WP_CLI::error( $e->getMessage() );
 		}
 		
 		\WP_CLI::success( 'Javascript module added.' );
 	}
+	
+	/**
+	 * Add a new stylesheet file
+	 * 
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The slug of the modern wordpress plugin
+	 * 
+	 * <name>
+	 * : The name of the stylesheet file (no extension)
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Add a new css stylesheet
+	 *     $ wp mwp add-css my-plugin newstyle
+	 *     Success: Stylesheet added.
+	 *
+	 * @subcommand add-css
+	 * @when after_wp_load
+	 */
+	function createStylesheetFile( $args, $assoc )
+	{
+		$framework = \Modern\Wordpress\Framework::instance();
+		
+		try
+		{
+			$framework->createStylesheet( $args[0], $args[1] );
+		}
+		catch( \ErrorException $e )
+		{
+			\WP_CLI::error( $e->getMessage() );
+		}
+		
+		\WP_CLI::success( 'Stylesheet added.' );
+	}
+	
+	/**
+	 * Add a new php class file
+	 * 
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The slug of the modern wordpress plugin
+	 * 
+	 * <name>
+	 * : The name of the new class (can be namespaced)
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Add a new php class file
+	 *     $ wp mwp add-class my-plugin Plugin\NewSettings
+	 *     Success: Class added.
+	 *
+	 * @subcommand add-class
+	 * @when after_wp_load
+	 */
+	function createClassFile( $args, $assoc )
+	{
+		$framework = \Modern\Wordpress\Framework::instance();
+		
+		try
+		{
+			$framework->createClass( $args[0], $args[1] );
+		}
+		catch( \ErrorException $e )
+		{
+			\WP_CLI::error( $e->getMessage() );
+		}
+		
+		\WP_CLI::success( 'Class added.' );
+	}	
 }
