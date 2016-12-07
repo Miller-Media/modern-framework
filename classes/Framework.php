@@ -207,12 +207,7 @@ class Framework extends Plugin
 		$plugin_vendor = $data[ 'vendor' ];
 		$plugin_namespace = $data[ 'namespace' ];
 		
-		if ( ! isset( $data[ 'date' ] ) )
-		{
-			$data[ 'date' ] = date( 'M j, Y' );
-		}
-		
-		if ( ! $data[ 'slug' ] )      { throw new \InvalidArgumentException( 'Invalid plugin directory.' ); }
+		if ( ! $data[ 'slug' ] )      { throw new \InvalidArgumentException( 'Invalid plugin slug.' ); }
 		if ( ! $data[ 'name' ] )      { throw new \InvalidArgumentException( 'No plugin name provided.' );  }
 		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided.' );  }
 		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided.' );    }
@@ -233,6 +228,14 @@ class Framework extends Plugin
 		$fh = fopen( WP_PLUGIN_DIR . '/' . $plugin_dir . '/' . $data[ 'slug' ] . '.php', 'w+' );
 		fwrite( $fh, "<?php\n\nrequire_once 'plugin.php';" );
 		fclose( $fh );
+		
+		/* Include autoloader so we can instantiate the plugin */
+		include_once WP_PLUGIN_DIR . '/' . $plugin_dir . '/vendor/autoload.php';
+		
+		$pluginClass = $plugin_namespace . '\Plugin';
+		$plugin = $pluginClass::instance();
+		$plugin->setPath( WP_PLUGIN_DIR . '/' . $plugin_dir );
+		$plugin->setData( 'plugin-meta', $data );
 		
 		return $this;
 	}
@@ -255,25 +258,9 @@ class Framework extends Plugin
 				copy( $source, $dest );
 				
 				$pathinfo = pathinfo( $dest );
-				if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json' ) ) )
+				if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) )
 				{
-					$file_contents = file_get_contents( $dest );
-					$file_contents = strtr( $file_contents, array
-					( 
-						'b7f88d4569eea7ab0b52f6a8c0e0e90c'  => md5( $data[ 'dir' ] ),
-						'MillerMedia\Boilerplate'           => $data[ 'namespace' ],
-						'MillerMedia\\\Boilerplate'         => str_replace( '\\', '\\\\', $data[ 'namespace' ] ),
-						'millermedia/boilerplate'           => strtolower( str_replace( '\\', '/', $data[ 'namespace' ] ) ),
-						'BoilerplatePlugin'                 => str_replace( '\\', '', $data[ 'namespace'] ) . 'Plugin',
-						'{vendor_name}'                     => $data[ 'vendor' ],
-						'{plugin_name}'                     => $data[ 'name' ],
-						'{plugin_description}'              => $data[ 'description' ],
-						'{plugin_dir}'                      => $data[ 'dir' ],
-						'{plugin_author}'                   => $data[ 'author' ],
-						'{plugin_author_url}'               => $data[ 'author_url' ],
-						'{date_time}'                       => $data[ 'date' ],						
-					) );
-					file_put_contents( $dest, $file_contents );
+					file_put_contents( $dest, $this->replaceMetaContents( file_get_contents( $dest ), $data ) );
 				}
 				
 				return true;
@@ -308,6 +295,212 @@ class Framework extends Plugin
 		// Clean up
 		$dir->close();
 		return true;
+	}
+	
+	/**
+	 * Create new javascript module
+	 *
+	 * @param	
+	 * @return	void
+	 * @throws	\ErrorException
+	 */
+	public function createJavascript( $slug, $name )
+	{
+		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js' ) )
+		{
+			throw new \ErrorException( "The boilerplate plugin is not present.\nTry using: $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip" );
+		}
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/assets/js' ) )
+		{
+			throw new \ErrorException( 'Javascript directory is not valid: ' . $slug . '/assets/js' );
+		}
+		
+		$javascript_file = WP_PLUGIN_DIR . '/' . $slug . '/assets/js/' . $name . '.js';
+		
+		if ( file_exists( $javascript_file ) )
+		{
+			throw new \ErrorException( "The javascript file already exists: " . $slug . '/assets/js/' . $name . '.js' );
+		}
+		
+		if ( ! copy( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js', $javascript_file ) )
+		{
+			throw new \ErrorException( 'Error copying file to destination: ' . $slug . '/assets/js/' . $name . '.js' );
+		}
+		
+		$plugin_data_file = WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php';
+		
+		if ( file_exists( $plugin_data_file ) )
+		{
+			$plugin_data = json_decode( include $plugin_data_file, TRUE );
+			file_put_contents( $javascript_file, $this->replaceMetaContents( file_get_contents( $javascript_file ), $plugin_data ) );
+		}	
+	}
+	
+	/**
+	 * Create new stylesheet
+	 *
+	 * @param	
+	 * @return	void
+	 * @throws	\ErrorException
+	 */
+	public function createStylesheet( $slug, $name )
+	{
+		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/css/style.css' ) )
+		{
+			throw new \ErrorException( "The boilerplate plugin is not present.\nTry using: $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip" );
+		}
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/assets/css' ) )
+		{
+			throw new \ErrorException( 'Stylesheet directory is not valid: ' . $slug . '/assets/css' );
+		}
+		
+		$stylesheet_file = WP_PLUGIN_DIR . '/' . $slug . '/assets/css/' . $name . '.css';
+		
+		if ( file_exists( $stylesheet_file ) )
+		{
+			throw new \ErrorException( "The stylesheet file already exists: " . $slug . '/assets/css/' . $name . '.css' );
+		}
+		
+		if ( ! copy( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/css/style.css', $stylesheet_file ) )
+		{
+			throw new \ErrorException( 'Error copying file to destination: ' . $slug . '/assets/css/' . $name . '.css' );
+		}
+		
+		$plugin_data_file = WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php';
+		
+		if ( file_exists( $plugin_data_file ) )
+		{
+			$plugin_data = json_decode( include $plugin_data_file, TRUE );
+			file_put_contents( $stylesheet_file, $this->replaceMetaContents( file_get_contents( $stylesheet_file ), $plugin_data ) );
+		}	
+	}
+
+	/**
+	 * Create new php class
+	 *
+	 * @param	
+	 * @return	void
+	 * @throws	\ErrorException
+	 */
+	public function createClass( $slug, $name )
+	{
+		$plugin_data_file = WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php';
+		
+		if ( ! file_exists( $plugin_data_file ) )
+		{
+			throw new \ErrorException( "No metadata available for this plugin. Namespace unknown." );
+		}
+		
+		$plugin_data = json_decode( include $plugin_data_file, TRUE );
+
+		if ( ! isset( $plugin_data[ 'namespace' ] ) )
+		{
+			throw new \ErrorException( "Namespace not defined in the plugin metadata." );
+		}
+		
+		$namespace = $plugin_data[ 'namespace' ];
+		$name = trim( str_replace( $namespace, '', $name ), '\\' );
+		$parts = explode( '\\', $name );
+		$classname = array_pop( $parts );
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/classes' ) )
+		{
+			throw new \ErrorException( 'Class directory is not valid: ' . 'plugins/' . $slug . '/classes' );
+		}
+		
+		$basedir = WP_PLUGIN_DIR . '/' . $slug . '/classes';
+		foreach( $parts as $dir )
+		{
+			$basedir .= '/' . $dir;
+			if ( ! is_dir( $basedir ) )
+			{
+				mkdir( $basedir );
+			}
+			$namespace .= '\\' . $dir;
+		}
+		
+		$class_file = $basedir . '/' . $classname . '.php';
+		
+		if ( file_exists( $class_file ) )
+		{
+			throw new \ErrorException( "The class file already exists: " . str_replace( WP_PLUGIN_DIR, '', $class_file ) );
+		}
+		
+		$class_contents = <<<CLASS
+<?php
+/**
+ * Plugin Class File
+ *
+ * @vendor:  {vendor_name}
+ * @package: {plugin_name}
+ * @author:  {plugin_author}
+ * @link:    {plugin_author_url}
+ * @since:   {date_time}
+ */
+namespace $namespace;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Access denied.' );
+}
+
+/**
+ * $classname Class
+ */
+class $classname
+{
+	/**
+	 * Constructor
+	 *
+	 * @return	void
+	 */
+	public function __construct()
+	{
+	
+	}
+}
+
+CLASS;
+		file_put_contents( $class_file, $this->replaceMetaContents( $class_contents, $plugin_data ) );
+	
+	}
+
+	/**
+	 * Replace meta contents
+	 *
+	 * @param	string		$source		The source code to replace meta contents in
+	 * @param	array		$data		Plugin meta data
+	 * @return	string
+	 */
+	public function replaceMetaContents( $source, $data )
+	{
+		$data = array_merge( array( 
+			'name' => '',
+			'description' => '',
+			'namespace' => '',
+			'slug' => '',
+			'vendor' => '',
+			'author' => '',
+			'author_url' => '',
+			'date' => date( 'F j, Y' ),
+			), $data );
+			
+		return strtr( $source, array
+		( 
+			'b7f88d4569eea7ab0b52f6a8c0e0e90c'  => md5( $data[ 'slug' ] ),
+			'MillerMedia\Boilerplate'           => $data[ 'namespace' ],
+			'MillerMedia\\\Boilerplate'         => str_replace( '\\', '\\\\', $data[ 'namespace' ] ),
+			'millermedia/boilerplate'           => strtolower( str_replace( '\\', '/', $data[ 'namespace' ] ) ),
+			'BoilerplatePlugin'                 => str_replace( '\\', '', $data[ 'namespace'] ) . 'Plugin',
+			'{vendor_name}'                     => $data[ 'vendor' ],
+			'{plugin_name}'                     => $data[ 'name' ],
+			'{plugin_description}'              => $data[ 'description' ],
+			'{plugin_dir}'                      => $data[ 'slug' ],
+			'{plugin_author}'                   => $data[ 'author' ],
+			'{plugin_author_url}'               => $data[ 'author_url' ],
+			'{date_time}'                       => $data[ 'date' ],						
+		) );
 	}
 	
 }
