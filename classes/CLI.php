@@ -234,7 +234,7 @@ class CLI extends \WP_CLI_Command {
 	 * : The slug of the modern wordpress plugin
 	 * 
 	 * <name>
-	 * : The name of the javascript file (no extension)
+	 * : The name of the javascript file
 	 *
 	 * ## EXAMPLES
 	 *
@@ -273,7 +273,7 @@ class CLI extends \WP_CLI_Command {
 	 * : The slug of the modern wordpress plugin
 	 * 
 	 * <name>
-	 * : The name of the stylesheet file (no extension)
+	 * : The name of the stylesheet file
 	 *
 	 * ## EXAMPLES
 	 *

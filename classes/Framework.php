@@ -316,6 +316,11 @@ class Framework extends Plugin
 			throw new \ErrorException( 'Javascript directory is not valid: ' . $slug . '/assets/js' );
 		}
 		
+		if ( substr( $name, -3 ) === '.js' )
+		{
+			$name = substr( $name, 0, strlen( $name ) - 3 );
+		}
+		
 		$javascript_file = WP_PLUGIN_DIR . '/' . $slug . '/assets/js/' . $name . '.js';
 		
 		if ( file_exists( $javascript_file ) )
@@ -354,6 +359,11 @@ class Framework extends Plugin
 		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/assets/css' ) )
 		{
 			throw new \ErrorException( 'Stylesheet directory is not valid: ' . $slug . '/assets/css' );
+		}
+		
+		if ( substr( $name, -4 ) === '.css' )
+		{
+			$name = substr( $name, 0, strlen( $name ) - 4 );
 		}
 		
 		$stylesheet_file = WP_PLUGIN_DIR . '/' . $slug . '/assets/css/' . $name . '.css';
