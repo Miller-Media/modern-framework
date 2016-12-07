@@ -274,7 +274,7 @@ abstract class Plugin extends Singleton
 			}
 		}
 		
-		file_put_contents( $data_dir . '/' . $key . '.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $data, JSON_PRETTY_PRINT ) . "\nJSON;" );
+		file_put_contents( $data_dir . '/' . $key . '.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 	}
 	
 	/**
