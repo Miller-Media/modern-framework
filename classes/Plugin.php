@@ -278,17 +278,29 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+	 * Get the plugin slug (dirname)
+	 *
+	 * @api
+	 *
+	 * @return	string
+	 */
+	public function pluginSlug()
+	{
+		return dirname( $this->getPath() . '/dir' );
+	}
+	
+	/**
 	 * Get a plugin file path
 	 *
 	 * @api
 	 *
-	 * @param	string				$pathfile		The file path and name
-	 * @param	string|FALSE		$type			The file type or FALSE if file type is included in $pathfile
+	 * @param	string				$pathfile		The file path and name relative to the plugin path
+	 * @param	string|FALSE		$type			The file type or NULL if file type is included in $pathfile
 	 * @return	string
 	 */
-	public function pluginFile( $pathfile, $type='php' )
+	public function pluginFile( $pathfile, $type=NULL )
 	{
-		return $this->path . '/' . $pathfile . ( $type ? ( '.' . $type ) : '' );
+		return $this->getPath() . '/' . $pathfile . ( $type ? ( '.' . $type ) : '' );
 	}
 	
 	/**
@@ -301,7 +313,7 @@ abstract class Plugin extends Singleton
 	 */
 	public function fileUrl( $filename )
 	{
-		return plugins_url( $filename, $this->path . '/dummydir' );
+		return plugins_url( $filename, $this->getPath() . '/dir' );
 	}
 	
 	/**
@@ -362,7 +374,7 @@ abstract class Plugin extends Singleton
 	 */
 	public function getTemplate( $template )
 	{
-		if ( $overridden_template = locate_template( $template . '.php' ) ) 
+		if ( $overridden_template = locate_template( $this->pluginSlug() . '/' . $template . '.php' ) ) 
 		{
 			// locate_template() returns path to file
 			// if either the child theme or the parent theme have overridden the template
@@ -377,10 +389,10 @@ abstract class Plugin extends Singleton
 			
 			if ( file_exists( $templateFile ) )
 			{			
-				return $this->pluginFile( 'templates/' . $template );
+				return $this->pluginFile( 'templates/' . $template, 'php' );
 			}
 			
-			return \Modern\Wordpress\Framework::instance()->pluginFile( 'templates/' . $template );
+			return \Modern\Wordpress\Framework::instance()->pluginFile( 'templates/' . $template, 'php' );
 		}
 	}
 
