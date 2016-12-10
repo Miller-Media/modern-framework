@@ -6,7 +6,8 @@ This "plugin" provides a modern foundation of object oriented design patterns an
 ## Documentation
 
 - [Annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations)
-- [Framework API Doc](https://github.com/Miller-Media/modern-wordpress/wiki)
+- [Framework Classes](https://github.com/Miller-Media/modern-wordpress/wiki)
+- [WP CLI](https://github.com/Miller-Media/modern-wordpress/wiki/WP-CLI)
 
 ## Main features
 
