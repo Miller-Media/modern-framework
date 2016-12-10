@@ -461,18 +461,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 class $classname
 {
 	/**
-	 * @var 	\MillerMedia\Boilerplate\Plugin		Provides access to the plugin instance
+	 * @var 	\Modern\Wordpress\Plugin		Provides access to the plugin instance
 	 */
 	protected $plugin;
-	 
+	
+	/**
+ 	 * Get plugin
+	 *
+	 * @return	\Modern\Wordpress\Plugin
+	 */
+	public function getPlugin()
+	{
+		return $this->plugin;
+	}
+	
 	/**
 	 * Constructor
 	 *
+	 * @param	\Modern\Wordpress\Plugin	$plugin			The plugin to associate this class with, or NULL to auto-associate
 	 * @return	void
 	 */
-	public function __construct()
+	public function __construct( \Modern\Wordpress\Plugin $plugin=NULL )
 	{
-		$this->plugin = \MillerMedia\Boilerplate\Plugin::instance();
+		$this->plugin = $plugin ?: \MillerMedia\Boilerplate\Plugin::instance();
 	}
 }
 
