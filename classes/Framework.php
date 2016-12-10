@@ -461,13 +461,18 @@ if ( ! defined( 'ABSPATH' ) ) {
 class $classname
 {
 	/**
+	 * @var 	\MillerMedia\Boilerplate\Plugin		Provides access to the plugin instance
+	 */
+	protected $plugin;
+	 
+	/**
 	 * Constructor
 	 *
 	 * @return	void
 	 */
 	public function __construct()
 	{
-	
+		$this->plugin = \MillerMedia\Boilerplate\Plugin::instance();
 	}
 }
 
