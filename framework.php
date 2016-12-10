@@ -3,7 +3,7 @@
  * Plugin Name: Modern Wordpress Plugin Framework
  * Version: 0.1.0
  * Provides: lib-modern-wordpresss
- * Description: Provides a modern framework to power modern wordpress plugins.
+ * Description: Provides an object oriented development framework for modern wordpress plugins.
  * Author: Miller Media
  * Author URI: http://www.miller-media.com/
  * License: GPL2 or later
@@ -18,10 +18,14 @@ use Doctrine\Common\Annotations\AnnotationRegistry;
 /* Load Only Once */
 if ( ! class_exists( 'ModernWordpressFramework' ) )
 {
+
 	/* Include packaged autoloader if present */
 	if ( file_exists( __DIR__ . '/vendor/autoload.php' ) ) {
 		require_once 'vendor/autoload.php';
 	}
+	
+	/* Include global functions */
+	require_once 'includes/globals.php';
 
 	/* Optional config file (for development overrides) */
 	if ( file_exists( __DIR__ . '/dev_config.php' ) ) {

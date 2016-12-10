@@ -33,7 +33,7 @@ class Action extends \Modern\Wordpress\Annotation
 	 */
 	public function applyToMethod( $instance, $method, $vars )
 	{
-		add_action( $this->for, array( $instance, $method->name ), $this->priority, $this->args );
+		mwp_add_action( $this->for, array( $instance, $method->name ), $this->priority, $this->args );
 	}	
 	
 }
