@@ -385,11 +385,11 @@ abstract class Plugin extends Singleton
 			// If neither the child nor parent theme have overridden the template,
 			// we load the template from the 'templates' directory of this plugin,
 			// or alternatively fall back to the modern wordpress framework template
-			$templateFile = $this->pluginFile( 'templates/' . $template );
+			$templateFile = $this->pluginFile( 'templates/' . $template, 'php' );
 			
 			if ( file_exists( $templateFile ) )
 			{			
-				return $this->pluginFile( 'templates/' . $template, 'php' );
+				return $templateFile;
 			}
 			
 			return \Modern\Wordpress\Framework::instance()->pluginFile( 'templates/' . $template, 'php' );
@@ -411,7 +411,12 @@ abstract class Plugin extends Singleton
 		
 		if ( ! file_exists( $templateFile ) )
 		{
-			return NULL;
+			/* Standardize path and make safe for output */
+			$missingFile = str_replace( '\\', '/', $templateFile );
+			$missingFile = str_replace( str_replace( '\\', '/', WP_PLUGIN_DIR ), '', $missingFile );
+			$missingFile = str_replace( '/modern-wordpress', '', $missingFile );
+			
+			return "[missing template file: {$missingFile}]";
 		}
 		
 		if ( is_array( $vars ) )
