@@ -126,6 +126,7 @@ class CLI extends \WP_CLI_Command {
 		
 		try
 		{
+			\WP_CLI::line( 'Creating plugin...' );
 			$framework->createPlugin( $assoc );
 		}
 		catch( \Exception $e )
@@ -185,6 +186,7 @@ class CLI extends \WP_CLI_Command {
 		ob_start();
 		
 		\WP_CLI::line( 'Downloading package...' );
+		
 		/*
 		 * Download the package (Note, This just returns the filename
 		 * of the file if the package is a local file)
@@ -239,8 +241,8 @@ class CLI extends \WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Add a new javascript module
-	 *     $ wp mwp add-js my-plugin testmodule
-	 *     Success: Javascript module added.
+	 *     $ wp mwp add-js my-plugin testmodule.js
+	 *     Success: Javascript module added successfully.
 	 *
 	 * @subcommand add-js
 	 * @when after_wp_load
@@ -251,6 +253,7 @@ class CLI extends \WP_CLI_Command {
 		
 		try
 		{
+			\WP_CLI::line( 'Creating new javascript module...' );
 			$framework->createJavascript( $args[0], $args[1] );
 		}
 		catch( \ErrorException $e )
@@ -258,7 +261,7 @@ class CLI extends \WP_CLI_Command {
 			\WP_CLI::error( $e->getMessage() );
 		}
 		
-		\WP_CLI::success( 'Javascript module added.' );
+		\WP_CLI::success( 'Javascript module added successfully.' );
 	}
 	
 	/**
@@ -278,8 +281,8 @@ class CLI extends \WP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Add a new css stylesheet
-	 *     $ wp mwp add-css my-plugin newstyle
-	 *     Success: Stylesheet added.
+	 *     $ wp mwp add-css my-plugin newstyle.css
+	 *     Success: Stylesheet added successfully.
 	 *
 	 * @subcommand add-css
 	 * @when after_wp_load
@@ -290,6 +293,7 @@ class CLI extends \WP_CLI_Command {
 		
 		try
 		{
+			\WP_CLI::line( 'Creating new css stylesheet...' );
 			$framework->createStylesheet( $args[0], $args[1] );
 		}
 		catch( \ErrorException $e )
@@ -297,7 +301,7 @@ class CLI extends \WP_CLI_Command {
 			\WP_CLI::error( $e->getMessage() );
 		}
 		
-		\WP_CLI::success( 'Stylesheet added.' );
+		\WP_CLI::success( 'Stylesheet added successfully.' );
 	}
 	
 	/**
@@ -318,7 +322,7 @@ class CLI extends \WP_CLI_Command {
 	 *
 	 *     # Add a new php class file
 	 *     $ wp mwp add-class my-plugin Plugin\NewSettings
-	 *     Success: Class added.
+	 *     Success: Class added successfully.
 	 *
 	 * @subcommand add-class
 	 * @when after_wp_load
@@ -329,6 +333,7 @@ class CLI extends \WP_CLI_Command {
 		
 		try
 		{
+			\WP_CLI::line( 'Creating new plugin class file...' );
 			$framework->createClass( $args[0], $args[1] );
 		}
 		catch( \ErrorException $e )
@@ -336,6 +341,6 @@ class CLI extends \WP_CLI_Command {
 			\WP_CLI::error( $e->getMessage() );
 		}
 		
-		\WP_CLI::success( 'Class added.' );
+		\WP_CLI::success( 'Class added sucessfully.' );
 	}	
 }
