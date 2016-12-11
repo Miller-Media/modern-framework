@@ -471,13 +471,13 @@ class CLI extends \WP_CLI_Command {
 	 * <slug>
 	 * : The slug of the modern wordpress plugin
 	 * 
-	 * [--version=<version>]
-	 * : The new plugin version
+	 * [--version-update=<version>]
+	 * : The new plugin version can be set explicitly, or auto incremented by using =(major, minor, point, patch)
 	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Build a new plugin package for release
-	 *     $ wp mwp build-plugin my-plugin --version=patch
+	 *     $ wp mwp build-plugin my-plugin --version-update=point
 	 *     Success: Plugin package successfully built.
 	 *
 	 * @subcommand build-plugin
@@ -525,28 +525,33 @@ class CLI extends \WP_CLI_Command {
 			}
 		}
 		
-		if ( isset( $assoc[ 'version' ] ) and $assoc[ 'version' ] )
+		if ( isset( $assoc[ 'version-update' ] ) and $assoc[ 'version-update' ] )
 		{
 			$version_parts = explode( '.', $plugin_version );
-			switch( $assoc[ 'version' ] )
+			switch( $assoc[ 'version-update' ] )
 			{
 				case 'major':
 					$version_parts[0]++;
-					$plugin_version = implode( '.', $version_parts );
+					$plugin_version = $version_parts[0] . '.0.0';
 					break;
 					
 				case 'minor':
 					$version_parts[1]++;
-					$plugin_version = implode( '.', $version_parts );
+					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.0';
 					break;
 					
-				case 'patch':
+				case 'point':
 					$version_parts[2]++;
-					$plugin_version = implode( '.', $version_parts );
+					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2];
 					break;
-					
+				
+				case 'patch':
+					$version_parts[3]++;
+					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2] . '.' . $version_parts[3];
+					break;
+				
 				default:
-					$plugin_version = $assoc[ 'version' ];
+					$plugin_version = $assoc[ 'version-update' ];
 			}
 		}
 	
@@ -592,7 +597,7 @@ class CLI extends \WP_CLI_Command {
 			$dir->close();
 		};
 		
-		\WP_CLI::line( 'Building package...' );
+		\WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
 		$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
 		$zip->close();
 		
