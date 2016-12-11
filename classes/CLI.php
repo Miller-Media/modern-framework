@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Implements commands that can be executed from the WP CLI.
+ * Modern wordpress framework commands that can be executed from the WP CLI.
  */
 class CLI extends \WP_CLI_Command {
 
@@ -59,7 +59,7 @@ class CLI extends \WP_CLI_Command {
 	 * @subcommand create-plugin
 	 * @when after_wp_load
 	 */
-	function createPlugin( $args, $assoc ) 
+	public function createPlugin( $args, $assoc ) 
 	{
 		$framework = \Modern\Wordpress\Framework::instance();
 		
@@ -168,7 +168,7 @@ class CLI extends \WP_CLI_Command {
 	 * @subcommand update-boilerplate
 	 * @when after_wp_load
 	 */
-	function updateBoilerplate( $args, $assoc ) 
+	public function updateBoilerplate( $args, $assoc ) 
 	{
 		include_once( ABSPATH . 'wp-admin/includes/file.php' ); // Internal Upgrader WP Class
 		include_once( ABSPATH . 'wp-admin/includes/class-wp-upgrader.php' ); // Internal Upgrader WP Class
@@ -247,7 +247,7 @@ class CLI extends \WP_CLI_Command {
 	 * @subcommand add-js
 	 * @when after_wp_load
 	 */
-	function createJavascriptModule( $args, $assoc )
+	public function createJavascriptModule( $args, $assoc )
 	{
 		$framework = \Modern\Wordpress\Framework::instance();
 		
@@ -287,7 +287,7 @@ class CLI extends \WP_CLI_Command {
 	 * @subcommand add-css
 	 * @when after_wp_load
 	 */
-	function createStylesheetFile( $args, $assoc )
+	public function createStylesheetFile( $args, $assoc )
 	{
 		$framework = \Modern\Wordpress\Framework::instance();
 		
@@ -327,7 +327,7 @@ class CLI extends \WP_CLI_Command {
 	 * @subcommand add-class
 	 * @when after_wp_load
 	 */
-	function createClassFile( $args, $assoc )
+	public function createClassFile( $args, $assoc )
 	{
 		$framework = \Modern\Wordpress\Framework::instance();
 		
@@ -342,5 +342,260 @@ class CLI extends \WP_CLI_Command {
 		}
 		
 		\WP_CLI::success( 'Class added sucessfully.' );
-	}	
+	}
+	
+	/**
+	 * Update plugin meta data contents
+	 * 
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The slug of the modern wordpress plugin
+	 * 
+	 * [--auto-update]
+	 * : Automatically update meta data by reading plugin header
+	 *
+	 * [--filename=<filename>]
+	 * : The plugin filename that contains the meta data
+	 *
+	 * [--<field>=<value>]
+	 * : The specific meta data to update
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Update the meta data in a plugin file
+	 *     $ wp mwp update-meta my-plugin --auto-update --namespace="MyCompany\PluginPackage"
+	 *     Success: Meta data successfully updated.
+	 *
+	 * @subcommand update-meta
+	 * @when after_wp_load
+	 */
+	public function updateMetaData( $args, $assoc )
+	{
+		$slug = $args[0];
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) )
+		{
+			\WP_CLI::error( 'Plugin directory is not valid: ' . $slug );
+		}
+		
+		$meta_data = array();
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) )
+		{
+			/* Create the data dir to store the meta data */
+			if ( ! mkdir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) )
+			{
+				\WP_CLI::error( 'Error creating data directory: ' . $slug . '/data' );
+			}
+			
+		}
+		else
+		{
+			/* Read existing metadata */
+			if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php' ) )
+			{
+				$meta_data = json_decode( include WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', TRUE );
+			}
+		}
+		
+		if ( isset( $assoc[ 'auto-update' ] ) and $assoc[ 'auto-update' ] )
+		{
+			include_once get_home_path() . 'wp-admin/includes/plugin.php';
+			$filename = isset( $assoc[ 'filename' ] ) ? $assoc[ 'filename' ] : 'plugin.php';
+
+			if ( ! file_exists( WP_PLUGIN_DIR . '/' . $slug . '/' . $filename ) )
+			{
+				\WP_CLI::error( 'Could not locate the plugin file: ' . $slug . '/' . $filename . "\n" . "Try using the --filename parameter to specify the correct filename." );
+			}
+			
+			$plugin_data = get_plugin_data( WP_PLUGIN_DIR . '/' . $slug . '/' . $filename, FALSE );
+			
+			if ( empty( $plugin_data ) )
+			{
+				\WP_CLI::error( 'No meta data could be found in file: ' . $slug . '/' . $filename );
+			}
+			
+			$meta_data[ 'slug' ] = $slug;
+			
+			if ( $plugin_data[ 'Name' ] ) {
+				$meta_data[ 'name' ] = $plugin_data[ 'Name' ];
+			}
+
+			if ( $plugin_data[ 'PluginURI' ] ) {
+				$meta_data[ 'plugin_url' ] = $plugin_data[ 'PluginURI' ];
+			}
+			
+			if ( $plugin_data[ 'Description' ] ) {
+				$meta_data[ 'description' ] = $plugin_data[ 'Description' ];
+			}
+			
+			if ( $plugin_data[ 'AuthorName' ] ) {
+				$meta_data[ 'author' ] = $plugin_data[ 'AuthorName' ];
+			}
+			
+			if ( $plugin_data[ 'AuthorURI' ] ) {
+				$meta_data[ 'author_url' ] = $plugin_data[ 'AuthorURI' ];
+			}
+			
+			if ( $plugin_data[ 'Version' ] )
+			{
+				$meta_data[ 'version' ] = $plugin_data[ 'Version' ];
+			}
+		}
+		
+		foreach( $assoc as $key => $value )
+		{
+			if ( ! in_array( $key, array( 'auto-update', 'filename' ) ) )
+			{
+				$meta_data[ $key ] = $value;
+			}
+		}
+		
+		file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $meta_data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
+		
+		\WP_CLI::success( 'Meta data successfully updated.' );
+	}
+	
+	/**
+	 * Build a new plugin package for release
+	 * 
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The slug of the modern wordpress plugin
+	 * 
+	 * [--version=<version>]
+	 * : The new plugin version
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Build a new plugin package for release
+	 *     $ wp mwp build-plugin my-plugin --version=patch
+	 *     Success: Plugin package successfully built.
+	 *
+	 * @subcommand build-plugin
+	 * @when after_wp_load
+	 */
+	public function buildPlugin( $args, $assoc )
+	{
+		$slug = $args[0];
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) )
+		{
+			\WP_CLI::error( 'Plugin directory is not valid: ' . $slug );
+		}
+		
+		$ignorelist = array();
+		
+		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/.buildignore' ) )
+		{
+			$fh = fopen( WP_PLUGIN_DIR . '/' . $slug . '/.buildignore', 'r' );
+			while( $line = fgets( $fh ) ) {
+				if ( $line ) {
+					$ignorelist[] = str_replace( '\\', '/', trim( $line ) );
+				}
+			}
+			fclose( $fh );
+		}
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/builds' ) )
+		{
+			if ( ! mkdir( WP_PLUGIN_DIR . '/' . $slug . '/builds' ) )
+			{
+				\WP_CLI::error( 'Unable to create the /builds directory' );
+			}
+		}
+		
+		$plugin_version = "0.0.0";
+		
+		/* Read existing metadata */
+		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php' ) )
+		{
+			$meta_data = json_decode( include WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', TRUE );
+			if ( isset( $meta_data[ 'version' ] ) and $meta_data[ 'version' ] )
+			{
+				$plugin_version = $meta_data[ 'version' ];
+			}
+		}
+		
+		if ( isset( $assoc[ 'version' ] ) and $assoc[ 'version' ] )
+		{
+			$version_parts = explode( '.', $plugin_version );
+			switch( $assoc[ 'version' ] )
+			{
+				case 'major':
+					$version_parts[0]++;
+					$plugin_version = implode( '.', $version_parts );
+					break;
+					
+				case 'minor':
+					$version_parts[1]++;
+					$plugin_version = implode( '.', $version_parts );
+					break;
+					
+				case 'patch':
+					$version_parts[2]++;
+					$plugin_version = implode( '.', $version_parts );
+					break;
+					
+				default:
+					$plugin_version = $assoc[ 'version' ];
+			}
+		}
+	
+		$zip = new \ZipArchive();
+		
+		if ( $zip->open( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) !== TRUE ) 
+		{
+			\WP_CLI::error( 'Cannot create the archive file: ' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip' );
+		}
+		
+		$basedir = str_replace( '\\', '/', WP_PLUGIN_DIR . '/' . $slug . '/' );
+		
+		$addToArchive = function( $source ) use ( $slug, $ignorelist, $basedir, $zip, &$addToArchive )
+		{
+			$relativename = str_replace( $basedir, '', str_replace( '\\', '/', $source ) );
+			
+			if ( in_array( $relativename, $ignorelist ) )
+			{
+				return;
+			}
+			
+			// Add file to zip
+			if ( is_file( $source ) ) 
+			{
+				$zip->addFile( $source, $slug . '/' . $relativename );
+				return;
+			}
+
+			// Loop through the folder
+			$dir = dir( $source );
+			while ( false !== $entry = $dir->read() ) 
+			{
+				// Skip pointers & special dirs
+				if ( in_array( $entry, array( '.', '..' ) ) )
+				{
+					continue;
+				}
+
+				$addToArchive( "$source/$entry" );
+			}
+
+			// Clean up
+			$dir->close();
+		};
+		
+		\WP_CLI::line( 'Building package...' );
+		$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
+		$zip->close();
+		
+		\WP_CLI::success( 'Plugin package successfully built.' );
+	}
 }
