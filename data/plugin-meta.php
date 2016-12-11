@@ -8,6 +8,6 @@ return <<<'JSON'
     "description": "Provides an object oriented development framework for modern wordpress plugins.",
     "author": "Miller Media",
     "author_url": "http:\/\/www.miller-media.com\/",
-    "version": "0.1.0"
+    "version": "0.1.2"
 }
 JSON;

@@ -1,4 +1,13 @@
 <?php
+/**
+ * Annotation: Wordpress\Stylesheet  
+ *
+ * Created:    Nov 20, 2016
+ *
+ * @package    Modern Wordpress Framework
+ * @author     Kevin Carwile
+ * @since      0.1.2
+ */
 
 namespace Wordpress;
 

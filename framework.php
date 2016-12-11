@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Modern Wordpress Plugin Framework
- * Version: 0.1.0
+ * Version: 0.1.2
  * Provides: lib-modern-wordpresss
  * Description: Provides an object oriented development framework for modern wordpress plugins.
  * Author: Miller Media

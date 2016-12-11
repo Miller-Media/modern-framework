@@ -2,9 +2,11 @@
 /**
  * Framework Class (Singleton)
  * 
- * @package 	Modern Wordpress Framework
- * @author	Kevin Carwile
- * @since	Nov 20, 2016
+ * Created:    Nov 20, 2016
+ *
+ * @package    Modern Wordpress Framework
+ * @author     Kevin Carwile
+ * @since      0.1.2
  */
 
 namespace Modern\Wordpress;
@@ -253,7 +255,7 @@ class Framework extends Plugin
 	 *
 	 * @param       string   $source    Source path
 	 * @param       string   $dest      Destination path
-	 * @param	array    $data      Plugin metadata
+	 * @param	    array    $data      Plugin metadata
 	 * @return      bool     Returns TRUE on success, FALSE on failure
 	 */
 	protected function copyPluginFiles( $source, $dest, $data )
@@ -451,11 +453,11 @@ class Framework extends Plugin
 /**
  * Plugin Class File
  *
- * @vendor:  {vendor_name}
- * @package: {plugin_name}
- * @author:  {plugin_author}
- * @link:    {plugin_author_url}
- * @since:   {date_time}
+ * Created:   {date_time}
+ *
+ * @package:  {plugin_name}
+ * @author:   {plugin_author}
+ * @since:    0.1.2
  */
 namespace $namespace;
 

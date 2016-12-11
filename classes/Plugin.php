@@ -2,9 +2,11 @@
 /**
  * Plugin Base Class (Singleton)
  *
- * @package 	Modern Wordpress Framework
- * @author	Kevin Carwile
- * @since	Nov 20, 2016
+ * Created:    Nov 20, 2016
+ *
+ * @package   Modern Wordpress Framework
+ * @author    Kevin Carwile
+ * @since     0.1.2
  */
 
 namespace Modern\Wordpress;
@@ -64,14 +66,17 @@ abstract class Plugin extends Singleton
 	 */
 	public function _versionUpdateCheck()
 	{
-		$build = $this->data( 'build-meta' );
-		
-		if ( is_array( $build ) and isset( $build[ 'version' ] ) and $build[ 'version' ] )
+		if ( ! defined( 'MODERN_WORDPRESS_DEV' ) or \MODERN_WORDPRESS_DEV == FALSE )
 		{
-			$install = $this->data( 'install-meta' );
-			if ( ! is_array( $install ) or version_compare( $install[ 'version' ], $build[ 'version' ] ) == -1 )
+			$plugin_meta = $this->data( 'plugin-meta' );
+			
+			if ( is_array( $plugin_meta ) and isset( $plugin_meta[ 'version' ] ) and $plugin_meta[ 'version' ] )
 			{
-				$this->versionUpdated();
+				$install = $this->data( 'install-meta' );
+				if ( ! is_array( $install ) or version_compare( $install[ 'version' ], $plugin_meta[ 'version' ] ) == -1 )
+				{
+					$this->versionUpdated();
+				}
 			}
 		}
 	}
@@ -83,24 +88,23 @@ abstract class Plugin extends Singleton
 	 */
 	public function versionUpdated()
 	{
-		$build = $this->data( 'build-meta' );
+		$plugin_meta = $this->data( 'plugin-meta' );
+		$build_meta = $this->data( 'build-meta' );
 		$install = $this->data( 'install-meta' ) ?: array();
 		
-		if ( is_array( $build[ 'schema' ] ) )
+		/* Update table definitions in database if needed */
+		if ( is_array( $build_meta[ 'tables' ] ) )
 		{
-			if ( is_array( $build[ 'schema' ][ 'tables' ] ) )
+			$dbHelper = \Modern\Wordpress\DbHelper::instance();
+			foreach( $build_meta[ 'tables' ] as $table )
 			{
-				$dbHelper = \Modern\Wordpress\DbHelper::instance();
-				foreach( $schema[ 'tables' ] as $table )
-				{
-					$tableSql = $dbHelper->buildTableSQL( $table );
-					dbDelta( $tableSql );
-				}
+				$tableSql = $dbHelper->buildTableSQL( $table );
+				dbDelta( $tableSql );
 			}
 		}
 		
-		$install[ 'schema' ] = $build[ 'schema' ];
-		$install[ 'version' ] = $build[ 'version' ];
+		/* Update installed version number */
+		$install[ 'version' ] = $plugin_meta[ 'version' ];
 		
 		/* Update install meta */
 		$this->setData( 'install-meta', $install );

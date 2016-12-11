@@ -2,9 +2,11 @@
 /**
  * WP CLI Command Class (WP_CLI_Command)
  * 
- * @package 	Modern Wordpress Framework
- * @author	Kevin Carwile
- * @since	Nov 20, 2016
+ * Created:    Nov 20, 2016
+ *
+ * @package   Modern Wordpress Framework
+ * @author    Kevin Carwile
+ * @since     0.1.2
  */
 
 namespace Modern\Wordpress;
@@ -492,7 +494,9 @@ class CLI extends \WP_CLI_Command {
 			\WP_CLI::error( 'Plugin directory is not valid: ' . $slug );
 		}
 		
-		$ignorelist = array();
+		$ignorelist = array(
+			'data/install-meta.php',
+		);
 		
 		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/.buildignore' ) )
 		{
@@ -514,6 +518,16 @@ class CLI extends \WP_CLI_Command {
 		}
 		
 		$plugin_version = "0.0.0";
+		$meta_data = array();
+		
+		/* Create data directory if needed */
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) )
+		{
+			if ( ! mkdir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) )
+			{
+				\WP_CLI::error( 'Unable to create the /data directory to store plugin meta data.' );
+			}
+		}
 		
 		/* Read existing metadata */
 		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php' ) )
@@ -525,6 +539,7 @@ class CLI extends \WP_CLI_Command {
 			}
 		}
 		
+		/* Work out the new version number if needed */
 		if ( isset( $assoc[ 'version-update' ] ) and $assoc[ 'version-update' ] )
 		{
 			$version_parts = explode( '.', $plugin_version );
@@ -554,52 +569,95 @@ class CLI extends \WP_CLI_Command {
 					$plugin_version = $assoc[ 'version-update' ];
 			}
 		}
-	
-		$zip = new \ZipArchive();
 		
-		if ( $zip->open( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) !== TRUE ) 
+		/**
+		 * Create build meta data
+		 */
 		{
-			\WP_CLI::error( 'Cannot create the archive file: ' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip' );
+			$build_meta = array();
+			
+			/* Update table schema data file */
+			if ( isset( $meta_data[ 'tables' ] ) and $meta_data[ 'tables' ] )
+			{
+				$build_meta = array( 'tables' => array() );
+				$dbHelper = \Modern\Wordpress\DbHelper::instance();
+				
+				$tables = explode( ',', $meta_data[ 'tables' ] );
+				foreach( $tables as $table )
+				{
+					try
+					{
+						$build_meta[ 'tables' ][] = $dbHelper->getTableDefinition( $table );
+					}
+					catch( \ErrorException $e ) { }
+				}
+			}
+		
+			/* Save the build meta */
+			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/build-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $build_meta, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		}
 		
-		$basedir = str_replace( '\\', '/', WP_PLUGIN_DIR . '/' . $slug . '/' );
-		
-		$addToArchive = function( $source ) use ( $slug, $ignorelist, $basedir, $zip, &$addToArchive )
+		/**
+		 * Create the ZIP Archive
+		 */
 		{
-			$relativename = str_replace( $basedir, '', str_replace( '\\', '/', $source ) );
-			
-			if ( in_array( $relativename, $ignorelist ) )
+			$zip = new \ZipArchive();
+			if ( $zip->open( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) !== TRUE ) 
 			{
-				return;
+				\WP_CLI::error( 'Cannot create the archive file: ' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip' );
 			}
 			
-			// Add file to zip
-			if ( is_file( $source ) ) 
+			/* Recursively build files into the archive */
+			$basedir = str_replace( '\\', '/', WP_PLUGIN_DIR . '/' . $slug . '/' );
+			$addToArchive = function( $source ) use ( $slug, $ignorelist, $basedir, $zip, &$addToArchive, $plugin_version )
 			{
-				$zip->addFile( $source, $slug . '/' . $relativename );
-				return;
-			}
-
-			// Loop through the folder
-			$dir = dir( $source );
-			while ( false !== $entry = $dir->read() ) 
-			{
-				// Skip pointers & special dirs
-				if ( in_array( $entry, array( '.', '..' ) ) )
+				$relativename = str_replace( $basedir, '', str_replace( '\\', '/', $source ) );
+				
+				if ( in_array( $relativename, $ignorelist ) )
 				{
-					continue;
+					return;
+				}
+				
+				// Add file to zip
+				if ( is_file( $source ) ) 
+				{
+					/* Update file with build version */
+					$pathinfo = pathinfo( $source );
+					if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) and substr( $relativename, 0, 7 ) !== 'vendor/' )
+					{
+						file_put_contents( $source, strtr( file_get_contents( $source ), array( '0.1.2' => $plugin_version ) ) );
+					}
+					
+					$zip->addFile( $source, $slug . '/' . $relativename );
+					return;
 				}
 
-				$addToArchive( "$source/$entry" );
-			}
+				// Loop through the folder
+				$dir = dir( $source );
+				while ( false !== $entry = $dir->read() ) 
+				{
+					// Skip pointers & special dirs
+					if ( in_array( $entry, array( '.', '..' ) ) )
+					{
+						continue;
+					}
 
-			// Clean up
-			$dir->close();
-		};
+					$addToArchive( "$source/$entry" );
+				}
+
+				// Clean up
+				$dir->close();
+			};
+			
+			/* Build the release */
+			\WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
+			$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
+			$zip->close();
+		}
 		
-		\WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
-		$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
-		$zip->close();
+		/* Save new plugin meta data */
+		$meta_data[ 'version' ] = $plugin_version;
+		file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $meta_data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		
 		\WP_CLI::success( 'Plugin package successfully built.' );
 	}
