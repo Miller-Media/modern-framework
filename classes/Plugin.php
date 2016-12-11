@@ -56,20 +56,23 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
-	 * Check if plugin update is required
+	 * Check if plugin version has been updated
 	 *
 	 * @Wordpress\Action( for="init" )
 	 *
 	 * @return	void
 	 */
-	public function checkIfUpdateNeeded()
+	public function _versionUpdateCheck()
 	{
 		$build = $this->data( 'build-meta' );
-		$install = $this->data( 'install-meta' );
 		
-		if ( ! is_array( $install ) or version_compare( $install[ 'version' ], $build[ 'version' ] ) == -1 )
+		if ( is_array( $build ) and isset( $build[ 'version' ] ) and $build[ 'version' ] )
 		{
-			$this->update();
+			$install = $this->data( 'install-meta' );
+			if ( ! is_array( $install ) or version_compare( $install[ 'version' ], $build[ 'version' ] ) == -1 )
+			{
+				$this->versionUpdated();
+			}
 		}
 	}
 	
@@ -78,7 +81,7 @@ abstract class Plugin extends Singleton
 	 *
 	 * @return	void
 	 */
-	public function update()
+	public function versionUpdated()
 	{
 		$build = $this->data( 'build-meta' );
 		$install = $this->data( 'install-meta' ) ?: array();
@@ -98,7 +101,12 @@ abstract class Plugin extends Singleton
 		
 		$install[ 'schema' ] = $build[ 'schema' ];
 		$install[ 'version' ] = $build[ 'version' ];
+		
+		/* Update install meta */
 		$this->setData( 'install-meta', $install );
+		
+		/* Clear the annotations cache */
+		\Modern\Wordpress\Framework::instance()->clearAnnotationsCache();
 	}
 	
 	/**

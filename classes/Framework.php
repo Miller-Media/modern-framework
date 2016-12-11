@@ -118,6 +118,16 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Clear annotation reader cache upon plugin updates, etc
+	 *
+	 * @return	void
+	 */
+	public function clearAnnotationsCache()
+	{
+		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*" ) );
+	}
+	
+	/**
 	 * Get all modern wordpress plugins
 	 *
 	 * @api
@@ -222,12 +232,10 @@ class Framework extends Plugin
 			throw new \ErrorException( 'Plugin directory is already being used.', 2 );
 		}
 		
-		$this->copyPlugin( $this->getPath() . '/boilerplate', WP_PLUGIN_DIR . '/' . $plugin_dir, $data );
+		$this->copyPluginFiles( $this->getPath() . '/boilerplate', WP_PLUGIN_DIR . '/' . $plugin_dir, $data );
 		
 		/* Create an alias file for the test suite, etc... */
-		$fh = fopen( WP_PLUGIN_DIR . '/' . $plugin_dir . '/' . $data[ 'slug' ] . '.php', 'w+' );
-		fwrite( $fh, "<?php\n\nrequire_once 'plugin.php';" );
-		fclose( $fh );
+		file_put_contents( WP_PLUGIN_DIR . '/' . $plugin_dir . '/' . $data[ 'slug' ] . '.php', "<?php\n\nrequire_once 'plugin.php';" );
 		
 		/* Include autoloader so we can instantiate the plugin */
 		include_once WP_PLUGIN_DIR . '/' . $plugin_dir . '/vendor/autoload.php';
@@ -248,7 +256,7 @@ class Framework extends Plugin
 	 * @param	array    $data      Plugin metadata
 	 * @return      bool     Returns TRUE on success, FALSE on failure
 	 */
-	protected function copyPlugin( $source, $dest, $data )
+	protected function copyPluginFiles( $source, $dest, $data )
 	{
 		// Simple copy for a file
 		if ( is_file( $source ) ) 
@@ -288,7 +296,7 @@ class Framework extends Plugin
 			// Deep copy directories
 			if ( $dest !== "$source/$entry" ) 
 			{
-				$this->copyPlugin( "$source/$entry", "$dest/$entry", $data );
+				$this->copyPluginFiles( "$source/$entry", "$dest/$entry", $data );
 			}
 		}
 
