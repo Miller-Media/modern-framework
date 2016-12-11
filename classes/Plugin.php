@@ -67,7 +67,7 @@ abstract class Plugin extends Singleton
 		$build = $this->data( 'build-meta' );
 		$install = $this->data( 'install-meta' );
 		
-		if ( ! is_array( $installed ) or version_compare( $install[ 'version' ], $build[ 'version' ] ) == -1 )
+		if ( ! is_array( $install ) or version_compare( $install[ 'version' ], $build[ 'version' ] ) == -1 )
 		{
 			$this->update();
 		}
