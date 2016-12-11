@@ -4,3 +4,6 @@ boilerplate
 docs
 modern-wordpress.wiki
 builddoc.bat
+bin
+phpunit.xml.dist
+tests/bootstrap.php
