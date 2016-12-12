@@ -1,4 +1,4 @@
-Modern Wordpress Plugin Framework
+Modern Framework for Wordpress
 ==================================
 
 This "plugin" provides a modern foundation of object oriented design patterns and api abstractions that enable rapid development of new wordpress plugins.
