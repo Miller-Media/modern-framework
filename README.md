@@ -32,13 +32,13 @@ The objective of this framework is to ease the development of new wordpress plug
 
 If you have WP CLI installed:
 ```
-$ wp plugin install modern-wordpress --activate
+$ wp plugin install modern-framework --activate
 ```
 
 -- **or** -- from your wordpress site:
 
 ```
-WP Admin > Plugins > Add New > Search for "Modern Wordpress" > Install Now > Activate
+WP Admin > Plugins > Add New > Search for "Modern Framework for Wordpress" > Install Now > Activate
 ```
 
 1.b) **Download/clone this repository**
@@ -50,10 +50,10 @@ WP Admin > Plugins > Add New > Search for "Modern Wordpress" > Install Now > Act
 
 ```
 $ cd wp-content/plugins
-$ git clone https://github.com/Miller-Media/modern-wordpress
-$ cd modern-wordpress
+$ git clone https://github.com/Miller-Media/modern-wordpress modern-framework
+$ cd modern-framework
 $ composer install
-$ wp plugin activate modern-wordpress
+$ wp plugin activate modern-framework
 ```
 You can get away without having git installed by [downloading the archive](https://github.com/Miller-Media/modern-wordpress/archive/master.zip) and extracting it to your plugins folder. And you can get away with not having WP CLI installed by activating the plugin via your wordpress admin. But you will still need [composer](https://getcomposer.org/doc/00-intro.md) to install the dependencies.
 
