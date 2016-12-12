@@ -6,7 +6,7 @@
  *
  * @package    Modern Wordpress Framework
  * @author     Kevin Carwile
- * @since      0.1.2
+ * @since      1.0.0
  */
 
 namespace Modern\Wordpress;
@@ -448,6 +448,8 @@ class Framework extends Plugin
 			throw new \ErrorException( "The class file already exists: " . str_replace( WP_PLUGIN_DIR, '', $class_file ) );
 		}
 		
+		$version_tag = '{' . 'build_version' . '}';
+		
 		$class_contents = <<<CLASS
 <?php
 /**
@@ -457,7 +459,7 @@ class Framework extends Plugin
  *
  * @package:  {plugin_name}
  * @author:   {plugin_author}
- * @since:    0.1.2
+ * @since:    $version_tag
  */
 namespace $namespace;
 
@@ -473,7 +475,7 @@ class $classname
 	/**
 	 * @var 	\Modern\Wordpress\Plugin		Provides access to the plugin instance
 	 */
-	protected $plugin;
+	protected \$plugin;
 	
 	/**
  	 * Get plugin
@@ -482,7 +484,7 @@ class $classname
 	 */
 	public function getPlugin()
 	{
-		return $this->plugin;
+		return \$this->plugin;
 	}
 	
 	/**
@@ -491,9 +493,9 @@ class $classname
 	 * @param	\Modern\Wordpress\Plugin	$plugin			The plugin to associate this class with, or NULL to auto-associate
 	 * @return	void
 	 */
-	public function __construct( \Modern\Wordpress\Plugin $plugin=NULL )
+	public function __construct( \Modern\Wordpress\Plugin \$plugin=NULL )
 	{
-		$this->plugin = $plugin ?: \MillerMedia\Boilerplate\Plugin::instance();
+		\$this->plugin = \$plugin ?: \MillerMedia\Boilerplate\Plugin::instance();
 	}
 }
 

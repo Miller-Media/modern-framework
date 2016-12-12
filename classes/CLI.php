@@ -6,7 +6,7 @@
  *
  * @package   Modern Wordpress Framework
  * @author    Kevin Carwile
- * @since     0.1.2
+ * @since     1.0.0
  */
 
 namespace Modern\Wordpress;
@@ -489,7 +489,7 @@ class CLI extends \WP_CLI_Command {
 	{
 		$slug = $args[0];
 		
-		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) )
+		if ( ! $slug or ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) )
 		{
 			\WP_CLI::error( 'Plugin directory is not valid: ' . $slug );
 		}
@@ -625,7 +625,7 @@ class CLI extends \WP_CLI_Command {
 					$pathinfo = pathinfo( $source );
 					if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) and substr( $relativename, 0, 7 ) !== 'vendor/' )
 					{
-						file_put_contents( $source, strtr( file_get_contents( $source ), array( '0.1.2' => $plugin_version ) ) );
+						file_put_contents( $source, strtr( file_get_contents( $source ), array( '{' . 'build_version' . '}' => $plugin_version ) ) );
 					}
 					
 					$zip->addFile( $source, $slug . '/' . $relativename );

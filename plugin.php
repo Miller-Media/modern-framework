@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Modern Wordpress Plugin Framework
- * Version: 0.1.2
- * Provides: lib-modern-wordpresss
- * Description: Provides an object oriented development framework for modern wordpress plugins.
- * Author: Miller Media
+ * Plugin Name: Modern Framework for Wordpress
+ * Version: 1.0.0
+ * Provides: lib-modern-framework
+ * Description: Provides an object oriented utility framework for modern wordpress plugins.
+ * Author: Kevin Carwile
  * Author URI: http://www.miller-media.com/
  * License: GPL2 or later
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html

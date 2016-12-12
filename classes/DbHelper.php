@@ -6,7 +6,7 @@
  *
  * @package  Modern Wordpress Framework
  * @author   Kevin Carwile
- * @since    0.1.2
+ * @since    1.0.0
  */
 
 namespace Modern\Wordpress;
