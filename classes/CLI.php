@@ -621,11 +621,31 @@ class CLI extends \WP_CLI_Command {
 				// Add file to zip
 				if ( is_file( $source ) ) 
 				{
-					/* Update file with build version */
+					/* Replace tokens in source files */
 					$pathinfo = pathinfo( $source );
 					if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) and substr( $relativename, 0, 7 ) !== 'vendor/' )
 					{
-						file_put_contents( $source, strtr( file_get_contents( $source ), array( '{' . 'build_version' . '}' => $plugin_version ) ) );
+						$source_contents = file_get_contents( $source );
+						$updated_contents = strtr( $source_contents, array( '{' . 'build_version' . '}' => $plugin_version ) );
+						
+						if ( $relativename == 'plugin.php' )
+						{
+							$docComments = array_filter(
+								token_get_all( $updated_contents ), function( $token ) {
+									return $token[0] == T_DOC_COMMENT;
+								}
+							);
+							
+							/* Plugin Header */
+							$headerDoc = array_shift( $docComments );
+							$newHeaderDoc = preg_replace( '/Version:(.*?)\n/', "Version: " . $plugin_version . "\n", $headerDoc );
+							$updated_contents = str_replace( $headerDoc, $newHeaderDoc, $updated_contents );
+						}
+						
+						if ( $updated_contents != $source_contents )
+						{
+							file_put_contents( $source, $updated_contents );
+						}
 					}
 					
 					$zip->addFile( $source, $slug . '/' . $relativename );
