@@ -669,15 +669,15 @@ class CLI extends \WP_CLI_Command {
 				$dir->close();
 			};
 			
-			/* Build the release */
+			/* Save new plugin meta data before building package */
+			$meta_data[ 'version' ] = $plugin_version;
+			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $meta_data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
+		
+			/* Build the release package */
 			\WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
 			$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
 			$zip->close();
 		}
-		
-		/* Save new plugin meta data */
-		$meta_data[ 'version' ] = $plugin_version;
-		file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $meta_data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		
 		\WP_CLI::success( 'Plugin package successfully built.' );
 	}
