@@ -41,12 +41,23 @@ class Field extends \Modern\Wordpress\Annotation
 	public $options;
 	
 	/**
+	 * @var mixed
+	 */
+	public $default;
+
+	/**
+	 * @var	string
+	 */
+	public $description;
+	 
+	/**
 	 * Get Field
 	 *
 	 * @param	\Modern\Wordpress\Plugin\Settings		$settings 			The settings store
 	 */
 	public function getFieldHtml( $settings )
 	{
+		$settings->setDefault( $this->name, $this->default );
 		return $settings->getPlugin()->getTemplateContent( 'admin/settings/' . $this->type . '-field', array( 'field' => $this, 'settings' => $settings ) );
 	}
 	

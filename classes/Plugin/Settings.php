@@ -45,6 +45,11 @@ abstract class Settings extends Singleton
 	protected $plugin;
 	
 	/**
+	 * @var array	Settings Defaults
+	 */
+	protected $defaults = array();
+	
+	/**
 	 * @var	string	The database option_name used to store these settings
 	 */
 	protected $storageId;
@@ -62,6 +67,18 @@ abstract class Settings extends Singleton
 		}
 		
 		parent::__construct();
+	}
+	
+	/**
+	 * Set a default setting
+	 *
+	 * @param	string		$name			Setting name
+	 * @param	mixed		$value			Setting value
+	 * @return	void
+	 */
+	public function setDefault( $name, $value )
+	{
+		$this->defaults[ $name ] = $value;
 	}
 	
 	/**
@@ -94,7 +111,7 @@ abstract class Settings extends Singleton
 	{
 		return $this->storageId;
 	}
-	 
+	
 	/**
 	 * Get A Setting
 	 *
@@ -108,7 +125,12 @@ abstract class Settings extends Singleton
 			$this->settings = get_option( $this->storageId, array() );
 		}
 		
-		return isset( $this->settings[ $name ] ) ? $this->settings[ $name ] : NULL;
+		if ( array_key_exists( $name, $this->settings ) )
+		{
+			return $this->settings[ $name ];
+		}
+		
+		return isset( $this->defaults[ $name ] ) ? $this->defaults[ $name ] : NULL;
 	}
 	
 	/**
