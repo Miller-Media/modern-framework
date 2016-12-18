@@ -28,34 +28,13 @@ The objective of this framework is to ease the development of new wordpress plug
 
 ## How to get started:
 
-1.a) **Install the packaged plugin** (not currently available in the directory)
+1) **Install the packaged plugin and dependencies**
 
 If you have WP CLI installed:
 ```
-$ wp plugin install modern-framework --activate
+$ wp plugin install piklist --activate
+$ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/builds/modern-framework-latest-stable.zip --activate
 ```
-
--- **or** -- from your wordpress site:
-
-```
-WP Admin > Plugins > Add New > Search for "Modern Framework for Wordpress" > Install Now > Activate
-```
-
-1.b) **Download/clone this repository**
-
-**Note**: When you begin by cloning this repository rather than installing the packaged version of the plugin, you will also need to install the composer dependencies manually after downloading. These instructions assume you already have the following programs on your system:
-* [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-* [composer](https://getcomposer.org/doc/00-intro.md)
-* [WP CLI](https://wp-cli.org/docs/installing/)
-
-```
-$ cd wp-content/plugins
-$ git clone https://github.com/Miller-Media/modern-wordpress modern-framework
-$ cd modern-framework
-$ composer install
-$ wp plugin activate modern-framework
-```
-You can get away without having git installed by [downloading the archive](https://github.com/Miller-Media/modern-wordpress/archive/master.zip) and extracting it to your plugins folder. And you can get away with not having WP CLI installed by activating the plugin via your wordpress admin. But you will still need [composer](https://getcomposer.org/doc/00-intro.md) to install the dependencies.
 
 2) Enable developer mode 
 
