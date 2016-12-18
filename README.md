@@ -44,15 +44,23 @@ define( 'MODERN_WORDPRESS_DEV', TRUE );
 ```
 
 ### Create A New Plugin
-Begin building your own new plugin from scratch by customizing the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate), or you can create a new modern wordpress plugin using [WP CLI](https://wp-cli.org/):
+Bootstrap the creation of your own new plugin by cloning and customizing the [boilerplate plugin](https://github.com/Miller-Media/wp-plugin-boilerplate) using [WP CLI](https://wp-cli.org/):
 ```
-$ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip
+$ wp mwp update-boilerplate
 $ wp mwp create-plugin "Awesome New Plugin" --vendor="My Company" --author="My Name"
 ```
-**Note**: By using the WP CLI to create your plugin, the boilerplate is automatically cloned, customized, and used as the skeleton for your new plugin!
+**Note**: By using the WP CLI to create your plugin, the boilerplate is automatically customized with your plugin details!
 
 ### Make It Do Something
-To begin programming the functionality of your new plugin, start adding methods to the *`./your-plugin-dir/classes/Plugin.php`* file, taking care to [hook them into wordpress using @annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations).
+To begin programming the functionality of your new plugin, start adding methods to the *`./your-plugin-dir/classes/Plugin.php`* file, which will be hooked into wordpress [using @annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations).
+
+### Distribute It
+When you are ready to build a release package of your plugin for distribution, that's easy too:
+
+```
+$ wp mwp build-plugin myplugin-slug --version-update=minor
+```
+A packaged .zip file that contains your new version will be created in the `/builds` subdirectory of your plugin. That zip file can be used to install the plugin on another wordpress site.
 
 Thats it. Have fun!
 
