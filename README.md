@@ -38,7 +38,7 @@ $ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/
 
 2) Enable developer mode 
 
-> To enable developer mode: Create or edit the **dev_config.php** file in the *wp-content/plugins/modern-wordpress/* directory and add:
+> To enable developer mode: Create or edit the **dev_config.php** file in the *wp-content/plugins/modern-framework/* directory and add:
 ```
 define( 'MODERN_WORDPRESS_DEV', TRUE );
 ```
