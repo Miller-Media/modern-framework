@@ -287,7 +287,7 @@ class Framework extends Plugin
 	 *
 	 * @return	void
 	 */
-	public function runQueue()
+	public function runTasks()
 	{
 		$db = $this->db();
 		$begin_time = time();
@@ -347,7 +347,7 @@ class Framework extends Plugin
 	 *
 	 * @return	void
 	 */
-	public function runQueueMaintenance()
+	public function runTasksMaintenance()
 	{
 		\Modern\Wordpress\Task::runMaintenance();
 	}
@@ -460,15 +460,16 @@ class Framework extends Plugin
 	/**
 	 * Create new javascript module
 	 *
-	 * @param	
+	 * @param	string		$slug		The plugin slug
+	 * @param	string		$name		The javascript module name
 	 * @return	void
 	 * @throws	\ErrorException
 	 */
 	public function createJavascript( $slug, $name )
 	{
-		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js' ) )
+		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/js/module.js' ) )
 		{
-			throw new \ErrorException( "The boilerplate plugin is not present.\nTry using: $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip" );
+			throw new \ErrorException( "The boilerplate plugin is not present. \nTry using: $ wp mwp update-boilerplate" );
 		}
 		
 		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/assets/js' ) )
@@ -488,7 +489,7 @@ class Framework extends Plugin
 			throw new \ErrorException( "The javascript file already exists: " . $slug . '/assets/js/' . $name . '.js' );
 		}
 		
-		if ( ! copy( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/js/module.js', $javascript_file ) )
+		if ( ! copy( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/js/module.js', $javascript_file ) )
 		{
 			throw new \ErrorException( 'Error copying file to destination: ' . $slug . '/assets/js/' . $name . '.js' );
 		}
@@ -505,15 +506,16 @@ class Framework extends Plugin
 	/**
 	 * Create new stylesheet
 	 *
-	 * @param	
+	 * @param	string		$slug		The plugin slug
+	 * @param	string		$name		The stylesheet name
 	 * @return	void
 	 * @throws	\ErrorException
 	 */
 	public function createStylesheet( $slug, $name )
 	{
-		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/css/style.css' ) )
+		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/css/style.css' ) )
 		{
-			throw new \ErrorException( "The boilerplate plugin is not present.\nTry using: $ wp mwp update-boilerplate https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip" );
+			throw new \ErrorException( "The boilerplate plugin is not present. \nTry using: $ wp mwp update-boilerplate" );
 		}
 		
 		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/assets/css' ) )
@@ -533,7 +535,7 @@ class Framework extends Plugin
 			throw new \ErrorException( "The stylesheet file already exists: " . $slug . '/assets/css/' . $name . '.css' );
 		}
 		
-		if ( ! copy( WP_PLUGIN_DIR . '/modern-wordpress/boilerplate/assets/css/style.css', $stylesheet_file ) )
+		if ( ! copy( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/css/style.css', $stylesheet_file ) )
 		{
 			throw new \ErrorException( 'Error copying file to destination: ' . $slug . '/assets/css/' . $name . '.css' );
 		}
@@ -548,9 +550,72 @@ class Framework extends Plugin
 	}
 
 	/**
+	 * Create new template snippet
+	 *
+	 * @param	string		$slug		The plugin slug
+	 * @param	string		$name		The template name
+	 * @return	void
+	 * @throws	\ErrorException
+	 */
+	public function createTemplate( $slug, $name )
+	{
+		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-framework/boilerplate/templates/snippet.php' ) )
+		{
+			throw new \ErrorException( "The boilerplate plugin is not present. \nTry using: $ wp mwp update-boilerplate" );
+		}
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/templates' ) )
+		{
+			throw new \ErrorException( 'Template directory is not valid: ' . $slug . '/templates' );
+		}
+		
+		if ( substr( $name, -4 ) === '.php' )
+		{
+			$name = substr( $name, 0, strlen( $name ) - 4 );
+		}
+		
+		$template_file = WP_PLUGIN_DIR . '/' . $slug . '/templates/' . $name . '.php';
+		
+		if ( file_exists( $template_file ) )
+		{
+			throw new \ErrorException( "The template file already exists: " . $slug . '/templates/' . $name . '.php' );
+		}
+		
+		$parts = explode( '/', $name );		
+		$basedir = WP_PLUGIN_DIR . '/' . $slug . '/templates';
+		$filename = array_pop( $parts );
+		foreach( $parts as $dir )
+		{
+			$basedir .= '/' . $dir;
+			if ( ! is_dir( $basedir ) )
+			{
+				mkdir( $basedir );
+			}
+		}
+		
+		if ( ! copy( WP_PLUGIN_DIR . '/modern-framework/boilerplate/templates/snippet.php', $template_file ) )
+		{
+			throw new \ErrorException( 'Error copying file to destination: ' . $slug . '/templates/' . $name . '.php' );
+		}
+		
+		$template_contents = file_get_contents( $template_file );
+		$template_contents = str_replace( "'snippet'", "'{$name}'", $template_contents );
+
+		$plugin_data_file = WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php';		
+		if ( file_exists( $plugin_data_file ) )
+		{
+			$plugin_data = json_decode( include $plugin_data_file, TRUE );
+			$template_contents = $this->replaceMetaContents( $template_contents, $plugin_data );
+		}
+		
+		file_put_contents( $template_file, $template_contents );
+	}
+	
+	/**
 	 * Create new php class
 	 *
-	 * @param	
+	 * @param	string		$slug		The plugin slug
+	 * @param	string		$name		The php classname
 	 * @return	void
 	 * @throws	\ErrorException
 	 */

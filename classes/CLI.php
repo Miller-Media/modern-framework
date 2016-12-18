@@ -181,12 +181,10 @@ class CLI extends \WP_CLI_Command {
 			return;
 		}
 		
-		$download_url = $args[0];
-		$upgrader = new \WP_Upgrader;
 		$framework = \Modern\Wordpress\Framework::instance();
+		$download_url = $args[0] ?: 'https://github.com/Miller-Media/wp-plugin-boilerplate/archive/master.zip';
+		$upgrader = new \WP_Upgrader( new \Modern\Wordpress\CLI\WPUpgraderSkin );
 
-		ob_start();
-		
 		\WP_CLI::line( 'Downloading package...' );
 		
 		/*
@@ -195,7 +193,7 @@ class CLI extends \WP_CLI_Command {
 		 */
 		if ( is_wp_error( $download = $upgrader->download_package( $download_url ) ) ) 
 		{
-			\WP_CLI::error( $download );
+			\WP_CLI::error( $download->get_error_message() );
 		}
 
 		$delete_package = ( $download != $download_url ); // Do not delete a "local" file
@@ -205,7 +203,7 @@ class CLI extends \WP_CLI_Command {
 		// Unzips the file into a temporary directory.
 		if ( is_wp_error( $working_dir = $upgrader->unpack_package( $download, $delete_package ) ) ) 
 		{
-			\WP_CLI::error( $working_dir );
+			\WP_CLI::error( $working_dir->get_error_message() );
 		}
 		
 		\WP_CLI::line( 'Updating boilerplate plugin...' );
@@ -221,7 +219,10 @@ class CLI extends \WP_CLI_Command {
 			'hook_extra' => array(),
 		) );
 		
-		$r = ob_get_clean();
+		if ( is_wp_error( $result ) )
+		{
+			\WP_CLI::error( $result->get_error_message() );
+		}
 		
 		\WP_CLI::success( 'Boilerplate successfully updated.' );
 	}
@@ -252,6 +253,11 @@ class CLI extends \WP_CLI_Command {
 	public function createJavascriptModule( $args, $assoc )
 	{
 		$framework = \Modern\Wordpress\Framework::instance();
+		
+		if ( ! ( $args[0] and $args[1] ) )
+		{
+			\WP_CLI::error( 'Not enough command arguments given.' );
+		}
 		
 		try
 		{
@@ -293,6 +299,11 @@ class CLI extends \WP_CLI_Command {
 	{
 		$framework = \Modern\Wordpress\Framework::instance();
 		
+		if ( ! ( $args[0] and $args[1] ) )
+		{
+			\WP_CLI::error( 'Not enough command arguments given.' );
+		}
+		
 		try
 		{
 			\WP_CLI::line( 'Creating new css stylesheet...' );
@@ -306,6 +317,51 @@ class CLI extends \WP_CLI_Command {
 		\WP_CLI::success( 'Stylesheet added successfully.' );
 	}
 	
+	/**
+	 * Add a new template file
+	 * 
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The slug of the modern wordpress plugin
+	 * 
+	 * <name>
+	 * : The name of the template file
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Add a new template snippet
+	 *     $ wp mwp add-template my-plugin views/category
+	 *     Success: Template added successfully.
+	 *
+	 * @subcommand add-template
+	 * @when after_wp_load
+	 */
+	public function createTemplateFile( $args, $assoc )
+	{
+		$framework = \Modern\Wordpress\Framework::instance();
+		
+		if ( ! ( $args[0] and $args[1] ) )
+		{
+			\WP_CLI::error( 'Not enough command arguments given.' );
+		}
+		
+		try
+		{
+			\WP_CLI::line( 'Creating new template snippet...' );
+			$framework->createTemplate( $args[0], $args[1] );
+		}
+		catch( \ErrorException $e )
+		{
+			\WP_CLI::error( $e->getMessage() );
+		}
+		
+		\WP_CLI::success( 'Template added successfully.' );
+	}
+
 	/**
 	 * Add a new php class file
 	 * 
