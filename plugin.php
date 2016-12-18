@@ -55,5 +55,9 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 			do_action( 'modern_wordpress_init' );
 		}
 	}
+	
+	/* Register plugin dependencies */
+	include_once 'includes/plugin-dependency-config.php';
+	
 	ModernWordpressFramework::init();
 }
