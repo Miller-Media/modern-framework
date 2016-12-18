@@ -1,5 +1,7 @@
 vendor/*
-builds
+builds/*.zip
+!builds/modern-framework-latest-stable.zip
+!builds/modern-framework-latest-dev.zip
 annotations/cache
 boilerplate
 docs

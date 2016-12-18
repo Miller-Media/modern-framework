@@ -532,6 +532,12 @@ class CLI extends \WP_CLI_Command {
 	 * [--version-update=<version>]
 	 * : The new plugin version can be set explicitly, or auto incremented by using =(major, minor, point, patch)
 	 *
+	 * [--stable]
+	 * : Use flag to update the latest-stable.zip to the current build
+	 *
+	 * [--dev]
+	 * : Use flag to update the latest-dev.zip to the current build
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Build a new plugin package for release
@@ -657,10 +663,11 @@ class CLI extends \WP_CLI_Command {
 		 * Create the ZIP Archive
 		 */
 		{
+			$zip_filename = WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip';
 			$zip = new \ZipArchive();
-			if ( $zip->open( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) !== TRUE ) 
+			if ( $zip->open( $zip_filename, \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) !== TRUE ) 
 			{
-				\WP_CLI::error( 'Cannot create the archive file: ' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip' );
+				\WP_CLI::error( 'Cannot create the archive file: ' . $zip_filename );
 			}
 			
 			/* Recursively build files into the archive */
@@ -733,6 +740,18 @@ class CLI extends \WP_CLI_Command {
 			\WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
 			$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
 			$zip->close();
+			
+			/* Copy to latest-dev.zip */
+			if ( $assoc[ 'dev' ] )
+			{
+				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-latest-dev.zip' );
+			}
+			
+			/* Copy to latest-stable.zip */
+			if ( $assoc[ 'stable' ] )
+			{
+				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-latest-stable.zip' );
+			}
 		}
 		
 		\WP_CLI::success( 'Plugin package successfully built.' );
