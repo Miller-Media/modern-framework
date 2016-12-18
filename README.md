@@ -54,6 +54,14 @@ $ wp mwp create-plugin "Awesome New Plugin" --vendor="My Company" --author="My N
 ### Make It Do Something
 To begin programming the functionality of your new plugin, start adding methods to the *`./your-plugin-dir/classes/Plugin.php`* file, which will be hooked into wordpress [using @annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations).
 
+You can easily create new javascript modules, css stylesheets, html templates, and php classes all from the WP CLI.
+```
+$ wp mwp add-script myplugin-slug module-name
+$ wp mwp add-css myplugin-slug stylesheet-name
+$ wp mwp add-template myplugin-slug views/template-name
+$ wp mwp add-class myplugin-slug New\Class
+```
+
 ### Distribute It
 When you are ready to build a release package of your plugin for distribution, that's easy too:
 
