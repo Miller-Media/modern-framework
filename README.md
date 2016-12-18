@@ -68,7 +68,7 @@ When you are ready to build a release package of your plugin for distribution, t
 ```
 $ wp mwp build-plugin myplugin-slug --version-update=minor
 ```
-A packaged .zip file that contains your new version will be created in the `/builds` subdirectory of your plugin. That zip file can be used to install the plugin on another wordpress site.
+A packaged .zip file that contains your new version will be created in the `/builds` subdirectory of your plugin. That zip file can be used to install the plugin on any other wordpress site.
 
 Thats it. Have fun!
 
