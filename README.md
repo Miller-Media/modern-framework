@@ -52,11 +52,11 @@ $ wp mwp create-plugin "Awesome New Plugin" --vendor="My Company" --author="My N
 **Note**: By using the WP CLI to create your plugin, the boilerplate is automatically customized with your plugin details!
 
 ### Make It Do Something
-To begin programming the functionality of your new plugin, start adding methods to the *`./your-plugin-dir/classes/Plugin.php`* file, which will be hooked into wordpress [using @annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations).
+To begin programming the functionality of your new plugin, just start adding methods to the *`./your-plugin-dir/classes/Plugin.php`* file, which can be hooked into wordpress [using @annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations). At some point, you will likely want to separate your code out into separate files to keep things logically organized.
 
 You can easily create new javascript modules, css stylesheets, html templates, and php classes all from the WP CLI.
 ```
-$ wp mwp add-script myplugin-slug module-name
+$ wp mwp add-script myplugin-slug script-name
 $ wp mwp add-css myplugin-slug stylesheet-name
 $ wp mwp add-template myplugin-slug views/template-name
 $ wp mwp add-class myplugin-slug New\Class
