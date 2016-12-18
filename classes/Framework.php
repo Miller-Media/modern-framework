@@ -53,6 +53,17 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Return the database
+	 *
+	 * @return		wpdb
+	 */
+	public function db()
+	{
+		global $wpdb;
+		return $wpdb;
+	}
+	
+	/**
 	 * Attach instances to wordpress
 	 *
 	 * @api
@@ -159,7 +170,7 @@ class Framework extends Plugin
 	 */
 	public function cronSchedules( $schedules )
 	{
-		$schedules['minutely'] = array(
+		$schedules[ 'minutely' ] = array(
 			'interval' => 60,
 			'display' => __( 'Once Per Minute' )
 		);
@@ -170,20 +181,22 @@ class Framework extends Plugin
 	/**
 	 * Setup the queue schedule on framework activation
 	 *
-	 * @Wordpress\Plugin( on="activation", file="framework.php" )
+	 * @Wordpress\Plugin( on="activation", file="plugin.php" )
 	 *
 	 * @return	void
 	 */
 	public function frameworkActivated()
 	{
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
 		wp_schedule_event( time(), 'minutely', 'modern_wordpress_queue_run' );
+		wp_schedule_event( time(), 'hourly', 'modern_wordpress_queue_maintenance' );
 	}
 	
 	/**
 	 * Clear the queue schedule on framework deactivation
 	 *
-	 * @Wordpress\Plugin( on="deactivation", file="framework.php" )
+	 * @Wordpress\Plugin( on="deactivation", file="plugin.php" )
 	 *
 	 * @return	void
 	 */
@@ -193,13 +206,150 @@ class Framework extends Plugin
 	}
 	
 	/**
-	 * Run any queued tasks (future use)
+	 * Add a task to the queue
+	 *
+	 * @param	array|string		$config			Task configuration options
+	 * @param	mixed				$data			Task data
+	 * @return	void
+	 */
+	public function queueTask( $config, $data=NULL )
+	{
+		$task = new \Modern\Wordpress\Task;
+		
+		if ( is_array( $config ) )
+		{
+			if ( ! isset( $config[ 'action' ] ) )
+			{
+				return FALSE;
+			}
+			
+			$task->action = $config[ 'action' ];
+			
+			if ( isset( $config[ 'tag' ] ) ) {
+				$task->tag = $config[ 'tag' ];
+			}
+			
+			if ( isset( $config[ 'priority' ] ) ) {
+				$task->priority = $config[ 'priority' ];
+			}
+			
+			if ( isset( $config[ 'next_start' ] ) ) {
+				$task->next_start = $config[ 'next_start' ];
+			}
+		}
+		
+		if ( is_string( $config ) )
+		{
+			$task->action = $config;
+		}
+		
+		$task->data = $data;
+		$task->save();
+	}
+	
+	/**
+	 * Delete tasks from queue based on action and or tag
+	 *
+	 * @param	string		$action			Delete all tasks with specific action
+	 * @param	string		$tag			Delete all tasks with specific tag
+	 * @return	void
+	 */
+	public function deleteTasks( $action, $tag=NULL )
+	{
+		if ( $action === NULL and $tag === NULL )
+		{
+			return;
+		}
+		
+		/* Only action provided */
+		if ( $tag === NULL )
+		{
+			$this->db()->query( $this->db()->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
+		}
+		
+		/* Only tag provided */
+		elseif ( $action === NULL )
+		{
+			$this->db()->query( $this->db()->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
+		}
+		
+		/* Both action and tag provided */
+		else
+		{
+			$this->db()->query( $this->db()->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
+		}
+	}
+	
+	/**
+	 * Run any queued tasks
 	 *
 	 * @Wordpress\Action( for="modern_wordpress_queue_run" )
+	 *
+	 * @return	void
 	 */
 	public function runQueue()
 	{
+		$db = $this->db();
+		$begin_time = time();
+		$max_execution_time = ini_get( 'max_execution_time' );
 		
+		/* Attempt to increase execution time if it is set to less than 60 seconds */
+		if ( $max_execution_time < 60 ) {
+			if ( set_time_limit( 60 ) ) {
+				$max_execution_time = 60;
+			}
+		}
+		
+		/* Run tasks */
+		while 
+		( 
+			/* We have a task to run */
+			$task = \Modern\Wordpress\Task::popQueue() and
+			
+			/* and we have time to run it */
+			( time() - $begin_time < $max_execution_time - 10 )
+		)
+		{
+			$task->last_start = time();
+			$task->running = 1;
+			$task->save();
+			
+			if ( has_action( $task->action ) )
+			{
+				while
+				( 
+					! $task->complete and                                   // task is not yet complete
+					time() >= $task->next_start and                         // task has not been rescheduled for the future
+					( time() - $begin_time < $max_execution_time - 10 ) )   // there is still time to run it
+				{
+					do_action( $task->action, $task );
+					$task->save();
+				}
+				
+				if ( $task->complete )
+				{
+					$task->delete();
+				}
+				else
+				{
+					$task->running = 0;
+					$task->fails = 0;
+					$task->save();
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Perform task queue maintenance
+	 *
+	 * @Wordpress\Action( for="modern_wordpress_queue_maintenance" )
+	 *
+	 * @return	void
+	 */
+	public function runQueueMaintenance()
+	{
+		\Modern\Wordpress\Task::runMaintenance();
 	}
 	
 	/**
