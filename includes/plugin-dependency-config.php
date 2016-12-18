@@ -11,9 +11,10 @@ add_action( 'tgmpa_register', function()
 	$base_dir = dirname( dirname( __FILE__ ) );
 	$dependencies = array(
 		array( 
-			'name'     => 'Piklist',
-			'slug'     => 'piklist',
-			'required' => true,
+			'name'             => 'Piklist',
+			'slug'             => 'piklist',
+			'required'         => true,
+			'force_activation' => true,
 		),
 	);
 	
@@ -24,7 +25,7 @@ add_action( 'tgmpa_register', function()
 		'parent_slug'  => 'plugins.php',
 		'capability'   => 'manage_options',
 		'has_notices'  => true,
-		'dismissable'  => true,
+		'dismissable'  => false,
 		'is_automatic' => true,
 		'message'      => '',
 		'strings'      => array(
