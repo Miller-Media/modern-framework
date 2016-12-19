@@ -32,22 +32,6 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 	if ( file_exists( __DIR__ . '/dev_config.php' ) ) {
 		include_once __DIR__ . '/dev_config.php'; 
 	}
-	
-	/* Register plugin dependencies */
-	include_once 'includes/plugin-dependency-config.php';
-	
-	if ( ! is_plugin_active( 'piklist/piklist.php' ) )
-	{
-		add_action( 'after_plugin_row_' . plugin_basename( __FILE__ ), function()
-		{
-			echo '<td colspan="3" class="plugin-update colspanchange">
-					<div class="update-message notice inline notice-error notice-alt">
-						<p><strong style="color:red">MISSING DEPENDENCY.</strong> Please activate <a href="' . admin_url( 'plugins.php?page=tgmpa-install-plugins' ) . '"><strong>Piklist</strong></a> to enable the operation of this plugin.</p>
-					</div>
-				  </td>';			
-		});
-		return;
-	}
 
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/AjaxHandler.php" );
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/Plugin.php" );
