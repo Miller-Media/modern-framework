@@ -1,7 +1,7 @@
 Modern Framework for Wordpress
 ==================================
 
-This "plugin" provides a foundation of object oriented design patterns, bootstrappd classes, and api abstractions into wordpress that enable very rapid development of new wordpress plugins.
+This "plugin" provides a foundation of object oriented design patterns, bootstrap classes, and api abstractions for wordpress that enable very rapid development of new wordpress plugins.
 
 ## Documentation
 
