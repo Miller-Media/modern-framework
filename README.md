@@ -57,7 +57,7 @@ $ wp mwp add-class myplugin-slug New\Class
 ```
 
 ### Distribute It
-When you are ready to build a release package of your plugin for distribution, that's easy too:
+When you are ready to build a new release of your plugin, that's easy too:
 
 ```
 $ wp mwp build-plugin myplugin-slug --version-update=minor
