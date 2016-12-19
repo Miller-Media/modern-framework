@@ -1,3 +1,3 @@
 <?php
 
-require_once 'framework.php';
+require_once 'plugin.php';
