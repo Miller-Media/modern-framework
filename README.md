@@ -22,7 +22,7 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 
 ## How to get started:
 
-1) **Install the packaged plugin and dependencies**
+1) **Install the packaged plugin and any dependencies**
 
 If you have WP CLI installed:
 ```
