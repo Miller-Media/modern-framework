@@ -18,17 +18,6 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 * Create tables for your plugin and let the framework automatically track and update them on new releases.
 * Build new release packages with a single command and all your plugin files will be versioned automatically.
 
-## Objectives
-
-The objective of this framework is to ease the development of new wordpress plugins and to encourage good design practices through the use of modern object oriented design patterns and paradigms. Using this framework, you can expect to:
-
-* Create accurate documentation (docblocks) while you develop. 
-* Keep all code portable and encapsulated in namespaced classes.
-* Eliminate the need to manually 'include' any php files.
-* Keep all html templates seperate from functional code.
-* Keep all plugin assets in an organized heirarchy.
-* Have fun!
-
 ## How to get started:
 
 1) **Install the packaged plugin and dependencies**
