@@ -15,7 +15,7 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 * Develop rapidly by extending base classes that bootstrap your plugin, settings pages, widgets, post types, and more.
 * Easily keep all your html in individual re-usable templates that can be overridden by other plugins and themes.
 * Leverage a built in task runner to easily send routine tasks off to a managed queue to be ran by cron.
-* Create tables for your plugin and let the framework automatically manage your changes for new releases.
+* Create tables for your plugin and let the framework automatically track and update them on new releases.
 * Build new release packages with a single command and all your plugin files will be versioned automatically.
 
 ## Objectives
