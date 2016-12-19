@@ -33,7 +33,8 @@ $ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/
 2) Enable developer mode 
 
 > To enable developer mode: Create or edit the **dev_config.php** file in the *wp-content/plugins/modern-framework/* directory and add:
-```
+```php
+<?php
 define( 'MODERN_WORDPRESS_DEV', TRUE );
 ```
 
@@ -50,7 +51,7 @@ To begin programming the functionality of your new plugin, just start adding met
 
 You can easily create new javascript modules, css stylesheets, html templates, and php classes all from the WP CLI.
 ```
-$ wp mwp add-script myplugin-slug script-name
+$ wp mwp add-js myplugin-slug script-name
 $ wp mwp add-css myplugin-slug stylesheet-name
 $ wp mwp add-template myplugin-slug views/template-name
 $ wp mwp add-class myplugin-slug New\Class
