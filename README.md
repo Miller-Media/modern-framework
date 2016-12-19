@@ -14,6 +14,7 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 * Simply document your functions using @annotations and let the framework automatically hook them into core.
 * Develop rapidly by extending base classes that bootstrap your plugin, settings pages, widgets, post types, and more.
 * Use auto-generation utilites to create new plugin stylesheets, scripts, templates, and php classes.
+* Safely add dependencies on php libraries or other wordpress and they will be managed automatically.
 * Easily keep all your html in individual re-usable templates that maintain theme override capabilities.
 * Leverage a built in task runner to easily send routine tasks off to a managed queue to be ran by cron.
 * Create tables for your plugin and let the framework automatically track and update their changes on new releases.
