@@ -211,7 +211,7 @@ abstract class ActiveRecord
 	/**
 	 * Load multiple records
 	 *
-	 * @param	string		$where 			Where clause
+	 * @param	array		$where 			Array of where clauses with associated replacement values
 	 * @return	array
 	 */
 	public static function loadWhere( $where=array() )
@@ -222,8 +222,14 @@ abstract class ActiveRecord
 		$clauses = array();
 		$where_clause = "1=0";
 		$results = array();
-		$where = (array) $where;
 		
+		/* Ensure we have an array of arrays */
+		if ( is_string( $where[0] ) )
+		{
+			$where = array( $where );
+		}
+		
+		/* Iterate the clauses to compile the query and replacement values */
 		foreach( $where as $clause )
 		{
 			if ( is_array( $clause ) )
@@ -245,6 +251,7 @@ abstract class ActiveRecord
 			$where_clause = '('. implode( ') AND (', $clauses ) . ')';
 		}
 		
+		/* Get results of the prepared query */
 		$query = "SELECT * FROM " . $db->prefix . static::$table . " WHERE " . $where_clause;
 		$rows = $db->get_results( $db->prepare( $query, $params ), ARRAY_A );
 		
