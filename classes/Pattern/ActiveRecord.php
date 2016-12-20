@@ -60,11 +60,46 @@ abstract class ActiveRecord
 	 */
 	public function __get( $property )
 	{
-		if ( in_array( $property, static::$columns ) )
+		/* Ensure we are getting a defined property */
+		if ( in_array( $property, static::$columns ) or array_key_exists( $property, static::$columns ) )
 		{
+			/* Proceed if we have a value to return */
 			if ( array_key_exists( static::$prefix . $property, $this->_data ) )
 			{
-				return $this->_data[ static::$prefix . $property ];
+				/* Retrieve the value */
+				$value = $this->_data[ static::$prefix . $property ];
+				
+				/* Check if there are any optional params assigned to this property */
+				if ( array_key_exists( $property, static::$columns ) )
+				{
+					$options = static::$columns[ $property ];
+					
+					/* Special format conversion needed? */
+					if ( isset( $options[ 'format' ] ) )
+					{
+						switch( $options[ 'format' ] )
+						{
+							case 'JSON':
+								
+								$value = json_decode( $value, true );
+								break;
+								
+							case 'ActiveRecord':
+								
+								$class = $options[ 'class' ];
+								try {
+									$value = $class::load( $value );
+								}
+								catch( \OutOfRangeException $e ) {
+									$value = NULL;
+								}
+								break;
+						}
+					}
+				}
+				
+				/* Return the value */
+				return $value;
 			}
 		}
 		
@@ -77,13 +112,70 @@ abstract class ActiveRecord
 	 * @param	string		$property		The property to set
 	 * @param	mixed		$value			The value to set
 	 * @return	void
+	 * @throws	InvalidArgumentException
 	 */
 	public function __set( $property, $value )
 	{
-		if ( in_array( $property, static::$columns ) )
+		/* Ensure we are setting a defined property */
+		if ( in_array( $property, static::$columns ) or array_key_exists( $property, static::$columns ) )
 		{
+			/* Check if there are any optional params assigned to this property */
+			if ( array_key_exists( $property, static::$columns ) )
+			{
+				$options = static::$columns[ $property ];
+				
+				/* Special format conversion needed? */
+				if ( isset( $options[ 'format' ] ) )
+				{
+					switch( $options[ 'format' ] )
+					{
+						case 'JSON':
+							
+							$value = json_encode( $value );
+							break;
+							
+						case 'ActiveRecord':
+							
+							$class = $options[ 'class' ];
+							
+							if ( is_object( $value ) )
+							{
+								if ( $value instanceof \Modern\Wordpress\Pattern\ActiveRecord and is_a( $value, $class ) )
+								{
+									$value = $value->id();
+								}
+								else
+								{
+									if ( ! $value instanceof \Modern\Wordpress\Pattern\ActiveRecord )
+									{
+										throw new \InvalidArgumentException( 'Object is not a subclass of Modern\Wordpress\Pattern\ActiveRecord' );
+									}
+									throw new \InvalidArgumentException( 'Object expected to be an active record of type: ' . $class . ' but it is a: ' . get_class( $value ) );
+								}
+							}
+							break;
+					}
+				}
+			}
+			
+			/* Set the value */
 			$this->_data[ static::$prefix . $property ] = $value;
 		}
+	}
+	
+	/** 
+	 * Get the active record id
+	 *
+	 * @return	int|NULL
+	 */
+	public function id()
+	{
+		if ( isset( $this->_data[ static::$prefix . static::$key ] ) )
+		{
+			return $this->_data[ static::$prefix . static::$key ];
+		}
+		
+		return NULL;
 	}
 	
 	/**
@@ -91,10 +183,15 @@ abstract class ActiveRecord
 	 *
 	 * @param	int 	$id			Record id
 	 * @return	ActiveRecord
-	 * @throws	ErrorException		Throws exception if record could not be located
+	 * @throws	OutOfRangeException		Throws exception if record could not be located
 	 */
 	public static function load( $id )
 	{
+		if ( ! $id )
+		{
+			throw new \OutOfRangeException( 'Invalid ID' );
+		}
+		
 		if ( isset( static::$multitons[ $id ] ) )
 		{
 			return static::$multitons[ $id ];
@@ -108,7 +205,59 @@ abstract class ActiveRecord
 			return static::loadFromRowData( $row );
 		}
 		
-		throw new \ErrorException( 'Unable to find a record with the id: ' . $id );
+		throw new \OutOfRangeException( 'Unable to find a record with the id: ' . $id );
+	}
+	
+	/**
+	 * Load multiple records
+	 *
+	 * @param	string		$where 			Where clause
+	 * @return	array
+	 */
+	public static function loadWhere( $where=array() )
+	{
+		$db = Framework::instance()->db();
+		
+		$params = array();
+		$clauses = array();
+		$where_clause = "1=0";
+		$results = array();
+		$where = (array) $where;
+		
+		foreach( $where as $clause )
+		{
+			if ( is_array( $clause ) )
+			{
+				$clauses[] = array_shift( $clause );
+				if ( ! empty( $clause ) )
+				{
+					$params = array_merge( $params, $clause );
+				}
+			}
+			else
+			{
+				$clauses[] = $clause;
+			}
+		}
+		
+		if ( ! empty( $clauses ) )
+		{
+			$where_clause = '('. implode( ') AND (', $clauses ) . ')';
+		}
+		
+		$query = "SELECT * FROM " . $db->prefix . static::$table . " WHERE " . $where_clause;
+		$rows = $db->get_results( $db->prepare( $query, $params ), ARRAY_A );
+		
+		if ( ! empty( $rows ) )
+		{
+			foreach( $rows as $row )
+			{
+				$record = static::loadFromRowData( $row );
+				$results[] = $record;
+			}
+		}
+		
+		return $results;
 	}
 	
 	/**
@@ -137,7 +286,7 @@ abstract class ActiveRecord
 				$column = substr( $column, strlen( static::$prefix ) );
 			}
 			
-			$record->$column = $value;
+			$record->setDirectly( $column, $value );
 		}
 		
 		/* Cache the record in the multiton store */
@@ -147,6 +296,42 @@ abstract class ActiveRecord
 		}
 		
 		return $record;
+	}
+	
+	/**
+	 * Set internal data properties directly
+	 *
+	 * @param	string		$property		The property to set
+	 * @param	mixed		$value			The value to set
+	 * @return	void
+	 */
+	public function setDirectly( $property, $value )
+	{
+		/* Ensure we are setting a defined property */
+		if ( in_array( $property, static::$columns ) or array_key_exists( $property, static::$columns ) )
+		{
+			$this->_data[ static::$prefix . $property ] = $value;
+		}
+	}
+	
+	/**
+	 * Get internal data properties directly
+	 *
+	 * @param	string		$property		The property to set
+	 * @return	void
+	 */
+	public function getDirectly( $property )
+	{
+		/* Ensure we are setting a defined property */
+		if ( in_array( $property, static::$columns ) or array_key_exists( $property, static::$columns ) )
+		{
+			if ( array_key_exists( static::$prefix . $property, $this->_data ) )
+			{
+				return $this->_data[ static::$prefix . $property ];
+			}
+		}
+		
+		return NULL;
 	}
 	
 	/**
