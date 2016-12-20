@@ -120,16 +120,13 @@ abstract class Plugin extends Singleton
 	 */
 	public function uninstall()
 	{
-		$install = $this->data( 'install-meta' ) ?: array();
+		$build_meta = $this->data( 'build-meta' ) ?: array();
 		
-		if ( is_array( $install[ 'schema' ] ) )
+		if ( is_array( $build_meta[ 'tables' ] ) )
 		{
-			if ( is_array( $install[ 'schema' ][ 'tables' ] ) )
+			foreach( $build_meta[ 'tables' ] as $table )
 			{
-				foreach( $install[ 'schema' ][ 'tables' ] as $table )
-				{
-					$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}{$table['name']}" );
-				}
+				$this->db->query( "DROP TABLE IF EXISTS {$this->db->prefix}{$table['name']}" );
 			}
 		}
 		
