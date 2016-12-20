@@ -12,6 +12,7 @@
 namespace Modern\Wordpress;
 
 use \Modern\Wordpress\Pattern\Singleton;
+use \Modern\Wordpress\Framework;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
@@ -27,7 +28,6 @@ class DbHelper extends Singleton
 	 */
 	public $db;
 
-
 	/**
 	 * Constructor
 	 *
@@ -35,8 +35,7 @@ class DbHelper extends Singleton
 	 */
 	protected function __construct()
 	{
-		global $wpdb;
-		$this->db = $wpdb;
+		$this->db = Framework::instance()->db();
 	}
 
 	/**
@@ -193,7 +192,7 @@ class DbHelper extends Singleton
 	 */
 	public function buildTableSQL( $data )
 	{
-		$query = "CREATE TABLE {$data[ 'name' ]} (" . "\n";
+		$query = "CREATE TABLE {$this->db->prefix}{$data[ 'name' ]} (" . "\n";
 		
 		foreach( $data[ 'columns' ] as $column )
 		{
