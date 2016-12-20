@@ -256,6 +256,8 @@ class Framework extends Plugin
 	 */
 	public function deleteTasks( $action, $tag=NULL )
 	{
+		$db = $this->db();
+		
 		if ( $action === NULL and $tag === NULL )
 		{
 			return;
@@ -264,22 +266,57 @@ class Framework extends Plugin
 		/* Only action provided */
 		if ( $tag === NULL )
 		{
-			$this->db()->query( $this->db()->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
 		}
 		
 		/* Only tag provided */
 		elseif ( $action === NULL )
 		{
-			$this->db()->query( $this->db()->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
 		}
 		
 		/* Both action and tag provided */
 		else
 		{
-			$this->db()->query( $this->db()->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
 		}
 	}
 	
+	/**
+	 * Count tasks from queue based on action and or tag
+	 *
+	 * @param	string		$action			Delete all tasks with specific action
+	 * @param	string		$tag			Delete all tasks with specific tag
+	 * @return	void
+	 */
+	public function countTasks( $action=NULL, $tag=NULL )
+	{
+		$db = $this->db();
+		
+		if ( $action === NULL and $tag === NULL )
+		{
+			return $db->get_var( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table );
+		}
+		
+		/* Only action provided */
+		if ( $tag === NULL )
+		{
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
+		}
+		
+		/* Only tag provided */
+		elseif ( $action === NULL )
+		{
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
+		}
+		
+		/* Both action and tag provided */
+		else
+		{
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
+		}
+	}
+
 	/**
 	 * Run any queued tasks
 	 *
