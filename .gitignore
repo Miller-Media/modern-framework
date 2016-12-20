@@ -10,3 +10,4 @@ builddoc.bat
 bin
 phpunit.xml.dist
 tests/bootstrap.php
+data/install-meta.php
