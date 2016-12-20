@@ -69,7 +69,6 @@ abstract class Plugin extends Singleton
 		if ( ! defined( 'MODERN_WORDPRESS_DEV' ) or \MODERN_WORDPRESS_DEV == FALSE )
 		{
 			$plugin_meta = $this->data( 'plugin-meta' );
-			
 			if ( is_array( $plugin_meta ) and isset( $plugin_meta[ 'version' ] ) and $plugin_meta[ 'version' ] )
 			{
 				$install = $this->data( 'install-meta' );
@@ -95,6 +94,7 @@ abstract class Plugin extends Singleton
 		/* Update table definitions in database if needed */
 		if ( is_array( $build_meta[ 'tables' ] ) )
 		{
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 			$dbHelper = \Modern\Wordpress\DbHelper::instance();
 			foreach( $build_meta[ 'tables' ] as $table )
 			{
@@ -240,9 +240,9 @@ abstract class Plugin extends Singleton
 	 */
 	public function getData( $key, $subdir=NULL )
 	{
-		if ( file_exists( $this->getPath() . 'data/' . $key . '.php' ) )
+		if ( file_exists( $this->getPath() . '/data/' . $key . '.php' ) )
 		{
-			$data = include $this->getPath() . 'data/' . $key . '.php';
+			$data = include $this->getPath() . '/data/' . $key . '.php';
 			if ( $data )
 			{
 				return json_decode( $data, TRUE );
@@ -261,7 +261,7 @@ abstract class Plugin extends Singleton
 	 */ 
 	public function data( $key, $subdir=NULL )
 	{
-		return $this->getData( $key );
+		return $this->getData( $key, $subdir );
 	}
 	
 	/**
