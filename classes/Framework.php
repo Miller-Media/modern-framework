@@ -206,118 +206,6 @@ class Framework extends Plugin
 	}
 	
 	/**
-	 * Add a task to the queue
-	 *
-	 * @param	array|string		$config			Task configuration options
-	 * @param	mixed				$data			Task data
-	 * @return	void
-	 */
-	public function queueTask( $config, $data=NULL )
-	{
-		$task = new \Modern\Wordpress\Task;
-		
-		if ( is_array( $config ) )
-		{
-			if ( ! isset( $config[ 'action' ] ) )
-			{
-				return FALSE;
-			}
-			
-			$task->action = $config[ 'action' ];
-			
-			if ( isset( $config[ 'tag' ] ) ) {
-				$task->tag = $config[ 'tag' ];
-			}
-			
-			if ( isset( $config[ 'priority' ] ) ) {
-				$task->priority = $config[ 'priority' ];
-			}
-			
-			if ( isset( $config[ 'next_start' ] ) ) {
-				$task->next_start = $config[ 'next_start' ];
-			}
-		}
-		
-		if ( is_string( $config ) )
-		{
-			$task->action = $config;
-		}
-		
-		$task->data = $data;
-		$task->save();
-	}
-	
-	/**
-	 * Delete tasks from queue based on action and or tag
-	 *
-	 * @param	string		$action			Delete all tasks with specific action
-	 * @param	string		$tag			Delete all tasks with specific tag
-	 * @return	void
-	 */
-	public function deleteTasks( $action, $tag=NULL )
-	{
-		$db = $this->db();
-		
-		if ( $action === NULL and $tag === NULL )
-		{
-			return;
-		}
-		
-		/* Only action provided */
-		if ( $tag === NULL )
-		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
-		}
-		
-		/* Only tag provided */
-		elseif ( $action === NULL )
-		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
-		}
-		
-		/* Both action and tag provided */
-		else
-		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
-		}
-	}
-	
-	/**
-	 * Count tasks from queue based on action and or tag
-	 *
-	 * @param	string		$action			Delete all tasks with specific action
-	 * @param	string		$tag			Delete all tasks with specific tag
-	 * @return	void
-	 */
-	public function countTasks( $action=NULL, $tag=NULL )
-	{
-		$db = $this->db();
-		
-		if ( $action === NULL and $tag === NULL )
-		{
-			return $db->get_var( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table );
-		}
-		
-		/* Only action provided */
-		if ( $tag === NULL )
-		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
-		}
-		
-		/* Only tag provided */
-		elseif ( $action === NULL )
-		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
-		}
-		
-		/* Both action and tag provided */
-		else
-		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
-		}
-	}
-
-	/**
 	 * Run any queued tasks
 	 *
 	 * @Wordpress\Action( for="modern_wordpress_queue_run" )
@@ -325,7 +213,7 @@ class Framework extends Plugin
 	 * @return	void
 	 */
 	public function runTasks()
-	{
+	{		
 		$db = $this->db();
 		$begin_time = time();
 		$max_execution_time = ini_get( 'max_execution_time' );
@@ -341,25 +229,26 @@ class Framework extends Plugin
 		while 
 		( 
 			/* We have a task to run */
-			$task = \Modern\Wordpress\Task::popQueue() and
+			$task = Task::popQueue() and
 			
 			/* and we have time to run it */
 			( time() - $begin_time < $max_execution_time - 10 )
 		)
 		{
-			$task->last_start = time();
-			$task->running = 1;
-			$task->save();
-			
 			if ( has_action( $task->action ) )
 			{
+				$task->last_start = time();
+				$task->running = 1;
+				$task->save();
+				
 				while
 				( 
 					! $task->complete and                                   // task is not yet complete
 					time() >= $task->next_start and                         // task has not been rescheduled for the future
-					( time() - $begin_time < $max_execution_time - 10 ) )   // there is still time to run it
+					( time() - $begin_time < $max_execution_time - 10 )     // there is still time to run it
+				)
 				{
-					do_action( $task->action, $task );
+					$task->execute();
 					$task->save();
 				}
 				
@@ -386,7 +275,7 @@ class Framework extends Plugin
 	 */
 	public function runTasksMaintenance()
 	{
-		\Modern\Wordpress\Task::runMaintenance();
+		Task::runMaintenance();
 	}
 	
 	/**

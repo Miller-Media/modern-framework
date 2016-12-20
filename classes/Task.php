@@ -38,7 +38,7 @@ class Task extends ActiveRecord
 	protected static $columns = array(
 		'id',
 		'action',
-		'data',
+		'data' => array( 'format' => 'JSON' ),
 		'priority',
 		'next_start',
 		'running',
@@ -63,56 +63,138 @@ class Task extends ActiveRecord
 	public $complete = false;
 	
 	/**
-	 * Property setter
+	 * Execute this task
 	 *
-	 * @param	string		$property		The property to set
-	 * @param	mixed		$value			The value to set
 	 * @return	void
 	 */
-	public function __set( $property, $value )
+	public function execute()
 	{
-		if ( $property == 'data' )
-		{
-			$value = json_encode( $value );
-		}
-		
-		parent::__set( $property, $value );
+		do_action( $this->action, $this );
 	}
 	
 	/**
-	 * Property getter
+	 * Complete this task
 	 *
-	 * @param	string		$property		The property to get_browser
-	 * @return	mixed
+	 * @return	void
 	 */
-	public function __get( $property )
+	public function complete()
 	{
-		$value = parent::__get( $property );
+		$this->complete = true;
+	}
+	
+	
+	/**
+	 * Add a task to the queue
+	 *
+	 * @param	array|string		$config			Task configuration options
+	 * @param	mixed				$data			Task data
+	 * @return	void
+	 */
+	public static function queueTask( $config, $data=NULL )
+	{
+		$task = new static;
 		
-		if ( $property == 'data' )
+		if ( is_array( $config ) )
 		{
-			$value = json_decode( $value, TRUE );
+			if ( ! isset( $config[ 'action' ] ) )
+			{
+				return FALSE;
+			}
+			
+			$task->action = $config[ 'action' ];
+			
+			if ( isset( $config[ 'tag' ] ) ) {
+				$task->tag = $config[ 'tag' ];
+			}
+			
+			if ( isset( $config[ 'priority' ] ) ) {
+				$task->priority = $config[ 'priority' ];
+			}
+			
+			if ( isset( $config[ 'next_start' ] ) ) {
+				$task->next_start = $config[ 'next_start' ];
+			}
 		}
 		
-		return $value;
+		if ( is_string( $config ) )
+		{
+			$task->action = $config;
+		}
+		
+		$task->data = $data;
+		$task->save();
+	}
+
+	/**
+	 * Delete tasks from queue based on action and or tag
+	 *
+	 * @param	string		$action			Delete all tasks with specific action
+	 * @param	string		$tag			Delete all tasks with specific tag
+	 * @return	void
+	 */
+	public static function deleteTasks( $action, $tag=NULL )
+	{
+		$db = Framework::instance()->db();
+		
+		if ( $action === NULL and $tag === NULL )
+		{
+			return;
+		}
+		
+		/* Only action provided */
+		if ( $tag === NULL )
+		{
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
+		}
+		
+		/* Only tag provided */
+		elseif ( $action === NULL )
+		{
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
+		}
+		
+		/* Both action and tag provided */
+		else
+		{
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
+		}
 	}
 	
 	/**
-	 * Load record from row data
+	 * Count tasks from queue based on action and or tag
 	 *
-	 * @param	array		$row_data		Row data from the database
-	 * @return	ActiveRecord
+	 * @param	string		$action			Delete all tasks with specific action
+	 * @param	string		$tag			Delete all tasks with specific tag
+	 * @return	void
 	 */
-	public static function loadFromRowData( $row_data )
+	public static function countTasks( $action=NULL, $tag=NULL )
 	{
-		if ( isset( $row_data[ 'task_data' ] ) )
+		$db = Framework::instance()->db();
+		
+		if ( $action === NULL and $tag === NULL )
 		{
-			$row_data[ 'task_data' ] = json_decode( $row_data[ 'task_data' ], TRUE );
+			return $db->get_var( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table );
 		}
 		
-		return parent::loadFromRowData( $row_data );
+		/* Only action provided */
+		if ( $tag === NULL )
+		{
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
+		}
+		
+		/* Only tag provided */
+		elseif ( $action === NULL )
+		{
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
+		}
+		
+		/* Both action and tag provided */
+		else
+		{
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
+		}
 	}
-	
+
 	/**
 	 * Get the next task that needs to be run
 	 *
@@ -121,9 +203,10 @@ class Task extends ActiveRecord
 	public static function popQueue()
 	{		
 		$db = Framework::instance()->db();
+		
 		$row = $db->get_row( 
 			$db->prepare( "
-				SELECT * FROM {$db->prefix}queued_tasks 
+				SELECT * FROM {$db->prefix}" . static::$table . " 
 					WHERE task_running=0 AND task_next_start <= %d AND task_fails < 3 
 					ORDER BY task_priority DESC, task_last_start ASC, task_id ASC", time() 
 			), ARRAY_A
