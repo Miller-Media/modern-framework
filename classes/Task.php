@@ -30,12 +30,12 @@ class Task extends ActiveRecord
 	/**
 	 * @var	string		Table name
 	 */
-	protected static $table = 'queued_tasks';
+	public static $table = 'queued_tasks';
 	
 	/**
 	 * @var	array		Table columns
 	 */
-	protected static $columns = array(
+	public static $columns = array(
 		'id',
 		'action',
 		'data' => array( 'format' => 'JSON' ),
@@ -50,12 +50,12 @@ class Task extends ActiveRecord
 	/**
 	 * @var	string		Table primary key
 	 */
-	protected static $key = 'id';
+	public static $key = 'id';
 	
 	/**
 	 * @var	string		Table column prefix
 	 */
-	protected static $prefix = 'task_';
+	public static $prefix = 'task_';
 	
 	/**
 	 * @var	bool		Task completed

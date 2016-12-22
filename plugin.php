@@ -28,11 +28,15 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 	require_once 'includes/mwp-global-functions.php';
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
 	
-	/* Optional config file (for development overrides) */
+	/* Include Redux Framework */
+	#require_once 'includes/redux/admin-init.php';
+	
+	/* Optional development config */
 	if ( file_exists( __DIR__ . '/dev_config.php' ) ) {
 		include_once __DIR__ . '/dev_config.php'; 
 	}
 
+	AnnotationRegistry::registerFile( __DIR__ . "/annotations/AdminPage.php" );
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/AjaxHandler.php" );
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/Plugin.php" );
 	AnnotationRegistry::registerFile( __DIR__ . "/annotations/Action.php" );
