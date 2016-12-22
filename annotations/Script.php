@@ -36,7 +36,7 @@ class Script extends \Modern\Wordpress\Annotation
 	 * @var boolean
 	 */
 	public $always = false;
-    
+	
 	/**
 	 * Apply to Property
 	 *
@@ -51,12 +51,21 @@ class Script extends \Modern\Wordpress\Annotation
 		{
 			$plugin = ( $instance instanceof \Modern\Wordpress\Plugin ) ? $instance : $instance->getPlugin();
 			$fileUrl = $plugin->fileUrl( $instance->{$property->name} );
-			wp_register_script( md5( $fileUrl ), $fileUrl, $this->deps, $this->ver, $this->footer );
+			$annotation = $this;
 			
-			if ( $this->always )
+			$register_callback = function() use ( $plugin, $fileUrl, $annotation, $instance, $property )
 			{
-				$plugin->useScript( $instance->{$property->name} );
-			}
+				wp_register_script( md5( $fileUrl ), $fileUrl, $annotation->deps, $annotation->ver, $annotation->footer );
+				
+				if ( $annotation->always )
+				{
+					$plugin->useScript( $instance->{$property->name} );
+				}
+			};
+			
+			mwp_add_action( 'wp_enqueue_scripts', $register_callback );
+			mwp_add_action( 'admin_enqueue_scripts', $register_callback );
+			mwp_add_action( 'login_enqueue_scripts', $register_callback );
 		}
 	}
 	

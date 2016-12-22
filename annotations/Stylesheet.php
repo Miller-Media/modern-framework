@@ -51,12 +51,21 @@ class Stylesheet extends \Modern\Wordpress\Annotation
 		{
 			$plugin = ( $instance instanceof \Modern\Wordpress\Plugin ) ? $instance : $instance->getPlugin();
 			$fileUrl = $plugin->fileUrl( $instance->{$property->name} );
-			wp_register_style( md5( $fileUrl ), $fileUrl, $this->deps, $this->ver, $this->media );
+			$annotation = $this;
 			
-			if ( $this->always )
+			$register_callback = function() use ( $plugin, $fileUrl, $annotation, $instance, $property )
 			{
-				$plugin->useStyle( $instance->{$property->name} );
-			}
+				wp_register_style( md5( $fileUrl ), $fileUrl, $annotation->deps, $annotation->ver, $annotation->media );
+				
+				if ( $annotation->always )
+				{
+					$plugin->useStyle( $instance->{$property->name} );
+				}
+			};
+			
+			mwp_add_action( 'wp_enqueue_scripts', $register_callback );
+			mwp_add_action( 'admin_enqueue_scripts', $register_callback );
+			mwp_add_action( 'login_enqueue_scripts', $register_callback );
 		}
 	}
 	
