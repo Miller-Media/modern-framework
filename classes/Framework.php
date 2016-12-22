@@ -73,6 +73,7 @@ class Framework extends Plugin
 	 */
 	public function attach( $instance )
 	{
+		
 		$reflClass = new \ReflectionClass( get_class( $instance ) );
 		$vars = array();
 		

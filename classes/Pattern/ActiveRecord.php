@@ -30,22 +30,22 @@ abstract class ActiveRecord
 	/**
 	 * @var	string		Table name
 	 */
-	protected static $table;
+	public static $table;
 	
 	/**
 	 * @var	array		Table columns
 	 */
-	protected static $columns = array();
+	public static $columns = array();
 	
 	/**
 	 * @var	string		Table primary key
 	 */
-	protected static $key;
+	public static $key;
 	
 	/**
 	 * @var	string		Table column prefix
 	 */
-	protected static $prefix = '';
+	public static $prefix = '';
 	
 	/**
 	 * @var	array		Record data
@@ -214,46 +214,16 @@ abstract class ActiveRecord
 	 * @param	array		$where 			Array of where clauses with associated replacement values
 	 * @return	array
 	 */
-	public static function loadWhere( $where=array() )
+	public static function loadWhere( $where )
 	{
 		$db = Framework::instance()->db();
-		
-		$params = array();
-		$clauses = array();
-		$where_clause = "1=0";
 		$results = array();
-		
-		/* Ensure we have an array of arrays */
-		if ( is_string( $where[0] ) )
-		{
-			$where = array( $where );
-		}
-		
-		/* Iterate the clauses to compile the query and replacement values */
-		foreach( $where as $clause )
-		{
-			if ( is_array( $clause ) )
-			{
-				$clauses[] = array_shift( $clause );
-				if ( ! empty( $clause ) )
-				{
-					$params = array_merge( $params, $clause );
-				}
-			}
-			else
-			{
-				$clauses[] = $clause;
-			}
-		}
-		
-		if ( ! empty( $clauses ) )
-		{
-			$where_clause = '('. implode( ') AND (', $clauses ) . ')';
-		}
+		$compiled = static::compileWhereClause( $where );
 		
 		/* Get results of the prepared query */
-		$query = "SELECT * FROM " . $db->prefix . static::$table . " WHERE " . $where_clause;
-		$rows = $db->get_results( $db->prepare( $query, $params ), ARRAY_A );
+		$query = "SELECT * FROM " . $db->prefix . static::$table . " WHERE " . $compiled[ 'where' ];
+		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
+		$rows = $db->get_results( $prepared_query, ARRAY_A );
 		
 		if ( ! empty( $rows ) )
 		{
@@ -265,6 +235,64 @@ abstract class ActiveRecord
 		}
 		
 		return $results;
+	}
+	
+	/**
+	 * Compile a where clause with params
+	 *
+	 * @param	array		$where			Where clauses
+	 * @return	array
+	 */
+	public static function compileWhereClause( $where )
+	{
+		$params = array();
+		$clauses = array();
+		$compiled = array
+		(
+			'where' => "1=0",
+			'params' => array(),
+		);
+		
+		$where = array( $where );
+		$called_class_slug = strtolower( str_replace( '\\', '_', get_called_class() ) );
+		
+		/* Apply filters */
+		$where = apply_filters( 'active_record_where', $where, get_called_class() );
+		$where = apply_filters( 'active_record_where' . $called_class_slug, $where );
+		
+		/* Iterate the clauses to compile the query and replacement values */
+		foreach( $where as $clause )
+		{
+			if ( is_array( $clause ) )
+			{
+				$clauses[] = array_shift( $clause );
+				if ( ! empty( $clause ) )
+				{
+					$compiled[ 'params' ] = array_merge( $compiled[ 'params' ], $clause );
+				}
+			}
+			else
+			{
+				$clauses[] = $clause;
+			}
+		}
+		
+		if ( ! empty( $clauses ) )
+		{
+			$compiled[ 'where' ] = '('. implode( ') AND (', $clauses ) . ')';
+		}
+		
+		return $compiled;
+	}
+	
+	/**
+	 * Create a table for viewing active records
+	 */
+	public static function createDisplayTable()
+	{
+		$table = new \Modern\Wordpress\Helper\ActiveRecordTable;
+		$table->activeRecordClass = get_called_class();
+		return $table;
 	}
 	
 	/**
