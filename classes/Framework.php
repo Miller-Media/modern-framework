@@ -632,7 +632,7 @@ class $classname
 	/**
 	 * Constructor
 	 *
-	 * @param	\Modern\Wordpress\Plugin	$plugin			The plugin to associate this class with, or NULL to auto-associate
+	 * @param	\Modern\Wordpress\Plugin	\$plugin			The plugin to associate this class with, or NULL to auto-associate
 	 * @return	void
 	 */
 	public function __construct( \Modern\Wordpress\Plugin \$plugin=NULL )

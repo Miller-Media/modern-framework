@@ -686,7 +686,7 @@ class CLI extends \WP_CLI_Command {
 				{
 					/* Replace tokens in source files */
 					$pathinfo = pathinfo( $source );
-					if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) and substr( $relativename, 0, 7 ) !== 'vendor/' )
+					if ( isset( $pathinfo[ 'extension' ] ) and in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) and substr( $relativename, 0, 7 ) !== 'vendor/' )
 					{
 						$source_contents = file_get_contents( $source );
 						$updated_contents = strtr( $source_contents, array( '{' . 'build_version' . '}' => $plugin_version ) );
@@ -742,13 +742,13 @@ class CLI extends \WP_CLI_Command {
 			$zip->close();
 			
 			/* Copy to latest-dev.zip */
-			if ( $assoc[ 'dev' ] )
+			if ( isset( $assoc[ 'dev' ] ) and $assoc[ 'dev' ] )
 			{
 				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-latest-dev.zip' );
 			}
 			
 			/* Copy to latest-stable.zip */
-			if ( $assoc[ 'stable' ] )
+			if ( isset( $assoc[ 'stable' ] ) and $assoc[ 'stable' ] )
 			{
 				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-latest-stable.zip' );
 			}
