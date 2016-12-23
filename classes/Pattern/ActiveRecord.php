@@ -211,17 +211,43 @@ abstract class ActiveRecord
 	/**
 	 * Load multiple records
 	 *
-	 * @param	array		$where 			Array of where clauses with associated replacement values
+	 * @param	array|string		$where 			Where clause with associated replacement values
+	 * @param	string				$order			Order by ( include field + ASC or DESC ) ex. "field_name DESC"
+	 * @param   int|array           $limit          Limit clause. If an int is provided, it should be the number of records to limit by
+	 *                                              If an array is provided, the first number will be the start record and the second number will be the limit
 	 * @return	array
 	 */
-	public static function loadWhere( $where )
+	public static function loadWhere( $where, $order=NULL, $limit=NULL )
 	{
+		if ( is_string( $where ) )
+		{
+			$where = array( $where );
+		}
+		
 		$db = Framework::instance()->db();
 		$results = array();
 		$compiled = static::compileWhereClause( $where );
 		
 		/* Get results of the prepared query */
 		$query = "SELECT * FROM " . $db->prefix . static::$table . " WHERE " . $compiled[ 'where' ];
+		
+		if ( $order !== NULL )
+		{
+			$query .= " ORDER BY " . $order;
+		}
+		
+		if ( $limit !== NULL )
+		{
+			if ( is_array( $limit ) )
+			{
+				$query .= " LIMIT " . $limit[0] . ", " . $limit[1];
+			}
+			else
+			{
+				$query .= " LIMIT " . $limit;
+			}
+		}
+		
 		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
 		$rows = $db->get_results( $prepared_query, ARRAY_A );
 		
@@ -235,6 +261,30 @@ abstract class ActiveRecord
 		}
 		
 		return $results;
+	}
+	
+	/**
+	 * Count records
+	 *
+	 * @param	array|string		$where 			Where clause with associated replacement values
+	 * @return	array
+	 */
+	public static function countWhere( $where )
+	{
+		if ( is_string( $where ) )
+		{
+			$where = array( $where );
+		}
+		
+		$db = Framework::instance()->db();
+		$compiled = static::compileWhereClause( $where );
+		
+		/* Get results of the prepared query */
+		$query = "SELECT COUNT(*) FROM " . $db->prefix . static::$table . " WHERE " . $compiled[ 'where' ];
+		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
+		$count = $db->get_var( $prepared_query );
+		
+		return $count;
 	}
 	
 	/**
