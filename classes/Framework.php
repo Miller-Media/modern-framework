@@ -34,7 +34,7 @@ class Framework extends Plugin
 	 * @var Annotations Reader
 	 */
 	protected $reader;
-	
+		
 	/**
 	 * Constructor
 	 */
@@ -148,6 +148,10 @@ class Framework extends Plugin
 	{
 		wp_register_script( 'knockout', $this->fileUrl( 'assets/js/knockout.min.js' ) );
 		wp_register_script( 'knockback', $this->fileUrl( 'assets/js/knockback.min.js' ), array( 'underscore', 'backbone', 'knockout' ) );
+		wp_register_script( 'mwp', $this->fileUrl( 'assets/js/mwp.framework.js' ), array( 'jquery', 'underscore', 'backbone', 'knockout' ) );
+		wp_localize_script( 'mwp', 'mw_localized_data', array(
+			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+		));
 	}
 	
 	/**
