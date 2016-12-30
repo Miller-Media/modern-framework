@@ -5,7 +5,7 @@
  *
  * @package    Modern Framework for Wordpress
  * @author     Kevin Carwile
- * @since      {build_version}
+ * @since      1.0.3
  */
 
 "use strict";
@@ -41,11 +41,20 @@ window.mwp = {};
 						module.init();
 					}
 				});
+			},
+			
+			model: function() {
+				return this;
 			}
+			
 		}),
 		
 		Model: Backbone.Model.extend({
 		
+			model: function() {
+				return this;
+			}
+			
 		}),
 		
 		Collection: Backbone.Collection.extend({
@@ -60,7 +69,7 @@ window.mwp = {};
 		modules[ name ] = new module;
 		return modules[ name ];
 	};
-	
+		
 	mwp.module.get = function( name )
 	{
 		if ( typeof modules[ name ] !== 'undefined' ) {
@@ -91,7 +100,7 @@ window.mwp = {};
 		return collections[ name ];
 	};
 	
-	mwp.model.get = function( name )
+	mwp.collection.get = function( name )
 	{
 		if ( typeof collections[ name ] !== 'undefined' ) {
 			return collections[ name ];
@@ -110,6 +119,7 @@ window.mwp = {};
 
 		ko.virtualElements.allowedBindings.stopBinding = true;
 		
+		/* Double ready means that this will be executed last */
 		$(document).ready( function() {
 			$(document).ready( function() {
 				var views = $('[data-view-model]');
