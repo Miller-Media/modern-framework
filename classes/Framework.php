@@ -142,6 +142,15 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * @Wordpress\Action( for="wp_enqueue_scripts", priority=0 )
+	 */
+	public function enqueueScripts()
+	{
+		wp_register_script( 'knockout', $this->fileUrl( 'assets/js/knockout.min.js' ) );
+		wp_register_script( 'knockback', $this->fileUrl( 'assets/js/knockback.min.js' ), array( 'underscore', 'backbone', 'knockout' ) );
+	}
+	
+	/**
 	 * Get all modern wordpress plugins
 	 *
 	 * @api
