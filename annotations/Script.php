@@ -38,6 +38,11 @@ class Script extends \Modern\Wordpress\Annotation
 	public $always = false;
 	
 	/**
+	 * @var	string
+	 */
+	public $handle;
+	
+	/**
 	 * Apply to Property
 	 *
 	 * @param	object					$instance		The object that the property belongs to
@@ -55,7 +60,15 @@ class Script extends \Modern\Wordpress\Annotation
 			
 			$register_callback = function() use ( $plugin, $fileUrl, $annotation, $instance, $property )
 			{
-				wp_register_script( md5( $fileUrl ), $fileUrl, $annotation->deps, $annotation->ver, $annotation->footer );
+				if ( isset( $annotation->handle ) )
+				{
+					wp_register_script( $annotation->handle, $fileUrl, $annotation->deps, $annotation->ver, $annotation->footer );
+					$plugin::$scriptHandles[ md5( $fileUrl ) ] = $annotation->handle;
+				}
+				else
+				{
+					wp_register_script( md5( $fileUrl ), $fileUrl, $annotation->deps, $annotation->ver, $annotation->footer );
+				}
 				
 				if ( $annotation->always )
 				{
