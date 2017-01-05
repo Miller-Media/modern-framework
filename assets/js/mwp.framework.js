@@ -17,7 +17,7 @@ window.mwp = {};
  */
 (function( $, undefined ) {
 	
-	var modules = {};
+	var controllers = {};
 	var models = {};
 	var collections = {};
 	var local = mw_localized_data;
@@ -27,22 +27,35 @@ window.mwp = {};
 	 */
 	mwp.base = {
 	
-		Module: Backbone.Model.extend({
+		Controller: Backbone.Model.extend({
 		
+			/**
+			 * @var	object		Controller view model
+			 */
 			viewModel: {},
 			
+			/**
+			 * Constructor
+			 *
+			 * @return	void
+			 */
 			initialize: function()
 			{
-				var module = this;
+				var controller = this;
 				this.local = $.extend( local, mw_localized_data );
 				
 				$(document).ready( function() {
-					if( typeof module.init == 'function' ) {
-						module.init();
+					if( typeof controller.init == 'function' ) {
+						controller.init();
 					}
 				});
 			},
 			
+			/**
+			 * Return self for knockback binding compatibility
+			 *
+			 * @return	this
+			 */
 			model: function() {
 				return this;
 			}
@@ -51,6 +64,11 @@ window.mwp = {};
 		
 		Model: Backbone.Model.extend({
 		
+			/**
+			 * Return self for knockback binding compatibility
+			 *
+			 * @return	this
+			 */
 			model: function() {
 				return this;
 			}
@@ -63,17 +81,17 @@ window.mwp = {};
 		
 	};
 	
-	mwp.module = function( name, properties, classProperties ) 
+	mwp.controller = function( name, properties, classProperties ) 
 	{
-		var module = mwp.base.Module.extend( properties, classProperties );
-		modules[ name ] = new module;
-		return modules[ name ];
+		var controller = mwp.base.Controller.extend( properties, classProperties );
+		controllers[ name ] = new controller;
+		return controllers[ name ];
 	};
 		
-	mwp.module.get = function( name )
+	mwp.controller.get = function( name )
 	{
-		if ( typeof modules[ name ] !== 'undefined' ) {
-			return modules[ name ];
+		if ( typeof controllers[ name ] !== 'undefined' ) {
+			return controllers[ name ];
 		}
 		
 		return undefined;
@@ -134,10 +152,10 @@ window.mwp = {};
 				views.each( function() {
 					var view = $(this);
 					var view_name = view.data( 'view-model' );
-					var module = mwp.module.get( view.data( 'view-model' ) );
-					if ( typeof module !== 'undefined' && typeof module.viewModel !== 'undefined' )
+					var controller = mwp.controller.get( view.data( 'view-model' ) );
+					if ( typeof controller !== 'undefined' && typeof controller.viewModel !== 'undefined' )
 					{
-						ko.applyBindings( module.viewModel, this );
+						ko.applyBindings( controller.viewModel, this );
 					}
 				});
 			});

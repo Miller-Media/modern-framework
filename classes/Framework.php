@@ -407,7 +407,7 @@ class Framework extends Plugin
 	 */
 	public function createJavascript( $slug, $name )
 	{
-		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/js/module.js' ) )
+		if ( ! file_exists( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/js/main.js' ) )
 		{
 			throw new \ErrorException( "The boilerplate plugin is not present. \nTry using: $ wp mwp update-boilerplate" );
 		}
@@ -429,7 +429,7 @@ class Framework extends Plugin
 			throw new \ErrorException( "The javascript file already exists: " . $slug . '/assets/js/' . $name . '.js' );
 		}
 		
-		if ( ! copy( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/js/module.js', $javascript_file ) )
+		if ( ! copy( WP_PLUGIN_DIR . '/modern-framework/boilerplate/assets/js/main.js', $javascript_file ) )
 		{
 			throw new \ErrorException( 'Error copying file to destination: ' . $slug . '/assets/js/' . $name . '.js' );
 		}
