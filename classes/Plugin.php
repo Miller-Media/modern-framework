@@ -32,6 +32,11 @@ abstract class Plugin extends Singleton
 	 */
 	protected $settings = array();
 	
+	/**
+	 * @var array	Script Handles Cache
+	 */
+	public static $scriptHandles = array();	 
+	
 	/** 
 	 * Set the base plugin path
 	 *
@@ -337,19 +342,27 @@ abstract class Plugin extends Singleton
 	public function useScript( $script, $localization=array() )
 	{
 		static $usedScripts = array();
-		$fileHash = md5( $this->fileUrl( $script ) );
+		static $existingLocalization = FALSE;
 		
-		if ( ! isset( $usedScripts[ $fileHash ] ) )
-		{
-			$localization = array_merge( array
-			(
-				'ajaxurl' => admin_url( 'admin-ajax.php' ),
-			)
-			, $localization );
+		$fileHash = md5( $this->fileUrl( $script ) );	
+		$handle = isset( static::$scriptHandles[ $fileHash ] ) ? static::$scriptHandles[ $fileHash ] : $fileHash;
+		
+		if ( ! isset( $usedScripts[ $handle ] ) )
+		{			
+			if ( ! empty( $localization ) )
+			{
+				wp_localize_script( $handle, 'mw_localized_data', $localization );
+				$existingLocalization = TRUE;
+			}
 			
-			wp_localize_script( $fileHash, 'mw_localized_data', $localization );			
-			wp_enqueue_script( $fileHash );
-			$usedScripts[ $fileHash ] = TRUE;
+			if ( empty( $localization ) and $existingLocalization )
+			{
+				wp_localize_script( $handle, 'mw_localized_data', array() );
+				$existingLocalization = FALSE;
+			}				
+			
+			wp_enqueue_script( $handle );
+			$usedScripts[ $handle ] = TRUE;
 		}
 	}
 	
