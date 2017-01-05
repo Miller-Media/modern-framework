@@ -688,6 +688,7 @@ CLASS;
 			'BoilerplatePlugin'                 => str_replace( '\\', '', $data[ 'namespace'] ) . 'Plugin',
 			'{vendor_name}'                     => $data[ 'vendor' ],
 			'{plugin_name}'                     => $data[ 'name' ],
+			'{plugin_slug}'                     => $data[ 'slug' ],
 			'{plugin_description}'              => $data[ 'description' ],
 			'{plugin_dir}'                      => $data[ 'slug' ],
 			'{plugin_author}'                   => $data[ 'author' ],
