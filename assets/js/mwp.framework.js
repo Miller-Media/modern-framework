@@ -10,7 +10,7 @@
 
 "use strict";
 
-window.mwp = {};
+window.mwp = _.extend( {}, Backbone.Events );
 
 /**
  * Module Design Pattern
@@ -45,8 +45,10 @@ window.mwp = {};
 				this.local = $.extend( local, mw_localized_data );
 				
 				$(document).ready( function() {
+					mwp.trigger( controller.get( 'name' ) + '.ready', controller );
 					if( typeof controller.init == 'function' ) {
 						controller.init();
+						mwp.trigger( controller.get( 'name' ) + '.init', controller );
 					}
 				});
 			},
@@ -84,10 +86,10 @@ window.mwp = {};
 	mwp.controller = function( name, properties, classProperties ) 
 	{
 		var controller = mwp.base.Controller.extend( properties, classProperties );
-		controllers[ name ] = new controller;
+		controllers[ name ] = new controller( { name: name } );
 		return controllers[ name ];
 	};
-		
+	
 	mwp.controller.get = function( name )
 	{
 		if ( typeof controllers[ name ] !== 'undefined' ) {
@@ -137,8 +139,8 @@ window.mwp = {};
 
 		ko.virtualElements.allowedBindings.stopBinding = true;
 		
-		/* Double ready means that this will be executed last */
-		$(document).ready( function() {
+		$(document).ready( function() {			
+			/* Double ready means that this will be executed last */
 			$(document).ready( function() {
 				var views = $('[data-view-model]');
 				
@@ -165,6 +167,10 @@ window.mwp = {};
 	{
 		console.log( 'Bindings not applied because knockout was not found.' );
 	}
+	
+	$(document).ready( function() {
+		mwp.trigger( 'mwp.ready' );
+	});
 	
 })( jQuery );
  
