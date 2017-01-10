@@ -16,3 +16,4 @@ docs
 dev_config.php
 phpdoc.xml
 annotations/cache
+includes/redux
