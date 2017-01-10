@@ -57,7 +57,6 @@ class Field extends \Modern\Wordpress\Annotation
 	 */
 	public function getFieldHtml( $settings )
 	{
-		$settings->setDefault( $this->name, $this->default );
 		return $settings->getPlugin()->getTemplateContent( 'admin/settings/' . $this->type . '-field', array( 'field' => $this, 'settings' => $settings ) );
 	}
 	
@@ -72,18 +71,23 @@ class Field extends \Modern\Wordpress\Annotation
 	{
 		extract( $vars );
 		
-		if ( $instance instanceof \Modern\Wordpress\Plugin\Settings and isset( $page_id ) and isset( $section_id ) )
+		if ( $instance instanceof \Modern\Wordpress\Plugin\Settings )
 		{
-			$self = $this;
-			add_action( 'admin_init', function() use ( $page_id, $section_id, $self, $instance )
+			$instance->setDefault( $this->name, $this->default );
+			
+			if ( isset( $page_id ) and isset( $section_id ) )
 			{
-				add_settings_field( md5( $page_id . $self->name ), $self->title, function() use ( $page_id, $section_id, $self, $instance )
+				$self = $this;
+				add_action( 'admin_init', function() use ( $page_id, $section_id, $self, $instance )
 				{
-					echo call_user_func( array( $self, 'getFieldHtml' ), $instance );
-				}
-				, $page_id, $section_id );
-			});
-		}		
+					add_settings_field( md5( $page_id . $self->name ), $self->title, function() use ( $page_id, $section_id, $self, $instance )
+					{
+						echo call_user_func( array( $self, 'getFieldHtml' ), $instance );
+					}
+					, $page_id, $section_id );
+				});
+			}
+		}
 	}
 	
 }
