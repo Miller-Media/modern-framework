@@ -76,7 +76,12 @@ class ActiveRecordTable extends \WP_List_Table
 	 * @var	array			Columns to display
 	 */
 	public $columns;
-	 
+	
+	/**
+	 * @var array			Optional display handlers for columns
+	 */
+	public $handlers = array();
+	
     /**
      * REQUIRED. Set up a constructor that references the parent constructor. We 
      * use the parent reference to set some default configs.
@@ -120,6 +125,11 @@ class ActiveRecordTable extends \WP_List_Table
 	 */
 	public function column_default( $item, $column_name )
 	{
+		if ( isset( $this->handlers[ $column_name ] ) and is_callable( $this->handlers[ $column_name ] ) )
+		{
+			return call_user_func( $this->handlers[ $column_name ], $item, $column_name );
+		}
+		
 		return $item[ $column_name ];
 	}
 	
@@ -232,7 +242,19 @@ class ActiveRecordTable extends \WP_List_Table
 		
 		if ( $action and array_key_exists( $action, $this->bulkActions ) )
 		{
-			// foreach record, apply the action method...
+			$class = $this->activeRecordClass;
+			foreach( $_POST[ 'item' ] as $item_id )
+			{
+				try
+				{
+					$item = $class::load( $item_id );
+					if ( is_callable( array( $item, $action ) ) )
+					{
+						call_user_func( array( $item, $action ) );
+					}
+				}
+				catch( \Exception $e ) { }
+			}
 		}
 	}
 	
