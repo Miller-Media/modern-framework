@@ -56,6 +56,11 @@ class AdminPage extends \Modern\Wordpress\Annotation
 	public $type = 'menu';
 	
 	/**
+	 * @var string
+	 */
+	public $parent;
+	
+	/**
 	 * Apply to Method
 	 *
 	 * @param	object					$instance		The object that the method belongs to
@@ -71,7 +76,14 @@ class AdminPage extends \Modern\Wordpress\Annotation
 			$add_page_func = 'add_' . $annotation->type . '_page';
 			if ( is_callable( $add_page_func ) )
 			{
-				call_user_func( $add_page_func, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, array( $instance, $method->name ), $annotation->icon, $annotation->position );
+				if ( $annotation->type == 'submenu' )
+				{
+					call_user_func( $add_page_func, $annotation->parent, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, array( $instance, $method->name ), $annotation->icon, $annotation->position );
+				}
+				else
+				{
+					call_user_func( $add_page_func, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, array( $instance, $method->name ), $annotation->icon, $annotation->position );
+				}
 			}
 		});
 	}
