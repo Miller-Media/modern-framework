@@ -142,7 +142,11 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Register framework resources
+	 * 
 	 * @Wordpress\Action( for="wp_enqueue_scripts", priority=0 )
+	 * @Wordpress\Action( for="admin_enqueue_scripts", priority=0 )
+	 * @Wordpress\Action( for="login_enqueue_scripts", priority=0 )
 	 */
 	public function enqueueScripts()
 	{
@@ -358,7 +362,7 @@ class Framework extends Plugin
 				copy( $source, $dest );
 				
 				$pathinfo = pathinfo( $dest );
-				if ( in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) )
+				if ( isset( $pathinfo[ 'extension' ] ) and in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) )
 				{
 					file_put_contents( $dest, $this->replaceMetaContents( file_get_contents( $dest ), $data ) );
 				}
