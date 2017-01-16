@@ -63,6 +63,16 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+ 	 * Get plugin
+	 *
+	 * @return	\Modern\Wordpress\Plugin
+	 */
+	public function getPlugin()
+	{
+		return $this;
+	}
+	
+	/**
 	 * Check if plugin version has been updated
 	 *
 	 * @Wordpress\Action( for="init" )
