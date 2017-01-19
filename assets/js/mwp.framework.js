@@ -129,6 +129,35 @@ window.mwp = _.extend( {}, Backbone.Events );
 		return undefined;
 	};
 	
+	/**
+	 * Apply view models to a new scope
+	 *
+	 * @param	object		scope			DOM Scope to apply views to
+	 */
+	mwp.applyViews = function( scope )
+	{
+		if ( typeof ko !== 'undefined' )
+		{
+			var views = $(scope).find('[data-view-model]').addBack('[data-view-model]');
+			
+			/* Wrap all views with a protective shield */
+			views.each( function() {
+				$(this).before( '<!-- ko stopBinding: true -->' );
+				$(this).after( '<!-- /ko -->' );
+			});
+			
+			/* Bind all views */
+			views.each( function() {
+				var view = $(this);
+				var view_name = view.data( 'view-model' );
+				var controller = mwp.controller.get( view.data( 'view-model' ) );
+				if ( typeof controller !== 'undefined' && typeof controller.viewModel !== 'undefined' ) {
+					ko.applyBindings( controller.viewModel, this );
+				}
+			});
+		}
+	}
+	
 	if ( typeof ko !== 'undefined' )
 	{
 		ko.bindingHandlers.stopBinding = {
@@ -142,30 +171,13 @@ window.mwp = _.extend( {}, Backbone.Events );
 		$(document).ready( function() {			
 			/* Double ready means that this will be executed last */
 			$(document).ready( function() {
-				var views = $('[data-view-model]');
-				
-				/* Wrap all views with a protective shield */
-				views.each( function() {
-					$(this).before( '<!-- ko stopBinding: true -->' );
-					$(this).after( '<!-- /ko -->' );
-				});
-				
-				/* Bind all views */
-				views.each( function() {
-					var view = $(this);
-					var view_name = view.data( 'view-model' );
-					var controller = mwp.controller.get( view.data( 'view-model' ) );
-					if ( typeof controller !== 'undefined' && typeof controller.viewModel !== 'undefined' )
-					{
-						ko.applyBindings( controller.viewModel, this );
-					}
-				});
+				mwp.applyViews( document );
 			});
 		});
 	}
 	else
 	{
-		console.log( 'Bindings not applied because knockout was not found.' );
+		console.log( 'Bindings not available because knockout was not found.' );
 	}
 	
 	$(document).ready( function() {
