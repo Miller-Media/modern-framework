@@ -8,6 +8,7 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 - [Annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations)
 - [Framework Classes](https://github.com/Miller-Media/modern-wordpress/wiki)
 - [WP CLI](https://github.com/Miller-Media/modern-wordpress/wiki/WP-CLI)
+- [Boilerplate](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md)
 
 ## Main features
 
