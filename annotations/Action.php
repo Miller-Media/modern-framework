@@ -33,6 +33,11 @@ class Action extends \Modern\Wordpress\Annotation
 	public $args = 1;
 	
 	/**
+	 * @var	bool
+	 */
+	public $output = false;
+	
+	/**
 	 * Apply to Method
 	 *
 	 * @param	object					$instance		The object that the method belongs to
@@ -42,7 +47,17 @@ class Action extends \Modern\Wordpress\Annotation
 	 */
 	public function applyToMethod( $instance, $method, $vars )
 	{
-		mwp_add_action( $this->for, array( $instance, $method->name ), $this->priority, $this->args );
+		$callback = array( $instance, $method->name );
+		
+		// Auto output?
+		if ( $this->output == true ) 
+		{
+			$callback = function() use ( $instance, $method ) {
+				echo call_user_func_array( array( $instance, $method->name ), func_get_args() );
+			};
+		}
+		
+		mwp_add_action( $this->for, $callback, $this->priority, $this->args );
 	}	
 	
 }
