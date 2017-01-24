@@ -163,9 +163,9 @@ class Task extends ActiveRecord
 	/**
 	 * Count tasks from queue based on action and or tag
 	 *
-	 * @param	string		$action			Delete all tasks with specific action
-	 * @param	string		$tag			Delete all tasks with specific tag
-	 * @return	void
+	 * @param	string		$action			Count all tasks with specific action|NULL to ignore
+	 * @param	string		$tag			Count all tasks with specific tag|NULL to ignore
+	 * @return	int
 	 */
 	public static function countTasks( $action=NULL, $tag=NULL )
 	{
