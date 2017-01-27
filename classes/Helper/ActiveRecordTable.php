@@ -273,7 +273,7 @@ class ActiveRecordTable extends \WP_List_Table
 	 * @uses $this->get_pagenum()
 	 * @uses $this->set_pagination_args()
 	 **************************************************************************/
-	public function prepare_items( $where=array( '1' ) ) 
+	public function prepare_items( $where=array( '1=1' ) ) 
 	{
 		$class = $this->activeRecordClass;
 		
@@ -323,7 +323,8 @@ class ActiveRecordTable extends \WP_List_Table
 		$query          = "SELECT * FROM {$db->prefix}{$class::$table} WHERE {$compiled['where']}";
 		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
 		
-		$total_items   = $db->get_var( $prepared_query );
+		
+		$total_items   = $db->get_var( str_replace( 'SELECT * ', 'SELECT COUNT(*) ', $prepared_query ) );
 		$this->items   = $db->get_results( $prepared_query . " ORDER BY {$sortBy} {$sortOrder} LIMIT {$start_at}, {$per_page}", ARRAY_A );
 		
 		/**
