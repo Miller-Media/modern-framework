@@ -13,7 +13,7 @@ namespace Wordpress;
 
 /**
  * @Annotation 
- * @Target( "METHOD" )
+ * @Target( { "METHOD", "CLASS" } )
  */
 class AdminPage extends \Modern\Wordpress\Annotation
 {
@@ -86,6 +86,44 @@ class AdminPage extends \Modern\Wordpress\Annotation
 				}
 			}
 		});
+	}
+	
+	/**
+	 * Apply to Object
+	 *
+	 * @param	object		$instance		The object which is documented with this annotation
+	 * @param	array		$vars			Persisted variables returned by previous annotations
+	 * @return	array|NULL
+	 */
+	public function applyToObject( $instance, $vars )
+	{
+		$annotation = $this;
+		mwp_add_action( 'admin_menu', function() use ( $annotation, $instance )
+		{
+			$add_page_func = 'add_' . $annotation->type . '_page';
+			if ( is_callable( $add_page_func ) )
+			{
+				// Route to the correct do_{action} on the controller based on the 'do' request param
+				$router_callback = function() use ( $instance ) 
+				{
+					$action = isset( $_REQUEST[ 'do' ] ) ? $_REQUEST[ 'do' ] : 'index';
+					if( is_callable( array( $instance, 'do_' . $action ) ) )
+					{
+						call_user_func( array( $instance, 'do_' . $action ) );
+					}
+				};
+				
+				if ( $annotation->type == 'submenu' )
+				{
+					call_user_func( $add_page_func, $annotation->parent, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, $router_callback, $annotation->icon, $annotation->position );
+				}
+				else
+				{
+					call_user_func( $add_page_func, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, $router_callback, $annotation->icon, $annotation->position );
+				}
+			}
+		});
+		
 	}
 	
 }
