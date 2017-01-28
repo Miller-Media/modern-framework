@@ -37,6 +37,11 @@ abstract class Plugin extends Singleton
 	 */
 	public static $scriptHandles = array();	 
 	
+	/**
+	 * @var array	Script Handles Cache
+	 */
+	public static $styleHandles = array();
+	
 	/** 
 	 * Set the base plugin path
 	 *
@@ -388,6 +393,7 @@ abstract class Plugin extends Singleton
 	{
 		static $usedStyles = array();
 		$fileHash = md5( $this->fileUrl( $style ) );
+		$handle = isset( static::$styleHandles[ $fileHash ] ) ? static::$styleHandles[ $fileHash ] : $fileHash;
 		
 		if ( ! isset( $usedStyles[ $fileHash ] ) )
 		{

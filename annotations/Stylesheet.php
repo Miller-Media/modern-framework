@@ -38,6 +38,11 @@ class Stylesheet extends \Modern\Wordpress\Annotation
 	public $always = false;
     
 	/**
+	 * @var	string
+	 */
+	public $handle;
+	
+	/**
 	 * Apply to Property
 	 *
 	 * @param	object					$instance		The object that the property belongs to
@@ -55,7 +60,15 @@ class Stylesheet extends \Modern\Wordpress\Annotation
 			
 			$register_callback = function() use ( $plugin, $fileUrl, $annotation, $instance, $property )
 			{
-				wp_register_style( md5( $fileUrl ), $fileUrl, $annotation->deps, $annotation->ver, $annotation->media );
+				if ( isset( $annotation->handle ) )
+				{
+					wp_register_style( $annotation->handle, $fileUrl, $annotation->deps, $annotation->ver, $annotation->media );
+					$plugin::$scriptHandles[ md5( $fileUrl ) ] = $annotation->handle;
+				}
+				else
+				{
+					wp_register_style( md5( $fileUrl ), $fileUrl, $annotation->deps, $annotation->ver, $annotation->media );
+				}
 				
 				if ( $annotation->always )
 				{
