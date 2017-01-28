@@ -469,6 +469,19 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+	 * Create a new form
+	 *
+	 * @param	string		$name		The plugin name
+	 * @return	Form
+	 */
+	public function createForm( $name )
+	{
+		$form = new \Modern\Wordpress\Helper\Form( $name, $this );
+		$form = $form->applyFilters( 'create', $form );
+		return $form;
+	}
+	
+	/**
 	 * Internal: Framework Plugin Finder
 	 *
 	 * @Wordpress\Filter( for="modern_wordpress_find_plugins" )
