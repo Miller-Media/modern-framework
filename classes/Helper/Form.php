@@ -115,6 +115,16 @@ class Form
 		$this->useNonce = $bool;
 		return $this;
 	}
+	
+	/**
+	 * Get the plugin slug for use in hooks
+	 *
+	 *@return	string
+	 */
+	public function getPluginSlug()
+	{
+		return str_replace( '-', '_', $this->getPlugin()->getSlug() );
+	}
 
 	/**
 	 * Add a field to the form
@@ -137,7 +147,7 @@ class Form
 			$field[ 'scope' ] = 'data';
 		}
 		
-		$field = apply_filters( 'mwp_form_field_' . $this->name, $field, $this );
+		$field = $this->applyFilters( 'field', $field );
 		
 		// Add our own validation rules
 		static::addFieldValidation( $field );
@@ -175,7 +185,7 @@ class Form
 	/**
 	 * @var array		Form Submission Cache
 	 */
-	protected $form_submission;
+	public $form_submission;
 	
 	/**
 	 * Get the form submission data
@@ -194,7 +204,7 @@ class Form
 			return $this->form_submission;
 		}
 		
-		$this->form_submission = $this->piklistContext( function() { return \Piklist_Validate::check(); } );
+		$this->form_submission = \Piklist_Validate::check();
 		
 		return $this->form_submission;
 	}
@@ -236,7 +246,7 @@ class Form
 			)
 		);
 		
-		return apply_filters( 'mwp_form_valid_' . $this->name, $valid, $this );
+		return $this->applyFilters( 'valid', $valid );
 	}
 	
 	/**
@@ -259,7 +269,7 @@ class Form
 				}
 			}
 			
-			$values = apply_filters( 'mwp_form_values_' . $this->name, $values, $this ); 
+			$values = $this->applyFilters( 'values', $values ); 
 		}
 		
 		return $values;
@@ -272,24 +282,20 @@ class Form
 	 */
 	public function getErrors()
 	{
-		$form = $this;
-		return $this->piklistContext( function() use ( $form ) 
-		{
-			$errors = array();
+		$errors = array();
 
-			if ( is_array( $form_submission = $form->getSubmissionData() ) ) {
-				foreach( $form_submission[ 'fields_data' ] as $scope => $fields ) {
-					foreach( $fields as $field_name => $field ) {
-						$_errors = \Piklist_Validate::get_errors( $field );
-						if ( ! empty( $_errors ) ) {
-							$errors[ $field_name ] = $_errors;
-						}
+		if ( is_array( $form_submission = $this->getSubmissionData() ) ) {
+			foreach( $form_submission[ 'fields_data' ] as $scope => $fields ) {
+				foreach( $fields as $field_name => $field ) {
+					$_errors = \Piklist_Validate::get_errors( $field );
+					if ( ! empty( $_errors ) ) {
+						$errors[ $field_name ] = $_errors;
 					}
 				}
 			}
-			
-			return apply_filters( 'mwp_form_errors_' . $form->name, $errors, $form );
-		});
+		}
+		
+		return $this->applyFilters( 'errors', $errors );
 	}
 	
 	/**
@@ -299,71 +305,75 @@ class Form
 	 */
 	public function render()
 	{
-		$form = $this;
-		return $this->piklistContext( function() use ( $form ) 
+		if ( ! class_exists( 'Piklist' ) )
 		{
-			if ( ! class_exists( 'Piklist' ) )
-			{
-				return "Form cannot be displayed because it requires the 'Piklist' plugin to be installed.";
-			}
-			
-			// This makes sure the piklist static states represent this form
-			\Piklist_Validate::check();
-			
-			$form_rows = array();
-			
-			foreach( $form->fields as $field_name => $field )
-			{
-				$form_rows[ $field_name ] = $form->getPlugin()->getTemplateContent( 'form/form-row', array( 
-					'field_name' => $field_name, 
-					'field' => $field, 
-					'field_html' => \Piklist_Form::render_field( $field, true ) 
-				) );
-			}
-			
-			if ( $form->submitButton ) {
-				$form_rows[] = \Piklist_Form::render_field( array(
-					'type' => 'submit',
-					'value' => $form->submitButton,
-					'attributes' => array(
-						'class' => 'button-primary',
-					)
-				), true ); 
-			}
+			return "Form cannot be displayed because it requires the 'Piklist' plugin to be installed.";
+		}
+		
+		// This makes sure the piklist static states represent this form
+		\Piklist_Validate::check();
+		
+		$form_rows = array();
+		
+		foreach( $this->fields as $field_name => $field )
+		{
+			$form_rows[ $field_name ] = $this->getPlugin()->getTemplateContent( 'form/form-row', array( 
+				'field_name' => $field_name, 
+				'field' => $field, 
+				'field_html' => \Piklist_Form::render_field( $field, true ) 
+			) );
+		}
+		
+		if ( $this->submitButton ) {
+			$form_rows[] = \Piklist_Form::render_field( array(
+				'type' => 'submit',
+				'value' => $this->submitButton,
+				'attributes' => array(
+					'class' => 'button-primary',
+				)
+			), true ); 
+		}
 
-			ob_start();
-			
-			// Piklist saves the added fields to a transient and outputs its own hidden form inputs for validation
-			\Piklist_Form::save_fields();
-			
-			$hidden_fields = ob_get_clean();
-			
-			return $form->getPlugin()->getTemplateContent( $this->template, array( 'form' => $form, 'form_rows' => $form_rows, 'hidden_fields' => $hidden_fields ) );
-		});
+		ob_start();
+		
+		// Piklist saves the added fields to a transient and outputs its own hidden form inputs for validation
+		\Piklist_Form::save_fields();
+		
+		$hidden_fields = ob_get_clean();
+		$template_vars = $this->applyFilters( 'render', array( 'form' => $this, 'form_rows' => $form_rows, 'hidden_fields' => $hidden_fields ) );
+		return $this->getPlugin()->getTemplateContent( $this->template, $template_vars );
 	}
 	
 	/**
-	 * Execute some piklist code in context of this form (by switching Piklist prefixes)
+	 * Signal that the processing of a successful form submission is complete, allowing hooks to run
 	 *
-	 * @param		callback			$callback			A callable
-	 * @return		mixed
+	 * @param	callback		$callback			An executable callback to filter and run
+	 * @return	mixed
 	 */
-	public function piklistContext( $callback )
+	public function processComplete( $callback )
 	{
-		// save the current prefix
-		//$_prefix = \Piklist::$prefix;
+		$callback = $this->applyFilters( 'processed', $callback );
+		return call_user_func( $callback );
+	}
+	
+	/**
+	 * Apply a standard set of filters
+	 *
+	 * @param	string		$action			The action being filtered
+	 * @return	mixed
+	 */
+	public function applyFilters( $action, $value )
+	{
+		// allow global modifications for this action
+		$value = apply_filters( 'mwp_form_' . $action, $value, $this );
 		
-		// set the prefix to this form id
-		//\Piklist::$prefix = $this->name;
+		// allow plugin specific modifications for this action
+		$value = apply_filters( 'mwp_form_' . $action . '_' . $this->getPluginSlug(), $value, $this );
 		
-		// execute the callback
-		$result = call_user_func( $callback );
+		// allow form specific modifications for this action
+		$value = apply_filters( 'mwp_form_' . $action . '_' . $this->getPluginSlug() . '_' . $this->name, $value, $this );
 		
-		// change the prefix back
-		//\Piklist::$prefix = $_prefix;
-		
-		// done.
-		return $result;
+		return $value;
 	}
 	
 }
