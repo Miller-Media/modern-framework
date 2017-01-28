@@ -141,6 +141,20 @@ class Framework extends Plugin
 		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*" ) );
 	}
 	
+	
+	/**
+	 * Initialize other resources before the wordpress init action
+	 * 
+	 * @Wordpress\Action( for="modern_wordpress_init" )
+	 * 
+	 * @return	void
+	 */
+	public function loadOtherResources()
+	{
+		$form_validators = new \Modern\Wordpress\Helper\Form\Validators;
+		$this->attach( $form_validators );
+	}
+	
 	/**
 	 * Register framework resources and dependency chains
 	 * 

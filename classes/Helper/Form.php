@@ -55,7 +55,7 @@ class Form
 	 * @param	string		$template			The new template
 	 * @return	this							Chainable
 	 */
-	public setTemplate( $template )
+	public function setTemplate( $template )
 	{
 		$this->template = $template;
 		return $this;
@@ -476,4 +476,6 @@ class Validators
 	}	
 }
 
-\Modern\Wordpress\Framework::instance()->attach( new Validators );
+$validators = new Validators;
+
+\Modern\Wordpress\Framework::instance()->attach( $validators );
