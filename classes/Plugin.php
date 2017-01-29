@@ -315,7 +315,7 @@ abstract class Plugin extends Singleton
 	 */
 	public function pluginSlug()
 	{
-		return dirname( $this->getPath() . '/dir' );
+		return basename( $this->getPath() );
 	}
 	
 	/**
