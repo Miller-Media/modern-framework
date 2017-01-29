@@ -123,7 +123,7 @@ class Form
 	 */
 	public function getPluginSlug()
 	{
-		return str_replace( '-', '_', $this->getPlugin()->getSlug() );
+		return str_replace( '-', '_', $this->getPlugin()->pluginSlug() );
 	}
 
 	/**
@@ -143,8 +143,9 @@ class Form
 			return $this;
 		}
 		
+		// pick a semi-unique scope to differentiate between possible fields on other forms with the same name
 		if ( ! isset( $field[ 'scope' ] ) ) {
-			$field[ 'scope' ] = 'data';
+			$field[ 'scope' ] = substr( md5( $this->getPluginSlug() . '_' . $this->name ), 10, 4 );
 		}
 		
 		$field = $this->applyFilters( 'field', $field );
@@ -216,7 +217,13 @@ class Form
 	 */
 	public function isSubmitted()
 	{
-		return $this->getSubmissionData() !== false;
+		$form_submission = $this->getSubmissionData();
+		
+		return ( 
+			isset( $_REQUEST[ 'form_id' ] ) and 
+			$_REQUEST[ 'form_id' ] == $this->getPluginSlug() . '_' . $this->name and 
+			$form_submission !== false
+		);
 	}
 	
 	/**
@@ -226,27 +233,30 @@ class Form
 	 */
 	public function isValidSubmission()
 	{
-		$form_submission = $this->getSubmissionData();
-		
 		if ( ! class_exists( 'Piklist_Form' ) ) {
 			return false;
 		}
 		
-		if ( $this->useNonce ) {
-			\Piklist_Form::check_nonce();
+		if ( $this->isSubmitted() )
+		{
+			$form_submission = $this->getSubmissionData();
+			
+			if ( $this->useNonce ) {
+				\Piklist_Form::check_nonce();
+			}
+			
+			$valid = ( 
+				$form_submission[ 'valid' ] and
+				(
+					! $this->useNonce or
+					\Piklist_Form::valid()
+				)
+			);
+			
+			return $this->applyFilters( 'valid', $valid );
 		}
 		
-		$valid = ( 
-			$form_submission !== false and 
-			is_array( $form_submission ) and 
-			$form_submission[ 'valid' ] and
-			(
-				! $this->useNonce or
-				\Piklist_Form::valid()
-			)
-		);
-		
-		return $this->applyFilters( 'valid', $valid );
+		return false;
 	}
 	
 	/**
@@ -338,6 +348,12 @@ class Form
 		
 		// Piklist saves the added fields to a transient and outputs its own hidden form inputs for validation
 		\Piklist_Form::save_fields();
+		
+		piklist( 'field', array(
+			'type' => 'hidden',
+			'field' => 'form_id',
+			'value' => $this->getPluginSlug() . '_' . $this->name,
+		) );
 		
 		$hidden_fields = ob_get_clean();
 		$template_vars = $this->applyFilters( 'render', array( 'form' => $this, 'form_rows' => $form_rows, 'hidden_fields' => $hidden_fields ) );
