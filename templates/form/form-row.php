@@ -6,7 +6,7 @@
  *
  * @package  Modern Framework for Wordpress
  * @author   Kevin Carwile
- * @since    {build_version}
+ * @since    1.1.4
  *
  * @param	Plugin		$this			The plugin instance which is loading this template
  *
