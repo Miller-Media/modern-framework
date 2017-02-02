@@ -741,16 +741,16 @@ class CLI extends \WP_CLI_Command {
 			$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
 			$zip->close();
 			
-			/* Copy to latest-dev.zip */
+			/* Copy to latest dev.zip */
 			if ( isset( $assoc[ 'dev' ] ) and $assoc[ 'dev' ] )
 			{
-				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-latest-dev.zip' );
+				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-dev.zip' );
 			}
 			
-			/* Copy to latest-stable.zip */
+			/* Copy to latest stable.zip */
 			if ( isset( $assoc[ 'stable' ] ) and $assoc[ 'stable' ] )
 			{
-				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-latest-stable.zip' );
+				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-stable.zip' );
 			}
 		}
 		
