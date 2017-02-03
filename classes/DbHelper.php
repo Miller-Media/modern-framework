@@ -23,6 +23,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class DbHelper extends Singleton
 {
+	protected static $_instance;
+	
 	/**
 	 * @var	wpdb	Wordpress database
 	 */
