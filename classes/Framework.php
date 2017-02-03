@@ -271,12 +271,12 @@ class Framework extends Plugin
 			( time() - $begin_time < $max_execution_time - 10 )
 		)
 		{
+			$task->last_start = time();
+			$task->running = 1;
+			$task->save();
+			
 			if ( has_action( $task->action ) )
-			{
-				$task->last_start = time();
-				$task->running = 1;
-				$task->save();
-				
+			{	
 				while
 				( 
 					! $task->complete and                                   // task is not yet complete
