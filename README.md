@@ -12,9 +12,9 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 
 ## Main features
 
-* Simply document your functions using @annotations and let the framework automatically hook them into core.
-* Develop rapidly by extending base classes that bootstrap your plugin, settings pages, widgets, post types, and more.
-* Use auto-generation utilites to create new plugin stylesheets, scripts, templates, and php classes.
+* Simply document your functions using [@annotations](https://github.com/Miller-Media/modern-wordpress/wiki/@Annotations) and let the framework automatically hook them into core.
+* Develop rapidly by [extending base classes](https://github.com/Miller-Media/wp-plugin-boilerplate) that bootstrap your plugin, settings pages, widgets, post types, and more.
+* Use [the command line](https://github.com/Miller-Media/modern-wordpress/wiki/WP-CLI) to create new plugin stylesheets, scripts, templates, and php classes.
 * Safely add dependencies on php libraries or other wordpress plugins and they will be managed automatically.
 * Easily keep all your html in individual re-usable templates that maintain theme override capabilities.
 * Leverage a built in task runner to easily send routine tasks off to a managed queue to be ran by cron.
@@ -25,7 +25,7 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 
 1) **Install the packaged plugin and any dependencies**
 
-If you have WP CLI installed:
+Once you have WP CLI installed:
 ```
 $ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/builds/modern-framework-stable.zip --activate
 ```
@@ -56,6 +56,8 @@ $ wp mwp add-css myplugin-slug stylesheet-name
 $ wp mwp add-template myplugin-slug views/template-name
 $ wp mwp add-class myplugin-slug New\Class
 ```
+
+Visit the boilerplate repository to get a [quick rundown of the development tools](https://github.com/Miller-Media/wp-plugin-boilerplate) available to you through modern wordpress.
 
 ### Distribute It
 When you are ready to build a new release of your plugin, that's easy too:
