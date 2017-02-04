@@ -57,7 +57,7 @@ $ wp mwp add-template myplugin-slug views/template-name
 $ wp mwp add-class myplugin-slug New\Class
 ```
 
-Visit the boilerplate repository to get a [quick rundown of the development tools](https://github.com/Miller-Media/wp-plugin-boilerplate) available to you through modern wordpress.
+Visit the [boilerplate repository](https://github.com/Miller-Media/wp-plugin-boilerplate) to get a quick rundown of the development tools available to you through modern wordpress.
 
 ### Distribute It
 When you are ready to build a new release of your plugin, that's easy too:
