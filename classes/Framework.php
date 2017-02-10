@@ -64,6 +64,21 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Run updates when new plugin version is uploaded
+	 *
+	 * @Wordpress\Action( for="init" )
+	 *
+	 * @return	void
+	 */
+	public function ensureActivated()
+	{
+		if ( wp_get_schedule( 'modern_wordpress_queue_run' ) == false ) 
+		{
+			$this->frameworkActivated();
+		}
+	}
+	
+	/**
 	 * Attach instances to wordpress
 	 *
 	 * @api
@@ -141,7 +156,6 @@ class Framework extends Plugin
 		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*" ) );
 	}
 	
-	
 	/**
 	 * Initialize other resources before the wordpress init action
 	 * 
@@ -152,7 +166,7 @@ class Framework extends Plugin
 	public function loadOtherResources()
 	{
 		$form_validators = new \Modern\Wordpress\Helper\Form\Validators;
-		$this->attach( $form_validators );
+		$this->attach( $form_validators );		
 	}
 	
 	/**
@@ -239,6 +253,7 @@ class Framework extends Plugin
 	public function frameworkDeactivated()
 	{
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
 	}
 	
 	/**
