@@ -29,6 +29,7 @@ Once you have WP CLI installed:
 ```
 $ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/builds/modern-framework.zip --activate
 ```
+> Note: If installing to a multisite wordpress, use --activate-network instead of --activate to activate the plugin from the command line.
 
 2) Enable developer mode 
 
