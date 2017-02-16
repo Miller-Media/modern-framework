@@ -27,8 +27,9 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 
 Once you have WP CLI installed:
 ```
-$ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/builds/modern-framework-stable.zip --activate
+$ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/builds/modern-framework.zip --activate
 ```
+> Note: If installing to a multisite wordpress, use --activate-network instead of --activate to activate the plugin from the command line.
 
 2) Enable developer mode 
 
@@ -69,3 +70,16 @@ A packaged .zip file that contains your new version will be created in the `/bui
 
 Thats it. Have fun!
 
+## Further Reading
+
+* [Creating PHP Classes](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#php-classes)
+* [Using templates](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#html-templating)
+* [Using settings](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#plugin-settings)
+* [Using widgets](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#widgets)
+* [Using stylesheets and scripts](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#stylesheets-and-scripts)
+* [Using javascript modules](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#javascript-module-programming)
+* [Using active records](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#database-records)
+* [Using display tables](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#active-record-display-tables)
+* [Using the form helper](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#form-helper)
+* [Using task queues](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#task-queues)
+* [Unit testing your plugin](https://github.com/Miller-Media/wp-plugin-boilerplate/blob/master/README.md#testing-your-plugin)
