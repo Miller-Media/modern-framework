@@ -45,6 +45,7 @@ class Task extends ActiveRecord
 		'last_start',
 		'tag',
 		'fails',
+		'blog_id',
 	);
 	
 	/**
@@ -121,6 +122,7 @@ class Task extends ActiveRecord
 			$task->action = $config;
 		}
 		
+		$task->blog_id = get_current_blog_id();
 		$task->data = $data;
 		$task->save();
 	}
@@ -144,19 +146,19 @@ class Task extends ActiveRecord
 		/* Only action provided */
 		if ( $tag === NULL )
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d", $action, get_current_blog_id() ) );
 		}
 		
 		/* Only tag provided */
 		elseif ( $action === NULL )
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d", $tag, get_current_blog_id() ) );		
 		}
 		
 		/* Both action and tag provided */
 		else
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d", $action, $tag, get_current_blog_id() ) );
 		}
 	}
 	
@@ -173,25 +175,25 @@ class Task extends ActiveRecord
 		
 		if ( $action === NULL and $tag === NULL )
 		{
-			return $db->get_var( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table );
+			return $db->get_var( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_blog_id=%d", get_current_blog_id() );
 		}
 		
 		/* Only action provided */
 		if ( $tag === NULL )
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s", $action ) );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d", $action, get_current_blog_id() ) );
 		}
 		
 		/* Only tag provided */
 		elseif ( $action === NULL )
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s", $tag ) );		
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d", $tag, get_current_blog_id() ) );		
 		}
 		
 		/* Both action and tag provided */
 		else
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s", $action, $tag ) );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d", $action, $tag, get_current_blog_id() ) );
 		}
 	}
 
@@ -207,8 +209,8 @@ class Task extends ActiveRecord
 		$row = $db->get_row( 
 			$db->prepare( "
 				SELECT * FROM {$db->prefix}" . static::$table . " 
-					WHERE task_running=0 AND task_next_start <= %d AND task_fails < 3 
-					ORDER BY task_priority DESC, task_last_start ASC, task_id ASC", time() 
+					WHERE task_running=0 AND task_next_start <= %d AND task_fails < 3 AND task_blog_id=%d
+					ORDER BY task_priority DESC, task_last_start ASC, task_id ASC", time(), get_current_blog_id()
 			), ARRAY_A
 		);
 		
