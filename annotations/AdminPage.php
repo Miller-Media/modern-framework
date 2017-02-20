@@ -25,9 +25,8 @@ class AdminPage extends \Modern\Wordpress\Annotation
 	
 	/**
 	 * @var string
-	 * @Required
 	 */
-	public $menu;
+	public $menu = "";
 	
 	/**
 	 * @var string
