@@ -27,7 +27,7 @@ This "plugin" provides a foundation of object oriented design patterns, bootstra
 
 Once you have WP CLI installed:
 ```
-$ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/builds/modern-framework.zip --activate
+$ wp plugin install https://github.com/Miller-Media/modern-wordpress/raw/master/builds/modern-framework-stable.zip --activate
 ```
 > Note: If installing to a multisite wordpress, use --activate-network instead of --activate to activate the plugin from the command line.
 
