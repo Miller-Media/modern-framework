@@ -34,7 +34,12 @@ class Field extends \Modern\Wordpress\Annotation
 	 * @Required
 	 */
 	public $type;
-	
+
+	/**
+	 * @var array
+	 */
+	public $attributes;
+
 	/**
 	 * @var mixed
 	 */
@@ -59,7 +64,24 @@ class Field extends \Modern\Wordpress\Annotation
 	{
 		return $settings->getPlugin()->getTemplateContent( 'admin/settings/' . $this->type . '-field', array( 'field' => $this, 'settings' => $settings ) );
 	}
-	
+
+	public function getFieldAttributes() {
+
+		if ( ! $this->attributes ) {
+			return '';
+		}
+
+		$attributes = '';
+
+		foreach( $this->attributes as $name => $value ) {
+			$attributes .= ( strlen( $value ) > 0 )
+				? " $name=\"$value\""
+				: " $name";
+		}
+
+		return $attributes;
+	}
+
 	/**
 	 * Apply to Object
 	 *

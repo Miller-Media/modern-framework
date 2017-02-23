@@ -12,4 +12,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<input id='<?php echo $field->name ?>' name='<?php echo $settings->getStorageId() ?>[<?php echo $field->name ?>]' size='40' type='text' value='<?php echo $settings->getSetting( $field->name ) ?>' />
+<input id='<?php echo $field->name ?>' name='<?php echo $settings->getStorageId() ?>[<?php echo $field->name ?>]' size='40' type='text' value='<?php echo $settings->getSetting( $field->name ) . $field->getFieldAttributes() ?>' />

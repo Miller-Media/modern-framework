@@ -27,7 +27,7 @@ if ( is_string( $field->options ) )
 
 ?>
 
-<select name='<?php echo $settings->getStorageId() ?>[<?php echo $field->name ?>]'>
+<select name='<?php echo $settings->getStorageId() ?>[<?php echo $field->name ?>]'<?php echo $field->getFieldAttributes() ?>>
 	<?php foreach( $selectOptions as $value => $title ) : ?>
 		<option value="<?php echo $value ?>" <?php if( $value == $currentValue ){ echo "selected"; } ?>>
 			<?php echo $title ?>
