@@ -1,6 +1,6 @@
 <?php
 /**
- * Annotation: Wordpress\Action  
+ * Annotation: Wordpress\AdminPage
  *
  * Created:    Nov 20, 2016
  *
@@ -25,8 +25,9 @@ class AdminPage extends \Modern\Wordpress\Annotation
 	
 	/**
 	 * @var string
+	 * @Required
 	 */
-	public $menu = "";
+	public $menu;
 	
 	/**
 	 * @var string
