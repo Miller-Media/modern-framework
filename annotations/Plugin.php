@@ -25,9 +25,8 @@ class Plugin extends \Modern\Wordpress\Annotation
 	
 	/**
 	 * @var string
-	 * @Required
 	 */
-	public $file = 'plugin.php'; 
+	public $file = 'Plugin.php';
 	
 	/**
 	 * Apply to Method
