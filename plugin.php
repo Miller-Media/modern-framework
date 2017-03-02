@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Modern Framework for Wordpress
- * Version: 1.2.2
+ * Version: 1.2.3
  * Provides: lib-modern-framework
  * Description: Provides an object oriented utility framework for modern wordpress plugins.
  * Author: Kevin Carwile
@@ -57,6 +57,11 @@ if ( ! class_exists( 'ModernWordpressFramework' ) )
 			$framework = \Modern\Wordpress\Framework::instance();		
 			$framework->setPath( rtrim( plugin_dir_path( __FILE__ ), '/' ) );
 			$framework->attach( $framework );
+			
+			if ( is_admin() ) {
+				$framework->attach( \Modern\Wordpress\Controller\Tasks::instance() );
+			}	
+				
 			do_action( 'modern_wordpress_init' );
 		}		
 	}
