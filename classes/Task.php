@@ -83,7 +83,6 @@ class Task extends ActiveRecord
 		$this->complete = true;
 	}
 	
-	
 	/**
 	 * Add a task to the queue
 	 *

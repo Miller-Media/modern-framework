@@ -286,31 +286,44 @@ class Framework extends Plugin
 			( time() - $begin_time < $max_execution_time - 10 )
 		)
 		{
+			$data = $task->data;
+			$data[ 'status' ] = NULL;
+			$task->data = $data;
 			$task->last_start = time();
 			$task->running = 1;
 			$task->save();
 			
 			if ( has_action( $task->action ) )
-			{	
-				while
-				( 
-					! $task->complete and                                   // task is not yet complete
-					time() >= $task->next_start and                         // task has not been rescheduled for the future
-					( time() - $begin_time < $max_execution_time - 10 )     // there is still time to run it
-				)
+			{
+				try
 				{
-					$task->execute();
-					$task->save();
+					while
+					( 
+						! $task->complete and                                   // task is not yet complete
+						time() >= $task->next_start and                         // task has not been rescheduled for the future
+						( time() - $begin_time < $max_execution_time - 10 )     // there is still time to run it
+					)
+					{
+						$task->execute();
+						$task->save();
+					}
+					
+					if ( $task->complete )
+					{
+						$task->delete();
+					}
+					else
+					{
+						$task->running = 0;
+						$task->fails = 0;
+						$task->save();
+					}
 				}
-				
-				if ( $task->complete )
+				catch( \Exception $e )
 				{
-					$task->delete();
-				}
-				else
-				{
-					$task->running = 0;
-					$task->fails = 0;
+					$data = $task->data;
+					$data[ 'status' ] = $e->getMessage();
+					$task->data = $data;
 					$task->save();
 				}
 			}
