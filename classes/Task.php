@@ -64,6 +64,11 @@ class Task extends ActiveRecord
 	public $complete = false;
 	
 	/**
+	 * @var bool		Task aborted
+	 */
+	public $aborted = false;
+	
+	/**
 	 * Execute this task
 	 *
 	 * @return	void
@@ -74,15 +79,34 @@ class Task extends ActiveRecord
 	}
 	
 	/**
+	 * Get task title
+	 */
+	public function getTitle()
+	{
+		$implied_title = ucwords( str_replace( '_', ' ', $this->action ) );
+		return apply_filters( $this->action . '_title', $implied_title, $this );
+	}
+	
+	/**
 	 * Complete this task
 	 *
 	 * @return	void
 	 */
 	public function complete()
 	{
-		$this->complete = true;
-		
+		$this->complete = true;		
 		do_action( $this->action . '_complete', $this );
+	}
+	
+	/**
+	 * Abort the task
+	 *
+	 * @return 	void
+	 */
+	public function abort()
+	{
+		$this->aborted = true;
+		do_action( $this->action . '_abort', $this );
 	}
 	
 	/**
@@ -99,6 +123,49 @@ class Task extends ActiveRecord
 		}		
 	}
 	
+	/**
+	 * Set Task Data
+	 *
+	 * @param	string			$key			The data key to set
+	 * @param	mixed			$value			The value to set
+	 * @return	void
+	 */
+	public function setData( $key, $value )
+	{
+		$data = $this->data;
+		$data[ $key ] = $value;
+		$this->data = $data;
+	}
+	
+	/**
+	 * Get Task Data
+	 *
+	 * @param	string			$key			The data key to set
+	 * @return	mixed
+	 */
+	public function getData( $key )
+	{
+		$data = $this->data;
+		if ( isset( $data[ $key ] ) ) {
+			return $data[ $key ];
+		}
+		
+		return NULL;
+	}
+	
+	/**
+	 * Set the task status
+	 *
+	 * @param	string				$status				The task status to display in the admin
+	 */
+	public function setStatus( $status )
+	{
+		$data = $this->data;
+		$data[ 'status' ] = (string) $status;
+		$this->data = $data;
+		$this->save();
+	}
+
 	/**
 	 * Execute a bootstrap action
 	 * 

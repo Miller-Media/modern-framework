@@ -302,7 +302,7 @@ class Framework extends Plugin
 				{
 					while
 					( 
-						! $task->complete and                                   // task is not yet complete
+						! $task->complete and ! $task->aborted and              // task is not yet complete
 						time() >= $task->next_start and                         // task has not been rescheduled for the future
 						( time() - $begin_time < $max_execution_time - 10 )     // there is still time to run it
 					)
@@ -314,6 +314,12 @@ class Framework extends Plugin
 					if ( $task->complete )
 					{
 						$task->delete();
+					}
+					else if ( $task->aborted )
+					{
+						$task->running = 0;
+						$task->fails = 3;
+						$task->save();
 					}
 					else
 					{
