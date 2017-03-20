@@ -29,6 +29,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 	<h1>Wordpress Tasks Queue</h1>
 
-	<?php $table->display(); ?>
+	<form method="POST">
+		<?php $table->display(); ?>
+	</form>
 	
 </div>
