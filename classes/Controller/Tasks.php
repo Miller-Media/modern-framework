@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
+use Modern\Wordpress\Task;
+
 /**
  * Tasks Controller
  *
@@ -70,14 +72,26 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 	 */
 	public function do_index()
 	{
-		$table = \Modern\Wordpress\Task::createDisplayTable();
-		$table->columns = array( 'task_action' => 'Task Action', 'task_tag' => 'Tag', 'task_last_start' => 'Last Ran', 'task_next_start' => 'Next Start', 'task_running' => 'Activity', 'task_fails' => 'Fails', 'task_data' => 'Status' );
+		$table = Task::createDisplayTable();
+		$table->columns = array
+		( 
+			'task_action'       => __( 'Task Item', 'modern-framework' ), 
+			'task_last_start'   => __( 'Last Started', 'modern-framework' ), 
+			'task_next_start'   => __( 'Next Start', 'modern-framework' ), 
+			'task_running'      => __( 'Activity', 'modern-framework' ), 
+			'task_fails'        => __( 'Fails', 'modern-framework' ), 
+			'task_data'         => __( 'Status', 'modern-framework' ), 
+		);
 		$table->bulkActions = array( 'delete' => 'Delete' );
 		$table->sortBy = 'task_next_start';
 		$table->sortOrder = 'ASC';
 		
 		$table->handlers = array
 		(
+			'task_action' => function( $task )
+			{
+				return $this->getPlugin()->getTemplateContent( 'views/management/tasks/task-title', array( 'task' => Task::loadFromRowData( $task ) ) );
+			},
 			'task_last_start' => function( $task ) 
 			{
 				if ( $task[ 'task_last_start' ] <= 0 ) {
