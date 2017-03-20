@@ -81,6 +81,32 @@ class Task extends ActiveRecord
 	public function complete()
 	{
 		$this->complete = true;
+		
+		do_action( $this->action . '_complete', $this );
+	}
+	
+	/**
+	 * Unlock the task
+	 *
+	 * @return	void
+	 */
+	public function unlock()
+	{
+		if ( $this->fails >= 3 )
+		{
+			$this->fails = 0;
+			$this->save();
+		}		
+	}
+	
+	/**
+	 * Execute a bootstrap action
+	 * 
+	 * @return	void
+	 */
+	public function bootstrap()
+	{
+		do_action( $this->action . '_bootstrap', $this );
 	}
 	
 	/**

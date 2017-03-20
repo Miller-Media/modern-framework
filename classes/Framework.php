@@ -295,6 +295,9 @@ class Framework extends Plugin
 			
 			if ( has_action( $task->action ) )
 			{
+				// Allow the task to bootstrap if needed
+				$task->bootstrap();
+				
 				try
 				{
 					while
