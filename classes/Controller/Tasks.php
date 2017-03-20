@@ -78,14 +78,16 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 		
 		$table->handlers = array
 		(
-			'task_last_start' => function( $task ) {
+			'task_last_start' => function( $task ) 
+			{
 				if ( $task[ 'task_last_start' ] <= 0 ) {
 					return __( "Never", 'modern-framework' );
 				}
 				
-				return get_date_from_gmt( date( 'Y-m-d H:i:s', $task[ 'task_next_start' ] ), 'F j, Y H:i:s' );
+				return get_date_from_gmt( date( 'Y-m-d H:i:s', $task[ 'task_last_start' ] ), 'F j, Y H:i:s' );
 			},
-			'task_next_start' => function( $task ) {
+			'task_next_start' => function( $task ) 
+			{
 				if ( $task[ 'task_next_start' ] > 0 )
 				{
 					return get_date_from_gmt( date( 'Y-m-d H:i:s', $task[ 'task_next_start' ] ), 'F j, Y H:i:s' );
@@ -93,14 +95,16 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 				
 				return __( "ASAP", 'modern-framework' );
 			},
-			'task_running' => function( $task ) {
+			'task_running' => function( $task ) 
+			{
 				if ( $task[ 'task_running' ] ) {
 					return __( "Running", 'modern-framwork' );
 				}
 				
 				return __( "Idle", 'modern-framework' );
 			},
-			'task_data' => function( $task ) {
+			'task_data' => function( $task ) 
+			{
 				$data = json_decode( $task[ 'task_data' ], true );
 				
 				if ( isset( $data[ 'status' ] ) ) {
