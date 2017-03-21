@@ -6,7 +6,7 @@
  *
  * @package  Modern Framework for Wordpress
  * @author   Kevin Carwile
- * @since    {build_version}
+ * @since    1.2.6
  *
  * Here is an example of how to get the contents of this template while 
  * providing the values of the $title and $content variables:
