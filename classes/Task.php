@@ -88,6 +88,16 @@ class Task extends ActiveRecord
 	}
 	
 	/**
+	 * Execute a setup action
+	 * 
+	 * @return	void
+	 */
+	public function setup()
+	{
+		do_action( $this->action . '_setup', $this );
+	}
+	
+	/**
 	 * Complete this task
 	 *
 	 * @return	void
@@ -166,16 +176,6 @@ class Task extends ActiveRecord
 		$this->save();
 	}
 
-	/**
-	 * Execute a bootstrap action
-	 * 
-	 * @return	void
-	 */
-	public function bootstrap()
-	{
-		do_action( $this->action . '_bootstrap', $this );
-	}
-	
 	/**
 	 * Add a task to the queue
 	 *
