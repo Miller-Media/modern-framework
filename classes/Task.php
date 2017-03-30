@@ -134,6 +134,25 @@ class Task extends ActiveRecord
 	}
 	
 	/**
+	 * Run Next
+	 *
+	 * Increase the task priority to run next
+	 *
+	 * @return	void
+	 */
+	public function runNext()
+	{
+		if ( ! $this->running )
+		{
+			$this->unlock();
+			$this->next_start = 0;
+			$this->priority = 99;
+			$this->save();
+		}		
+	}
+	
+	
+	/**
 	 * Set Task Data
 	 *
 	 * @param	string			$key			The data key to set

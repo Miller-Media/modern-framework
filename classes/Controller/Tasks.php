@@ -80,10 +80,11 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			'task_next_start'   => __( 'Next Start', 'modern-framework' ), 
 			'task_running'      => __( 'Activity', 'modern-framework' ), 
 			'task_fails'        => __( 'Fails', 'modern-framework' ), 
-			'task_data'         => __( 'Status', 'modern-framework' ), 
+			'task_data'         => __( 'Status', 'modern-framework' ),
+			'task_priority'     => __( 'Priority', 'modern-framework' ),
 		);
-		$table->bulkActions = array( 'delete' => 'Delete' );
-		$table->sortBy = 'task_next_start';
+		$table->bulkActions = array( 'runNext' => 'Run Next', 'unlock' => 'Unlock', 'delete' => 'Delete'  );
+		$table->sortBy = 'task_priority DESC, task_next_start';
 		$table->sortOrder = 'ASC';
 		
 		$table->handlers = array
