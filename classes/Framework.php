@@ -352,6 +352,48 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * @var		FormFactory
+	 */
+	protected $formFactory;
+	
+	/**
+	 * Set the form factory
+	 *
+	 * @param	FormFactory			$formFactory			The form factory
+	 * @return	void
+	 */
+	public function setFormFactory( \Symfony\Component\Form\FormFactoryInterface $formFactory )
+	{
+		$this->formFactory = $formFactory;
+	}
+	
+	/**
+	 * Get form factory
+	 *
+	 * @return	FormFactory
+	 */
+	public function getFormFactory()
+	{
+		if ( ! isset( $this->formFactory ) )
+		{
+			$csrfTokenManager = new \Symfony\Component\Security\Csrf\CsrfTokenManager();
+			$csrfExtension = new \Symfony\Component\Form\Extension\Csrf\CsrfExtension( $csrfTokenManager );
+			
+			$validator = \Symfony\Component\Validator\Validation::createValidator();
+			$validatorExtension = new \Symfony\Component\Form\Extension\Validator\ValidatorExtension( $validator );
+			
+			$formFactory = \Symfony\Component\Form\Forms::createFormFactoryBuilder()
+				->addExtension( $csrfExtension )
+				->addExtension( $validatorExtension )
+				->getFormFactory();
+				
+			$this->setFormFactory( $formFactory );
+		}
+		
+		return $this->formFactory;
+	}
+	
+	/**
 	 * Generate a new plugin from the boilerplate
 	 *
 	 * @api

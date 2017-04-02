@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
+use Modern\Wordpress\Framework;
+
 /**
  * Form Class
  */
@@ -45,19 +47,21 @@ class Form
 	public $submitButton = "Save";
 	
 	/**
-	 * @var	string		Output template
+	 * @var	string		Output themes
 	 */
-	public $template = 'form/form';
+	public $themes = array();
 	
 	/**
 	 * Set template
 	 *
-	 * @param	string		$template			The new template
+	 * @param	string|array		$themes		The form themes (or themes) to pick templates from
 	 * @return	this							Chainable
 	 */
-	public function setTemplate( $template )
+	public function setTheme( $themes )
 	{
-		$this->template = $template;
+		$themes = (array) $themes;
+		$this->themes = $themes;
+		
 		return $this;
 	}
 	
@@ -91,7 +95,105 @@ class Form
 	public function __construct( $name, \Modern\Wordpress\Plugin $plugin=NULL )
 	{
 		$this->name = $name;
-		$this->plugin = $plugin ?: \Modern\Wordpress\Framework::instance();
+		$this->plugin = $plugin ?: Framework::instance();
+		
+		$engines = array();
+		
+		if ( isset( $plugin ) )
+		{
+			$engines[] = new \Modern\Wordpress\Symfony\TemplateEngine( $plugin );
+		}
+		
+		$engines[] = new \Modern\Wordpress\Symfony\TemplateEngine( Framework::instance() );
+		$templateEngine = new \Symfony\Component\Templating\DelegatingEngine( $engines );
+		$formBuilder = Framework::instance()->getFormFactory()->createBuilder();
+		
+		$this->setTemplateEngine( $templateEngine );
+		$this->setFormBuilder( $formBuilder );
+		$this->setEngines( $engines );
+	}
+	
+	/**
+	 * @var		EngineInterface
+	 */
+	protected $templateEngine;
+	
+	/**
+	 * @var	FormRenderHelper
+	 */
+	public $renderHelper;
+	
+	/**
+	 * Set the template rendering engine
+	 *
+	 * @param	EngineInterface			$templateEngine				The template rendering engine
+	 * @return	void
+	 */
+	public function setTemplateEngine( \Symfony\Component\Templating\EngineInterface $templateEngine )
+	{
+		$this->templateEngine = $templateEngine;
+	}
+	
+	/**
+	 * Get template rendering engine
+	 *
+	 * @return	EngineInterface
+	 */
+	public function getTemplateEngine()
+	{
+		return $this->templateEngine;
+	}
+	
+	/** 
+	 * @var		FormBuilderInterface
+	 */
+	protected $formBuilder;
+	
+	/**
+	 * Set the form builder
+	 *
+	 * @param	FormBuilderInterface		$formBuilder			The form builder
+	 * @return	void
+	 */
+	public function setFormBuilder( \Symfony\Component\Form\FormBuilderInterface $formBuilder )
+	{
+		$this->formBuilder = $formBuilder;
+	}
+	
+	/** 
+	 * Get the form builder
+	 *
+	 * @return	\Symfony\Component\Form\FormBuilderInterface
+	 */
+	public function getFormBuilder()
+	{
+		return $this->formBuilder;
+	}
+	
+	/**
+	 * @var		array
+	 */
+	protected $engines = array();
+	
+	/**
+	 * Set the template engines cache
+	 *
+	 * @param	array		$engines			The form view
+	 * @return	void
+	 */
+	public function setEngines( $engines )
+	{
+		$this->engines = $engines;
+	}
+	
+	/** 
+	 * Get the template engines
+	 *
+	 * @return	array
+	 */
+	public function getEngines()
+	{
+		return $this->engines;
 	}
 	
 	/**
@@ -315,49 +417,24 @@ class Form
 	 */
 	public function render()
 	{
-		if ( ! class_exists( 'Piklist' ) )
-		{
-			return "Form cannot be displayed because it requires the 'Piklist' plugin to be installed.";
-		}
-		
-		// This makes sure the piklist static states represent this form
-		\Piklist_Validate::check();
-		
-		$form_rows = array();
-		
-		foreach( $this->fields as $field_name => $field )
-		{
-			$form_rows[ $field_name ] = $this->getPlugin()->getTemplateContent( 'form/form-row', array( 
-				'field_name' => $field_name, 
-				'field' => $field, 
-				'field_html' => \Piklist_Form::render_field( $field, true ) 
-			) );
-		}
-		
-		if ( $this->submitButton ) {
-			$form_rows[] = \Piklist_Form::render_field( array(
-				'type' => 'submit',
-				'value' => $this->submitButton,
-				'attributes' => array(
-					'class' => 'button-primary',
-				)
-			), true ); 
-		}
-
-		ob_start();
-		
-		// Piklist saves the added fields to a transient and outputs its own hidden form inputs for validation
-		\Piklist_Form::save_fields();
-		
-		piklist( 'field', array(
-			'type' => 'hidden',
-			'field' => 'form_id',
-			'value' => $this->getPluginSlug() . '_' . $this->name,
+		$template_vars = $this->applyFilters( 'render', array( 
+			'formWrapper' => $this,
+			'form' => $this->getFormBuilder()->getForm()->createView(),
 		) );
 		
-		$hidden_fields = ob_get_clean();
-		$template_vars = $this->applyFilters( 'render', array( 'form' => $this, 'form_rows' => $form_rows, 'hidden_fields' => $hidden_fields ) );
-		return $this->getPlugin()->getTemplateContent( $this->template, $template_vars );
+		$this->renderHelper = new \Modern\Wordpress\Helper\FormRenderHelper( 
+			new \Symfony\Component\Form\FormRenderer( 
+				new \Symfony\Component\Form\Extension\Templating\TemplatingRendererEngine(
+					$this->getTemplateEngine(), array_merge( $this->themes, array( 'form' ) )
+				)
+			)
+		);
+		
+		foreach( $this->engines as $engine ) {
+			$engine->addHelpers( array( $this->renderHelper ) );
+		}
+		
+		return $this->renderHelper->form( $template_vars[ 'form' ], $template_vars );
 	}
 	
 	/**
