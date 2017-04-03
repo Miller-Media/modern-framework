@@ -8,7 +8,7 @@
  * @author:   Kevin Carwile
  * @since:    {build_version}
  */
-namespace Modern\Wordpress\Helper;
+namespace Modern\Wordpress\Symfony;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );

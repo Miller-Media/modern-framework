@@ -94,12 +94,6 @@ class TemplateEngine implements EngineInterface, \ArrayAccess
 	 */
 	public function exists( $name )
 	{
-		if ( strstr( $name, 'row' ) and ! strstr( $name, 'rows' ) )
-		{
-			print "<pre>";
-			print_r( $this->translateName( $name ) );
-			exit;
-		}
 		$filename = $this->getPlugin()->getTemplate( $this->translateName( $name ) );
 
 		return file_exists( $filename );
@@ -113,7 +107,7 @@ class TemplateEngine implements EngineInterface, \ArrayAccess
 	 */
 	public function supports( $name )
 	{
-		return $this->exists( $name );
+		return substr( $name, -4 ) == '.php';
 	}
 
 	/**
@@ -125,7 +119,6 @@ class TemplateEngine implements EngineInterface, \ArrayAccess
 	public function translateName( $name )
 	{
 		list( $theme, $template ) = explode( ':', $name );
-		$template = ltrim( $template, '_' );
 
 		// Remove .php extension from template name if it has one
 		if ( substr( $template, -4 ) == '.php' )

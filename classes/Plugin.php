@@ -484,7 +484,7 @@ abstract class Plugin extends Singleton
 	 */
 	public function createForm( $name )
 	{
-		$form = new \Modern\Wordpress\Helper\Form( $name, $this );
+		$form = new \Modern\Wordpress\Helpers\Form( $name, $this );
 		$form = $form->applyFilters( 'create', $form );
 		
 		return $form;

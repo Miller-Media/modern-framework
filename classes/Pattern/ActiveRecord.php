@@ -340,7 +340,7 @@ abstract class ActiveRecord
 	 */
 	public static function createDisplayTable()
 	{
-		$table = new \Modern\Wordpress\Helper\ActiveRecordTable;
+		$table = new \Modern\Wordpress\Helpers\ActiveRecordTable;
 		$table->activeRecordClass = get_called_class();
 		return $table;
 	}
