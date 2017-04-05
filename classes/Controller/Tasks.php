@@ -95,20 +95,13 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			},
 			'task_last_start' => function( $task ) 
 			{
-				if ( $task[ 'task_last_start' ] <= 0 ) {
-					return __( "Never", 'modern-framework' );
-				}
-				
-				return get_date_from_gmt( date( 'Y-m-d H:i:s', $task[ 'task_last_start' ] ), 'F j, Y H:i:s' );
+				$taskObj = Task::loadFromRowData( $task );			
+				return $taskObj->getLastStartForDisplay();
 			},
 			'task_next_start' => function( $task ) 
 			{
-				if ( $task[ 'task_next_start' ] > 0 )
-				{
-					return get_date_from_gmt( date( 'Y-m-d H:i:s', $task[ 'task_next_start' ] ), 'F j, Y H:i:s' );
-				}
-				
-				return __( "ASAP", 'modern-framework' );
+				$taskObj = Task::loadFromRowData( $task );			
+				return $taskObj->getNextStartForDisplay();
 			},
 			'task_running' => function( $task ) 
 			{
@@ -120,19 +113,52 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			},
 			'task_data' => function( $task ) 
 			{
-				$data = json_decode( $task[ 'task_data' ], true );
+				$taskObj = Task::loadFromRowData( $task );			
+				$status = $taskObj->getStatusForDisplay();
 				
-				if ( isset( $data[ 'status' ] ) ) {
-					return $data[ 'status' ];
+				if ( $task[ 'task_completed' ] )
+				{
+					return "<span style='color:green'>{$status}</span>";
 				}
 				
-				return '--';
+				return $status;
 			},
 		);
 		
-		$table->prepare_items();
+		// Default to all non-completed tasks
+		$where = array( 'task_completed=0' );
+		
+		if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'completed' )
+		{
+			// Only show completed tasks
+			$where = array( 'task_completed > 0' );
+		}			
+		
+		$table->prepare_items( $where );
 		
 		echo $this->getPlugin()->getTemplateContent( 'views/management/tasks', array( 'table' => $table ) );
+	}
+	
+	/**
+	 * Show the status and logs for a task
+	 * 
+	 * @return void
+	 */
+	public function do_viewtask()
+	{
+		if ( isset( $_REQUEST[ 'task_id' ] ) )
+		{
+			try
+			{
+				$task = Task::load( $_REQUEST[ 'task_id' ] );
+			}
+			catch( \OutOfRangeException $e )
+			{
+				$task = NULL;
+			}
+		}
+		
+		echo $this->getPlugin()->getTemplateContent( 'views/management/task-item', array( 'task' => $task ) );
 	}
 	
 }

@@ -23,13 +23,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
+use Modern\Wordpress\Task;
 ?>
 
 <div class="wrap">
 
 	<h1>Wordpress Tasks Queue</h1>
-
-	<form method="POST">
+	
+	<?php echo $this->getTemplateContent( 'views/management/task-submenu' ) ?>
+	
+	<form method="post">
 		<?php $table->display(); ?>
 	</form>
 	
