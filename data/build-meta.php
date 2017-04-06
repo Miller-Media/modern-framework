@@ -137,6 +137,19 @@ return <<<'JSON'
                     "unsigned": false,
                     "values": [],
                     "zerofill": false
+                },
+                "task_completed": {
+                    "allow_null": false,
+                    "auto_increment": false,
+                    "binary": false,
+                    "decimals": null,
+                    "default": "0",
+                    "length": 11,
+                    "name": "task_completed",
+                    "type": "INT",
+                    "unsigned": false,
+                    "values": [],
+                    "zerofill": false
                 }
             },
             "indexes": {
