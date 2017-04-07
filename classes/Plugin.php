@@ -482,6 +482,33 @@ abstract class Plugin extends Singleton
 	}
 	
 	/**
+	 * Ensure that the framework task runner is set up
+	 *
+	 * @Wordpress\Plugin( on="activation", file="plugin.php" )
+	 *
+	 * @return	void
+	 */
+	public function pluginActivated()
+	{
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
+		wp_schedule_event( time(), 'minutely', 'modern_wordpress_queue_run' );
+		wp_schedule_event( time(), 'hourly', 'modern_wordpress_queue_maintenance' );
+	}
+
+	/**
+	 * Clear the queue schedule on framework deactivation
+	 *
+	 * @Wordpress\Plugin( on="deactivation", file="plugin.php" )
+	 *
+	 * @return	void
+	 */
+	public function pluginDeactivated()
+	{
+		
+	}
+	
+	/**
 	 * Internal: Framework Plugin Finder
 	 *
 	 * @Wordpress\Filter( for="modern_wordpress_find_plugins" )
