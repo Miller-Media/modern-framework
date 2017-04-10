@@ -52,7 +52,7 @@ class Symfony extends Singleton
 		if ( ! isset( $this->formFactory ) )
 		{
 			$csrfGenerator = new \Symfony\Component\Security\Csrf\TokenGenerator\UriSafeTokenGenerator();
-			$csrfStorage = new \Symfony\Component\Security\Csrf\TokenStorage\NativeSessionTokenStorage();
+			$csrfStorage = new \Modern\Wordpress\Symfony\WPTokenStorage();
 			$csrfTokenManager = new \Symfony\Component\Security\Csrf\CsrfTokenManager( $csrfGenerator, $csrfStorage );
 			$csrfExtension = new \Symfony\Component\Form\Extension\Csrf\CsrfExtension( $csrfTokenManager );
 			

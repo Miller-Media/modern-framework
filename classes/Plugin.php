@@ -482,10 +482,10 @@ abstract class Plugin extends Singleton
 	 * @param	string		$name		The form name
 	 * @return	Form
 	 */
-	public function createForm( $name )
+	public function createForm( $name, $data=null, $options=array() )
 	{
-		$form = new \Modern\Wordpress\Helpers\Form( $name, $this );
-		$form = $form->applyFilters( 'create', $form );
+		$form = new \Modern\Wordpress\Helpers\Form( $name, $this, $data, $options );
+		$form = $form->applyFilters( 'create', $form, $data, $options );
 		
 		return $form;
 	}

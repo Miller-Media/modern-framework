@@ -315,6 +315,11 @@ class Form
 		'reset' => '',
 		'submit' => '',
 	);
+	
+	/**
+	 * @var	array		Added fields
+	 */
+	protected $fields = array();
 
 	/**
 	 * Add a field to the form
@@ -324,7 +329,6 @@ class Form
 	 */
 	public function addField( $name, $type='text', $options=array() )
 	{	
-
 		$options = array_merge( array( 'translation_domain' => $this->getPlugin()->pluginSlug() ), $options );
 		$field = $this->applyFilters( 'field', array( 'name' => $name, 'type' => $type, 'options' => $options ) );
 		
@@ -340,8 +344,19 @@ class Form
 		}
 		
 		$this->getFormBuilder()->add( $field[ 'name' ], $field[ 'type' ], $field[ 'options' ] );
+		$this->fields[ $field[ 'name' ] ] = $field;
 		
 		return $this;
+	}
+	
+	/**
+	 * Get the added fields
+	 *
+	 * @return	array
+	 */
+	public function getFields()
+	{
+		return $this->fields;
 	}
 	
 	/**
@@ -457,7 +472,7 @@ class Form
 		$this->renderHelper = new \Modern\Wordpress\Symfony\FormRenderHelper( 
 			new \Symfony\Component\Form\FormRenderer( 
 				new \Symfony\Component\Form\Extension\Templating\TemplatingRendererEngine(
-					$this->getTemplateEngine(), array_merge( $this->themes, array( 'form' ) )
+					$this->getTemplateEngine(), array_merge( $this->themes, array( 'form/generic' ) )
 				)
 			)
 		);
