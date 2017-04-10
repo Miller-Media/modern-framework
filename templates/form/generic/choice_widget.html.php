@@ -1,0 +1,21 @@
+<?php
+/**
+ * Form template file
+ *
+ * Created:   April 3, 2017
+ *
+ * @package:  Modern Framework for Wordpress
+ * @author:   Kevin Carwile
+ * @since:    {build_version}
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Access denied.' );
+}
+
+?>
+<?php if ($expanded): ?>
+<?php echo $view['form']->block($form, 'choice_widget_expanded') ?>
+<?php else: ?>
+<?php echo $view['form']->block($form, 'choice_widget_collapsed') ?>
+<?php endif ?>
