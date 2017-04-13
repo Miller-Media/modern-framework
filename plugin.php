@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Modern Framework for Wordpress
- * Version: 1.3.0
+ * Version: 1.3.0.1
  * Provides: lib-modern-framework
  * Description: Provides an object oriented utility framework for modern wordpress plugins.
  * Author: Kevin Carwile
@@ -55,14 +55,19 @@ call_user_func( function() {
 	 */
 	add_action( 'plugins_loaded', function() use ( $plugin_meta, &$_mwp_version )
 	{
-		// Let's skip including non-development versions of mwp
-		if ( defined( 'MODERN_WORDPRESS_DEV' ) and \MODERN_WORDPRESS_DEV and basename( __DIR__ ) != 'modern-framework' )
+		// Let's always skip including bundled frameworks if we are in development
+		$in_development = ( defined( 'MODERN_WORDPRESS_DEV' ) and \MODERN_WORDPRESS_DEV );
+		if ( $in_development and basename( __DIR__ ) != 'modern-framework' )
 		{
 			return;
 		}
-			
-		// Let's skip loading versions of mwp that are not the newest we know we have
-		if ( ! empty( $_mwp_version ) and version_compare( $_mwp_version, $plugin_meta[ 'version' ] ) === 1 )
+
+		// Let's skip loading framework versions that are not the newest we know we have, unless we are in development
+		if (
+			! $in_development and
+			! empty( $_mwp_version ) and 
+			version_compare( $_mwp_version, $plugin_meta[ 'version' ] ) === 1 
+		)
 		{
 			return;
 		}
