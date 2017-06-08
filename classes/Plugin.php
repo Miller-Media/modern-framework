@@ -112,7 +112,7 @@ abstract class Plugin extends Singleton
 		$install = $this->data( 'install-meta' ) ?: array();
 		
 		/* Update table definitions in database if needed */
-		if ( is_array( $build_meta[ 'tables' ] ) )
+		if ( isset( $build_meta[ 'tables' ] ) and is_array( $build_meta[ 'tables' ] ) )
 		{
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 			$dbHelper = \Modern\Wordpress\DbHelper::instance();
