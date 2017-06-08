@@ -13,4 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<input id="<?php echo $field_id ?>" class="widefat" name="<?php echo $field_name ?>" size="40" type="text" value="<?php echo $field_value ?>" />
+<p>
+	<label><?php echo $field['title'] ?>
+		<input id="<?php echo $field_id ?>" class="widefat" name="<?php echo $field_name ?>" size="40" type="text" value="<?php echo $field_value ?>" />
+	</label>
+</p>
