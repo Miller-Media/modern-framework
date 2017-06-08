@@ -96,6 +96,7 @@ call_user_func( function() {
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/Plugin.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/Action.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/Filter.php" );
+			$annotationRegistry::registerFile( __DIR__ . "/annotations/MetaBox.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/Shortcode.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/Options.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/OptionsSection.php" );
