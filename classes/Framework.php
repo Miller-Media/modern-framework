@@ -211,6 +211,40 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Include localized data with mwp scripts when concatenation is turned on
+	 *
+	 * @Wordpress\Filter( for="script_loader_tag", args=3 )
+	 * 
+	 * @param	string			$tag				The script tag
+	 * @param	string			$handle				The script handle
+	 * @param	string			$src				The script src
+	 * @return	string
+	 */
+	public function adjustConcatSettings( $tag, $handle, $src )
+	{
+		global $wp_scripts;
+		if ( $wp_scripts->do_concat )
+		{
+			$localized_data = $wp_scripts->get_data( $handle, 'data' );
+			if ( $localized_data and strstr( $localized_data, 'mw_localized_data' ) ) 
+			{
+				/**
+				 * If $wp_scripts->do_concat is enabled, then localized data will all be printed before the
+				 * actual concatenated scripts are outputted, which can cause script specific mw_localized_data 
+				 * to clobber each other. So, this prepends the localized data to the concatenated script tag.
+				 */
+				ob_start();
+				$wp_scripts->print_extra_script( $handle );
+				$local_data_script = ob_get_clean();
+				$tag = $local_data_script . $tag;
+			}
+		}
+		
+		return $tag;
+	}
+	
+	
+	/**
 	 * Add a one minute time period to the wordpress cron schedule
 	 *
 	 * @Wordpress\Filter( for="cron_schedules" )
@@ -716,7 +750,7 @@ class $classname
 	 */
 	public function __construct( \Modern\Wordpress\Plugin \$plugin=NULL )
 	{
-		\$this->plugin = \$plugin ?: \MillerMedia\Boilerplate\Plugin::instance();
+		\$this->setPlugin( \$plugin ?: \MillerMedia\Boilerplate\Plugin::instance() );
 	}
 }
 
