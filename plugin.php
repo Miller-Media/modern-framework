@@ -101,6 +101,7 @@ call_user_func( function() {
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/OptionsSection.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/OptionsField.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/PostType.php" );
+			$annotationRegistry::registerFile( __DIR__ . "/annotations/RestRoute.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/Stylesheet.php" );
 			$annotationRegistry::registerFile( __DIR__ . "/annotations/Script.php" );
 
