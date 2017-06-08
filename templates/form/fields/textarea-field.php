@@ -13,4 +13,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
+<p>
+<label><?php echo $field['title'] ?></label>
 <textarea id="<?php echo $field_id ?>" name="<?php echo $field_name ?>" class="widefat" rows="16" cols="20" type="textarea"><?php echo $field_value ?></textarea>
+</p>

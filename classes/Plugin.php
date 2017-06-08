@@ -120,16 +120,7 @@ abstract class Plugin extends Singleton
 		$install = $this->data( 'install-meta' ) ?: array();
 		
 		/* Update table definitions in database if needed */
-		if ( is_array( $build_meta[ 'tables' ] ) )
-		{
-			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-			$dbHelper = \Modern\Wordpress\DbHelper::instance();
-			foreach( $build_meta[ 'tables' ] as $table )
-			{
-				$tableSql = $dbHelper->buildTableSQL( $table );
-				dbDelta( $tableSql );
-			}
-		}
+		$this->updateSchema();
 		
 		/* Update installed version number */
 		$install[ 'version' ] = $plugin_meta[ 'version' ];
@@ -139,6 +130,28 @@ abstract class Plugin extends Singleton
 		
 		/* Clear the annotations cache */
 		\Modern\Wordpress\Framework::instance()->clearAnnotationsCache();
+	}
+
+	/**
+	 * Update the schema for this plugin
+	 * 
+	 * @return	void
+	 */
+	public function updateSchema()
+	{
+		$build_meta = $this->data( 'build-meta' );
+		
+		/* Update table definitions in database if needed */
+		if ( isset( $build_meta[ 'tables' ] ) and is_array( $build_meta[ 'tables' ] ) )
+		{
+			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+			$dbHelper = \Modern\Wordpress\DbHelper::instance();
+			foreach( $build_meta[ 'tables' ] as $table )
+			{
+				$tableSql = $dbHelper->buildTableSQL( $table );
+				dbDelta( $tableSql );
+			}
+		}
 	}
 	
 	/**
@@ -488,6 +501,33 @@ abstract class Plugin extends Singleton
 		$form = $form->applyFilters( 'create', $form, $data, $options );
 		
 		return $form;
+	}
+	
+	/**
+	 * Ensure that the framework task runner is set up
+	 *
+	 * @Wordpress\Plugin( on="activation", file="plugin.php" )
+	 *
+	 * @return	void
+	 */
+	public function pluginActivated()
+	{
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
+		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
+		wp_schedule_event( time(), 'minutely', 'modern_wordpress_queue_run' );
+		wp_schedule_event( time(), 'hourly', 'modern_wordpress_queue_maintenance' );
+	}
+
+	/**
+	 * Clear the queue schedule on framework deactivation
+	 *
+	 * @Wordpress\Plugin( on="deactivation", file="plugin.php" )
+	 *
+	 * @return	void
+	 */
+	public function pluginDeactivated()
+	{
+		
 	}
 	
 	/**

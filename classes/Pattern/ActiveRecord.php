@@ -485,6 +485,16 @@ abstract class ActiveRecord
 	}
 	
 	/**
+	 * Get data array
+	 *
+	 * @return	array
+	 */
+	public function dataArray()
+	{
+		return apply_filters( 'mwp_record_data_array', $this->_data, $this );
+	}
+	
+	/**
 	 * Get the database placeholder format for a value type
 	 *
 	 * @param	mixed		$value			The value to check

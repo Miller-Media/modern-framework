@@ -523,6 +523,7 @@ class CLI extends \WP_CLI_Command {
 	 * 
 	 * @param	$args		array		Positional command line arguments
 	 * @param	$assoc		array		Named command line arguments
+	 * @param	$api_opts	array		Optional array of options to use this method as an api
 	 *
 	 * ## OPTIONS
 	 *
@@ -538,6 +539,9 @@ class CLI extends \WP_CLI_Command {
 	 * [--dev]
 	 * : Use flag to update the latest-dev.zip to the current build
 	 *
+	 * [--nobundle]
+	 * : Use flag to prevent the modern wordpress framework from being bundled in with the plugin
+	 *
 	 * ## EXAMPLES
 	 *
 	 *     # Build a new plugin package for release
@@ -547,9 +551,10 @@ class CLI extends \WP_CLI_Command {
 	 * @subcommand build-plugin
 	 * @when after_wp_load
 	 */
-	public function buildPlugin( $args, $assoc )
+	public function buildPlugin( $args, $assoc, $api_opts=array() )
 	{
 		$slug = $args[0];
+		$cli_output = isset( $api_opts[ 'cli_output' ] ) ? $api_opts[ 'cli_output' ] : true;
 		
 		if ( ! $slug or ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) )
 		{
@@ -659,6 +664,21 @@ class CLI extends \WP_CLI_Command {
 			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/build-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $build_meta, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		}
 		
+		if ( $slug !== 'modern-framework' and ! isset( $assoc[ 'nobundle' ] ) )
+		{
+			$this->rmdir( WP_PLUGIN_DIR . '/' . $slug . '/framework' );
+			$this->rmdir( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework' );
+			
+			$bundle_filename = $this->buildPlugin( array( 'modern-framework' ), array( 'nobundle' => true ), array( 'cli_output' => false, 'return_zip' => true ) );
+			
+			$framework_zip = new \ZipArchive();
+			$framework_zip->open( $bundle_filename );
+			$framework_zip->extractTo( WP_PLUGIN_DIR . '/' . $slug . '/' );
+			$framework_zip->close();
+			
+			rename( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework', WP_PLUGIN_DIR . '/' . $slug . '/framework' );
+		}
+		
 		/**
 		 * Create the ZIP Archive
 		 */
@@ -737,9 +757,17 @@ class CLI extends \WP_CLI_Command {
 			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $meta_data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		
 			/* Build the release package */
-			\WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
+			$cli_output && \WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
+			
 			$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
 			$zip->close();
+			
+			$this->rmdir( WP_PLUGIN_DIR . '/' . $slug . '/framework' );
+			
+			if ( isset( $api_opts[ 'return_zip' ] ) and $api_opts[ 'return_zip' ] )
+			{
+				return $zip_filename;
+			}
 			
 			/* Copy to latest dev.zip */
 			if ( isset( $assoc[ 'dev' ] ) and $assoc[ 'dev' ] )
@@ -754,6 +782,43 @@ class CLI extends \WP_CLI_Command {
 			}
 		}
 		
-		\WP_CLI::success( 'Plugin package successfully built.' );
+		$cli_output && \WP_CLI::success( 'Plugin package successfully built.' );		
+	}
+	
+	/**
+	 * Delete a directory and all files in it
+	 *
+	 * @param	string		$dir			The directory to delete
+	 * @return	void
+	 */
+	protected function rmdir( $dir )
+	{
+		if ( ! is_dir( $dir ) )
+		{
+			return;
+		}
+		
+		$_dir = dir( $dir );
+		while ( false !== $file = $_dir->read() ) 
+		{
+			// Skip pointers & special dirs
+			if ( in_array( $file, array( '.', '..' ) ) )
+			{
+				continue;
+			}
+
+			if( is_dir( $dir . '/' . $file ) ) 
+			{
+				$this->rmdir( $dir . '/' . $file ); 
+			}
+			else 
+			{
+				unlink( $dir . '/' . $file );
+			}
+			
+		}
+		$_dir->close();
+		
+		rmdir( $dir ); 
 	}
 }

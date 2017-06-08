@@ -45,6 +45,7 @@ class Task extends ActiveRecord
 		'last_start',
 		'tag',
 		'fails',
+		'completed',
 		'blog_id',
 	);
 	
@@ -57,12 +58,7 @@ class Task extends ActiveRecord
 	 * @var	string		Table column prefix
 	 */
 	public static $prefix = 'task_';
-	
-	/**
-	 * @var	bool		Task completed
-	 */
-	public $complete = false;
-	
+		
 	/**
 	 * @var bool		Task aborted
 	 */
@@ -98,13 +94,35 @@ class Task extends ActiveRecord
 	}
 	
 	/**
+	 * Save a log message
+	 *
+	 * @param	string			$message			The message to log
+	 */
+	public function log( $message )
+	{
+		$logs = $this->getData( 'logs' );
+		if ( ! is_array( $logs ) )
+		{
+			$logs = array();
+		}
+		
+		$logs[] = array(
+			'time' => time(),
+			'message' => $message,
+		);
+		
+		$this->setData( 'logs', $logs );
+		$this->save();
+	}
+	
+	/**
 	 * Complete this task
 	 *
 	 * @return	void
 	 */
 	public function complete()
 	{
-		$this->complete = true;		
+		$this->completed = time();
 		do_action( $this->action . '_complete', $this );
 	}
 	
@@ -142,7 +160,7 @@ class Task extends ActiveRecord
 	 */
 	public function runNext()
 	{
-		if ( ! $this->running )
+		if ( ! $this->running and ! $this->completed )
 		{
 			$this->unlock();
 			$this->next_start = 0;
@@ -150,7 +168,6 @@ class Task extends ActiveRecord
 			$this->save();
 		}		
 	}
-	
 	
 	/**
 	 * Set Task Data
@@ -193,6 +210,60 @@ class Task extends ActiveRecord
 		$data[ 'status' ] = (string) $status;
 		$this->data = $data;
 		$this->save();
+	}
+	
+	/**
+	 * Get status for display
+	 * 
+	 * @return	string
+	 */
+	public function getStatusForDisplay()
+	{
+		if ( $this->completed )
+		{
+			return __( 'Completed', 'modern-framework' );
+		}
+		
+		return $this->getData( 'status' ) ?: '---';
+	}
+
+	/**
+	 * Get next start for display
+	 * 
+	 * @return	string
+	 */
+	public function getNextStartForDisplay()
+	{
+		if ( $this->completed )
+		{
+			return __( 'N/A', 'modern-framework' );
+		}
+		
+		if ( $this->next_start > 0 )
+		{
+			return get_date_from_gmt( date( 'Y-m-d H:i:s', $this->next_start ), 'F j, Y H:i:s' );
+		}
+		else
+		{
+			return __( 'ASAP', 'modern-framework' );
+		}
+	}
+
+	/**
+	 * Get last start for display
+	 * 
+	 * @return	string
+	 */
+	public function getLastStartForDisplay()
+	{
+		if ( $this->last_start > 0 )
+		{
+			return get_date_from_gmt( date( 'Y-m-d H:i:s', $this->last_start ), 'F j, Y H:i:s' );
+		}
+		else
+		{
+			return __( 'Never', 'modern-framework' );
+		}		
 	}
 
 	/**
@@ -320,7 +391,7 @@ class Task extends ActiveRecord
 		$row = $db->get_row( 
 			$db->prepare( "
 				SELECT * FROM {$db->prefix}" . static::$table . " 
-					WHERE task_running=0 AND task_next_start <= %d AND task_fails < 3 AND task_blog_id=%d
+					WHERE task_completed=0 AND task_running=0 AND task_next_start <= %d AND task_fails < 3 AND task_blog_id=%d
 					ORDER BY task_priority DESC, task_last_start ASC, task_id ASC", time(), get_current_blog_id()
 			), ARRAY_A
 		);
@@ -341,6 +412,11 @@ class Task extends ActiveRecord
 	public static function runMaintenance()
 	{
 		$db = Framework::instance()->db();
+		
+		// Update failover status of tasks that appear to have ended abruptly
 		$db->query( "UPDATE " . $db->prefix . static::$table . " SET task_running=0, task_fails=task_fails + 1 WHERE task_running=1 AND task_last_start < " . ( time() - ( 60 * 60 ) ) );
+		
+		// Remove completed tasks that are older than 24 hours
+		$db->query( "DELETE FROM " . $db->prefix . static::$table . " WHERE task_completed > 0 AND task_completed < " . ( time() - ( 60 * 60 * 24 ) ) );
 	}
 }

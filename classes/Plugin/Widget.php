@@ -121,26 +121,31 @@ abstract class Widget extends \WP_Widget
 	 * Creates a settings form for the widget
 	 *
 	 * @param	array		$instance			The widget instance settings
-	 * @return	string
+	 * @return	void
 	 */
 	public function form( $instance )
 	{
-		foreach( $this->settings as $name => $field )
+		foreach( $this->getSettings( $instance ) as $name => $field )
 		{
-			switch( $field[ 'type' ] )
-			{
-				case 'text':
-				case 'textarea':
-					
-					echo $this->getPlugin()->getTemplateContent( 'form/fields/' . $field[ 'type' ] . '-field', array( 
-						'field_name' 	=> $this->get_field_name( $name ),
-						'field_id'		=> $this->get_field_id( $name ),
-						'field_value' 	=> isset( $instance[ $name ] ) ? $instance[ $name ] : $field[ 'default' ],
-						'field_title'	=> $field[ 'title' ],
-					) );
-					break;
-			}
+			echo $this->getPlugin()->getTemplateContent( 'form/fields/' . $field[ 'type' ] . '-field', array( 
+				'field'         => $field,
+				'field_name' 	=> $this->get_field_name( $name ),
+				'field_id'		=> $this->get_field_id( $name ),
+				'field_value' 	=> isset( $instance[ $name ] ) ? $instance[ $name ] : $field[ 'default' ],
+				'field_title'	=> $field[ 'title' ],
+			) );
 		}
+	}
+	
+	/**
+	 * Get the widget settings
+	 *
+	 * @param	array		$instance		The widget instance settings
+	 * @return	array
+	 */
+	public function getSettings( $instance )
+	{
+		return $this->settings;
 	}
 	
 	/**

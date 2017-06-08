@@ -42,7 +42,7 @@ window.mwp = _.extend( {}, Backbone.Events );
 			initialize: function()
 			{
 				var controller = this;
-				this.local = $.extend( local, mw_localized_data );
+				controller.local = $.extend( {}, local, mw_localized_data );
 				
 				$(document).ready( function() {
 					mwp.trigger( controller.get( 'name' ) + '.ready', controller );
