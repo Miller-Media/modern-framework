@@ -112,6 +112,28 @@ abstract class Plugin extends Singleton
 		$install = $this->data( 'install-meta' ) ?: array();
 		
 		/* Update table definitions in database if needed */
+		$this->updateSchema();
+		
+		/* Update installed version number */
+		$install[ 'version' ] = $plugin_meta[ 'version' ];
+		
+		/* Update install meta */
+		$this->setData( 'install-meta', $install );
+		
+		/* Clear the annotations cache */
+		\Modern\Wordpress\Framework::instance()->clearAnnotationsCache();
+	}
+
+	/**
+	 * Update the schema for this plugin
+	 * 
+	 * @return	void
+	 */
+	public function updateSchema()
+	{
+		$build_meta = $this->data( 'build-meta' );
+		
+		/* Update table definitions in database if needed */
 		if ( isset( $build_meta[ 'tables' ] ) and is_array( $build_meta[ 'tables' ] ) )
 		{
 			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -122,15 +144,6 @@ abstract class Plugin extends Singleton
 				dbDelta( $tableSql );
 			}
 		}
-		
-		/* Update installed version number */
-		$install[ 'version' ] = $plugin_meta[ 'version' ];
-		
-		/* Update install meta */
-		$this->setData( 'install-meta', $install );
-		
-		/* Clear the annotations cache */
-		\Modern\Wordpress\Framework::instance()->clearAnnotationsCache();
 	}
 	
 	/**

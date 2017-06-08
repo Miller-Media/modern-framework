@@ -79,6 +79,21 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Add dashboard widget
+	 *
+	 * @Wordpress\Action( for="wp_dashboard_setup" )
+	 * 
+	 * @return	void
+	 */
+	public function addDashboardWidget()
+	{
+		wp_add_dashboard_widget( 'mwp-console', __( "Modern Wordpress Console", 'modern-framework' ), function() 
+		{
+			echo $this->getTemplateContent( 'widget/dashboard' );
+		});
+	}
+		
+	/**
 	 * Attach instances to wordpress
 	 *
 	 * @api
