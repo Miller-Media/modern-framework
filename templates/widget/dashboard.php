@@ -6,7 +6,7 @@
  *
  * @package  Modern Framework for Wordpress
  * @author   Kevin Carwile
- * @since    {build_version}
+ * @since    1.3.1
  *
  * Here is an example of how to get the contents of this template while 
  * providing the values of the $title and $content variables:
@@ -28,14 +28,15 @@ use Modern\Wordpress\Task;
 use Modern\Wordpress\Framework;
 
 $notices = array();
+$framework = Framework::instance();
 
-if ( $_POST['mwp_clear_caches'] ) 
+if ( isset( $_POST['mwp_clear_caches'] ) and $_POST['mwp_clear_caches'] ) 
 {
-	Framework::instance()->clearAnnotationsCache();
+	$framework->clearAnnotationsCache();
 	$notices[] = __( "Temporary caches have been cleared.", 'modern-framework' );
 }
 
-if ( $_POST['mwp_update_schema'] )
+if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 {
 	foreach( apply_filters( 'modern_wordpress_find_plugins', array() ) as $plugin )
 	{
@@ -47,19 +48,29 @@ if ( $_POST['mwp_update_schema'] )
 ?>
 
 <div style="float: right; display: inline-block;">
+
 	<?php foreach ( $notices as $message ) : ?>
 		<div class="notice updated"><p><?php echo esc_html( $message ) ?></p></div>
 	<?php endforeach; ?>
+
 	<form method="post" style="margin-bottom: 10px">
 		<input name="mwp_clear_caches" type="hidden" value="1" />
 		<input class="button" value="Clear Caches" type="submit" style="width: 100%;"/>
 	</form>
+
 	<form method="post">
 		<input name="mwp_update_schema" type="hidden" value="1" />
 		<input class="button" value="Update DB Schema" type="submit" style="width: 100%;" />
 	</form>
-</div>
+
+	</div>
 
 <a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countWhere( 'task_completed=0' ) ?>
 
-<div style="clear:both"></div>
+<div style="clear:both; padding-top: 10px;">
+	<hr />
+	<i class="dashicons dashicons-category" aria-hidden="true"></i> <?php echo str_replace( str_replace( '/', '\\', get_home_path() ), '', $framework->getPath() ) ?>
+	<?php if ( defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV ) : ?>
+		<br><span style="color: red">Development Mode On</span>
+	<?php endif; ?>
+</div>

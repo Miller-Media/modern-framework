@@ -87,7 +87,11 @@ class Framework extends Plugin
 	 */
 	public function addDashboardWidget()
 	{
-		wp_add_dashboard_widget( 'mwp-console', __( "Modern Wordpress Console", 'modern-framework' ), function() 
+		if ( $plugin_meta = $this->getData( 'plugin-meta' ) )
+		{
+			$version = isset( $plugin_meta['version'] ) ? " ({$plugin_meta['version']})" : '';
+		}
+		wp_add_dashboard_widget( 'mwp-console', __( "Modern Wordpress Console", 'modern-framework' ) . $version, function() 
 		{
 			echo $this->getTemplateContent( 'widget/dashboard' );
 		});
