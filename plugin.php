@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Modern Framework for Wordpress
- * Version: 1.3.0.1
+ * Version: 1.3.1
  * Provides: lib-modern-framework
  * Description: Provides an object oriented utility framework for modern wordpress plugins.
  * Author: Kevin Carwile
@@ -19,7 +19,7 @@ if ( basename( __DIR__ ) == 'modern-framework' and file_exists( __DIR__ . '/dev_
 }
 
 /**
- * Execute some code in an anonymous function to maintain variable scope
+ * Executing code in an anonymous function to scope the variables
  *
  * @return	void
  */
@@ -43,7 +43,23 @@ call_user_func( function() {
 			}
 		}
 	}
-
+	
+	/** 
+	 * When activating a new plugin, check if it has a bundled modern wordpress framework and attempt
+	 * to include it now because it might resolve as the most current version, and be needed for the plugin
+	 * to activate successfully.
+	 */
+	global $pagenow;
+	if ( $pagenow == 'plugins.php' and $_REQUEST['action'] == 'activate' and ! did_action( 'plugins_loaded' ) )
+	{
+		$activating_plugin = $_REQUEST['plugin'];
+		$activating_plugin_path = dirname( WP_PLUGIN_DIR . '/' . plugin_basename( trim( $activating_plugin ) ) );
+		if ( file_exists( $activating_plugin_path . '/framework/modern-framework.php' ) )
+		{
+			include_once $activating_plugin_path . '/framework/plugin.php';
+		}
+	}
+	
 	/**
 	 * Only attempt to load the framework which is the most up to date after
 	 * all plugins have had a chance to report their bundled framework version.
