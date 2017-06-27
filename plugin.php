@@ -50,7 +50,7 @@ call_user_func( function() {
 	 * to activate successfully.
 	 */
 	global $pagenow;
-	if ( $pagenow == 'plugins.php' and $_REQUEST['action'] == 'activate' and ! did_action( 'plugins_loaded' ) )
+	if ( $pagenow == 'plugins.php' and isset( $_REQUEST['action'] ) and $_REQUEST['action'] == 'activate' and ! did_action( 'plugins_loaded' ) )
 	{
 		$activating_plugin = $_REQUEST['plugin'];
 		$activating_plugin_path = dirname( WP_PLUGIN_DIR . '/' . plugin_basename( trim( $activating_plugin ) ) );
