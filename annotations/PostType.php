@@ -13,7 +13,7 @@ namespace Wordpress;
 
 /**
  * @Annotation 
- * @Target( "PROPERTY" )
+ * @Target( { "PROPERTY", "METHOD" } )
  */
 class PostType extends \Modern\Wordpress\Annotation
 {
@@ -32,12 +32,29 @@ class PostType extends \Modern\Wordpress\Annotation
 	 */
 	public function applyToProperty( $instance, $property, $vars )
 	{	
-		$self = $this;
-		add_action( 'init', function() use ( $self, $instance, $property )
+		$annotation = $this;
+		add_action( 'init', function() use ( $annotation, $instance, $property )
 		{
 			/* Register Post Type */
-			register_post_type( $self->name, $instance->{$property->name} );			
+			register_post_type( $annotation->name, $instance->{$property->name} );			
 		});	
 	}
 	
+	/**
+	 * Apply to Method
+	 *
+	 * @param	object					$instance		The object that the method belongs to
+	 * @param	ReflectionMethod		$method			The reflection method of the object instance
+	 * @param	array					$vars			Persisted variables returned by previous annotations
+	 * @return	array|NULL
+	 */
+	public function applyToMethod( $instance, $method, $vars )
+	{
+		$annotation = $this;
+		add_action( 'init', function() use ( $annotation, $instance, $method )
+		{
+			/* Register Post Type */
+			register_post_type( $annotation->name, call_user_func( array( $instance, $method->name ) ) );			
+		});	
+	}
 }
