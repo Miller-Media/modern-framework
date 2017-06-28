@@ -83,51 +83,107 @@ window.mwp = _.extend( {}, Backbone.Events );
 		
 	};
 	
-	mwp.controller = function( name, properties, classProperties ) 
+	/**
+	 * Controller Registration
+	 */
+	mwp.controller = _.extend( function( name, properties, classProperties ) 
 	{
 		var controller = mwp.base.Controller.extend( properties, classProperties );
 		controllers[ name ] = new controller( { name: name } );
-		return controllers[ name ];
-	};
-	
-	mwp.controller.get = function( name )
+		return controllers[ name ];	
+	}, 
 	{
-		if ( typeof controllers[ name ] !== 'undefined' ) {
-			return controllers[ name ];
+		/**
+		 * Get a controller
+		 *
+		 * @param	string				name		The name of a registered controller
+		 * @return	Backbone.Model
+		 */
+		get: function( name )
+		{
+			if ( typeof controllers[ name ] !== 'undefined' ) {
+				return controllers[ name ];
+			}
+			
+			return undefined;
 		}
-		
-		return undefined;
-	};
+	});
 	
-	mwp.model = function( name, properties, classProperties )
+	/**
+	 * Model Registration
+	 */
+	mwp.model = _.extend( function( name, properties, classProperties )
 	{
 		models[ name ] = mwp.base.Model.extend( properties, classProperties );
 		return models[ name ];
-	};
-	
-	mwp.model.get = function( name )
+	},
 	{
-		if ( typeof models[ name ] !== 'undefined' ) {
-			return models[ name ];
-		}
+		/**
+		 * Get a model
+		 *
+		 * @param	string				name		The name of a registered model
+		 * @return	Backbone.Model
+		 */
+		get: function( name )
+		{
+			if ( typeof models[ name ] !== 'undefined' ) {
+				return models[ name ];
+			}
+			
+			return undefined;
+		},
 		
-		return undefined;
-	};
+		/**
+		 * Set a model
+		 *
+		 * @param	string				name			The registered name
+		 * @param	Backbone.Model		model			The model
+		 * @return	Backbone.Model
+		 */
+		set: function( name, model )
+		{
+			models[ name ] = model;
+			return model;
+		}
+	});
 	
-	mwp.collection = function( name, properties, classProperties )
+	/**
+	 * Collection Registration
+	 */
+	mwp.collection = _.extend( function( name, properties, classProperties )
 	{
 		collections[ name ] = mwp.base.Collection.extend( properties, classProperties );
 		return collections[ name ];
-	};
-	
-	mwp.collection.get = function( name )
+	},
 	{
-		if ( typeof collections[ name ] !== 'undefined' ) {
-			return collections[ name ];
-		}
+		/**
+		 * Get a collection
+		 *
+		 * @param	string				name		The name of a registered model
+		 * @return	Backbone.Model
+		 */
+		get: function( name )
+		{
+			if ( typeof collections[ name ] !== 'undefined' ) {
+				return collections[ name ];
+			}
+			
+			return undefined;
+		},
 		
-		return undefined;
-	};
+		/**
+		 * Set a collection
+		 *
+		 * @param	string					name		The registered name
+		 * @param	Backbone.Collection		model
+		 * @return	Backbone.Collection
+		 */
+		set: function( name, collection )
+		{
+			collections[ name ] = collection;
+			return collection
+		}
+	});
 	
 	/**
 	 * Apply view models to a new scope
