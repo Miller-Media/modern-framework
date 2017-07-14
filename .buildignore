@@ -15,5 +15,5 @@ boilerplate
 docs
 dev_config.php
 phpdoc.xml
-annotations/cache
+annotations/cache/*.cache.php
 includes/redux
