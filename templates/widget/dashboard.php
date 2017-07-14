@@ -60,14 +60,17 @@ if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 		<input class="button" value="Update DB Schema" type="submit" style="width: 100%;" />
 	</form>
 
-	</div>
+</div>
 
 <a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countWhere( 'task_completed=0' ) ?>
 
 <div style="clear:both; padding-top: 10px;">
-	<hr />
-	<i class="dashicons dashicons-category" aria-hidden="true"></i> <?php echo str_replace( str_replace( '/', '\\', get_home_path() ), '', $framework->getPath() ) ?>
 	<?php if ( defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV ) : ?>
-		<br><span style="color: red">Development Mode On</span>
+		<br><strong>Development Mode: </strong><span style="color: green">On</span>
 	<?php endif; ?>
+	<?php if ( ! $framework->getAnnotationReader() instanceof \Doctrine\Common\Annotations\FileCacheReader ) : ?>
+		<br><strong>Annotation Caching: </strong><span style="color: red">Disabled</span>
+	<?php endif; ?>
+	<hr />
+	<i class="dashicons dashicons-category" aria-hidden="true"></i> <?php echo str_replace( str_replace( '\\', '/', get_home_path() ), '', str_replace( '\\', '/', $framework->getPath() ) ) ?>
 </div>

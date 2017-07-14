@@ -41,7 +41,18 @@ class Framework extends Plugin
 	protected function __construct()
 	{
 		/* Load Annotation Reader */
-		$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../annotations/cache", defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV );
+		$bypass_cache = defined( 'MODERN_WORDPRESS_DEV' ) and \MODERN_WORDPRESS_DEV;
+		
+		try 
+		{
+			// Attempt to read from file caches
+			$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../annotations/cache", $bypass_cache );
+		} 
+		catch( \InvalidArgumentException $e )
+		{
+			// Fallback to reading on the fly every time if the directory cannot be loaded
+			$this->reader = new AnnotationReader();
+		}
 		
 		/* Register WP CLI */
 		if ( defined( '\WP_CLI' ) && \WP_CLI ) {
@@ -50,6 +61,16 @@ class Framework extends Plugin
 		
 		/* Init Parent */
 		parent::__construct();		
+	}
+	
+	/**
+	 * Get annotation reader
+	 *
+	 * @return	Reader
+	 */
+	public function getAnnotationReader()
+	{
+		return $this->reader;
 	}
 	
 	/**
@@ -64,18 +85,43 @@ class Framework extends Plugin
 	}
 	
 	/**
-	 * Run updates when new plugin version is uploaded
+	 * Initialization
 	 *
 	 * @Wordpress\Action( for="init" )
 	 *
 	 * @return	void
 	 */
-	public function ensureActivated()
+	public function initialized()
 	{
+		// Ensure task runner is activated
 		if ( wp_get_schedule( 'modern_wordpress_queue_run' ) == false ) 
 		{
 			$this->frameworkActivated();
-		}
+		}	
+	}
+	
+	/**
+	 * Admin init
+	 * 
+	 * @Wordpress\Action( for="admin_init" )
+	 * 
+	 * @return	void
+	 */
+	public function adminInit()
+	{
+		remove_action( 'install_plugins_upload', 'install_plugins_upload' );		
+	}
+	
+	/**
+	 * Modify the upload plugin form 
+	 * 
+	 * @Wordpress\Action( for="install_plugins_upload", output=true )
+	 * 
+	 * @return	string
+	 */
+	public function uploadPluginForm()
+	{
+		return $this->getTemplateContent( 'admin/upload-plugin-form' );
 	}
 	
 	/**
@@ -95,6 +141,24 @@ class Framework extends Plugin
 		{
 			echo $this->getTemplateContent( 'widget/dashboard' );
 		});
+	}
+	
+	/**
+	 * Allow plugins to be upgraded by uploading a new version
+	 * 
+	 * @Wordpress\Filter( for="upgrader_package_options" )
+	 * 
+	 * @param	array			$options				The upgrader options
+	 * @return	array
+	 */
+	public function allowUploadUpgrades( $options )
+	{
+		if ( isset( $_REQUEST['clear_destination'] ) and $_REQUEST['clear_destination'] ) 
+		{
+			$options['clear_destination'] = true;
+		}
+		
+		return $options;
 	}
 		
 	/**
@@ -172,7 +236,7 @@ class Framework extends Plugin
 	 */
 	public function clearAnnotationsCache()
 	{
-		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*" ) );
+		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*.cache.php" ) );
 	}
 	
 	/**
