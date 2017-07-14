@@ -664,6 +664,7 @@ class CLI extends \WP_CLI_Command {
 			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/build-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $build_meta, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		}
 		
+		// Bundle the modern wordpress framework in with the plugin
 		if ( $slug !== 'modern-framework' and ! isset( $assoc[ 'nobundle' ] ) )
 		{
 			$this->rmdir( WP_PLUGIN_DIR . '/' . $slug . '/framework' );
@@ -675,6 +676,11 @@ class CLI extends \WP_CLI_Command {
 			$framework_zip->open( $bundle_filename );
 			$framework_zip->extractTo( WP_PLUGIN_DIR . '/' . $slug . '/' );
 			$framework_zip->close();
+			
+			/* Prevent bundled framework from being detected as another plugin by installer skin */
+			$contents = file_get_contents( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework/plugin.php' );
+			$contents = str_replace( '* Plugin Name:', '* Plugin:', $contents );
+			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework/plugin.php', $contents );
 			
 			rename( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework', WP_PLUGIN_DIR . '/' . $slug . '/framework' );
 		}
@@ -696,9 +702,11 @@ class CLI extends \WP_CLI_Command {
 			{
 				$relativename = str_replace( $basedir, '', str_replace( '\\', '/', $source ) );
 				
-				if ( in_array( $relativename, $ignorelist ) )
-				{
-					return;
+				// Check against ignore list
+				foreach( $ignorelist as $pattern ) {
+					if ( fnmatch( $pattern, $relativename ) ) {
+						return;
+					}
 				}
 				
 				// Add file to zip
