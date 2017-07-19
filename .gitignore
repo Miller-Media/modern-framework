@@ -2,7 +2,7 @@ vendor/*
 builds/*.zip
 !builds/modern-framework-latest-stable.zip
 !builds/modern-framework-latest-dev.zip
-annotations/cache
+annotations/cache/*.cache.php
 boilerplate
 docs
 modern-wordpress.wiki
