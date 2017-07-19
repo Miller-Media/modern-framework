@@ -17,7 +17,7 @@
  * @access private
  */
 
-namespace Modern\Wordpress\Helper; 
+namespace Modern\Wordpress\Helpers; 
  
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );

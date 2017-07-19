@@ -15,7 +15,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
-use \Modern\Wordpress\Pattern\Singleton;
+use Modern\Wordpress\Framework;
+use Modern\Wordpress\Pattern\Singleton;
+use Symfony\Component\Security\Csrf\CsrfTokenManager;
+use Symfony\Component\Validator\Validation;
+use Symfony\Component\Form\Forms;
+use Symfony\Component\Form\Extension\Validator\ValidatorExtension;
+use Symfony\Component\Form\Extension\Templating\TemplatingExtension;
+use Symfony\Component\Form\Extension\Csrf\CsrfExtension;
+use Symfony\Component\Templating\DelegatingEngine;
 
 /**
  * All modern wordpress plugins should extend this class.
@@ -484,13 +492,14 @@ abstract class Plugin extends Singleton
 	/**
 	 * Create a new form
 	 *
-	 * @param	string		$name		The plugin name
+	 * @param	string		$name		The form name
 	 * @return	Form
 	 */
-	public function createForm( $name )
+	public function createForm( $name, $data=null, $options=array() )
 	{
-		$form = new \Modern\Wordpress\Helper\Form( $name, $this );
-		$form = $form->applyFilters( 'create', $form );
+		$form = new \Modern\Wordpress\Helpers\Form( $name, $this, $data, $options );
+		$form = $form->applyFilters( 'create', $form, $data, $options );
+		
 		return $form;
 	}
 	

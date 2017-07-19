@@ -85,7 +85,27 @@ class Framework extends Plugin
 	}
 	
 	/**
-	 * Initialization
+	 * @var		Request
+	 */
+	protected $request;
+	
+	/**
+	 * Get the HTTP Request
+	 *
+	 * @return	Request
+	 */
+	public function getRequest()
+	{
+		if ( ! isset( $this->request ) )
+		{
+			$this->request = \Symfony\Component\HttpFoundation\Request::createFromGlobals();
+		}
+		
+		return $this->request;
+	}
+	
+	/**
+	 * Run updates when new plugin version is uploaded
 	 *
 	 * @Wordpress\Action( for="init" )
 	 *
@@ -248,8 +268,7 @@ class Framework extends Plugin
 	 */
 	public function loadOtherResources()
 	{
-		$form_validators = new \Modern\Wordpress\Helper\Form\Validators;
-		$this->attach( $form_validators );		
+		
 	}
 	
 	/**
@@ -463,7 +482,7 @@ class Framework extends Plugin
 	{
 		Task::runMaintenance();
 	}
-	
+		
 	/**
 	 * Generate a new plugin from the boilerplate
 	 *

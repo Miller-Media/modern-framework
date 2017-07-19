@@ -1,0 +1,23 @@
+<?php
+/**
+ * Form template file
+ *
+ * Created:   April 3, 2017
+ *
+ * @package:  Modern Framework for Wordpress
+ * @author:   Kevin Carwile
+ * @since:    {build_version}
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	die( 'Access denied.' );
+}
+
+?>
+<div <?php echo $view['form']->block($form, 'widget_container_attributes') ?>>
+    <?php if (!$form->parent && $errors): ?>
+    <?php echo $view['form']->errors($form) ?>
+    <?php endif ?>
+    <?php echo $view['form']->block($form, 'form_rows') ?>
+    <?php echo $view['form']->rest($form) ?>
+</div>
