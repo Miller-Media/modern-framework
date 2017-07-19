@@ -642,12 +642,12 @@ class CLI extends \WP_CLI_Command {
 		 */
 		{
 			$build_meta = array();
+			$dbHelper = \Modern\Wordpress\DbHelper::instance();
 			
 			/* Update table schema data file */
 			if ( isset( $meta_data[ 'tables' ] ) and $meta_data[ 'tables' ] )
 			{
-				$build_meta = array( 'tables' => array() );
-				$dbHelper = \Modern\Wordpress\DbHelper::instance();
+				$build_meta['tables'] = array();
 				
 				$tables = explode( ',', $meta_data[ 'tables' ] );
 				foreach( $tables as $table )
@@ -657,12 +657,31 @@ class CLI extends \WP_CLI_Command {
 					
 					try
 					{
-						$build_meta[ 'tables' ][] = $dbHelper->getTableDefinition( $table );
+						$build_meta[ 'tables' ][] = $dbHelper->getTableDefinition( $table, FALSE );
 					}
 					catch( \ErrorException $e ) { }
 				}
 			}
 		
+			/* Update table schema data file */
+			if ( isset( $meta_data[ 'ms_tables' ] ) and $meta_data[ 'ms_tables' ] )
+			{
+				$build_meta['ms_tables'] = array();
+				
+				$tables = explode( ',', $meta_data[ 'ms_tables' ] );
+				foreach( $tables as $table )
+				{
+					// trim spaces from table names
+					$table = trim( $table );
+					
+					try
+					{
+						$build_meta[ 'ms_tables' ][] = $dbHelper->getTableDefinition( $table, FALSE );
+					}
+					catch( \ErrorException $e ) { }
+				}
+			}
+			
 			/* Save the build meta */
 			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/build-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $build_meta, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		}

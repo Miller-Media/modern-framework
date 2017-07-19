@@ -133,15 +133,60 @@ abstract class Plugin extends Singleton
 	{
 		$build_meta = $this->data( 'build-meta' );
 		
-		/* Update table definitions in database if needed */
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		$dbHelper = \Modern\Wordpress\DbHelper::instance();
+		
+		/* Update global table definitions in database if needed */
 		if ( isset( $build_meta[ 'tables' ] ) and is_array( $build_meta[ 'tables' ] ) )
 		{
-			require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-			$dbHelper = \Modern\Wordpress\DbHelper::instance();
 			foreach( $build_meta[ 'tables' ] as $table )
 			{
-				$tableSql = $dbHelper->buildTableSQL( $table );
+				$tableSql = $dbHelper->buildTableSQL( $table, FALSE );
 				dbDelta( $tableSql );
+			}
+		}
+		
+		/* Update multisite specific table definitions in database if needed */
+		if ( isset( $build_meta[ 'ms_tables' ] ) and is_array( $build_meta[ 'ms_tables' ] ) )
+		{
+			if ( function_exists( 'is_multisite' ) and is_multisite() )
+			{
+				// Update tables in site specific contexts
+				$sites_func = function_exists( 'get_sites' ) ? 'get_sites' : 'wp_get_sites';
+				if ( function_exists( $sites_func ) )
+				{
+					require_once( ABSPATH . '/wp-admin/includes/plugin.php' );
+					
+					$sites = call_user_func( $sites_func );
+					$plugin_path = $this->pluginSlug() . '/plugin.php';
+					
+					foreach( $sites as $site )
+					{
+						$site_data = (array) $site;
+						switch_to_blog( (int) $site_data['blog_id'] );
+						
+						if ( is_plugin_active_for_network( $plugin_path ) or is_plugin_active( $plugin_path ) )
+						{
+							// Create tables for this site
+							foreach( $build_meta[ 'ms_tables' ] as $table )
+							{
+								$tableSql = $dbHelper->buildTableSQL( $table, TRUE );
+								dbDelta( $tableSql );
+							}
+						}
+						
+						restore_current_blog();
+					}
+				}
+			}
+			else
+			{
+				// Update tables under global context
+				foreach( $build_meta[ 'ms_tables' ] as $table )
+				{
+					$tableSql = $dbHelper->buildTableSQL( $table, FALSE );
+					dbDelta( $tableSql );
+				}
 			}
 		}
 	}
@@ -155,13 +200,50 @@ abstract class Plugin extends Singleton
 	{
 		$build_meta = $this->data( 'build-meta' ) ?: array();
 		
+		// Remove global tables on uninstall
 		if ( is_array( $build_meta[ 'tables' ] ) )
 		{
 			foreach( $build_meta[ 'tables' ] as $table )
 			{
-				$this->db->query( "DROP TABLE IF EXISTS {$this->db->prefix}{$table['name']}" );
+				$this->db->query( "DROP TABLE IF EXISTS {$this->db->base_prefix}{$table['name']}" );
 			}
 		}
+		
+		// Remove multisite specific tables on uninstall
+		if ( isset( $build_meta[ 'ms_tables' ] ) and is_array( $build_meta[ 'ms_tables' ] ) )
+		{
+			if ( function_exists( 'is_multisite' ) and is_multisite() )
+			{
+				// Update tables in site specific contexts
+				$sites_func = function_exists( 'get_sites' ) ? 'get_sites' : 'wp_get_sites';
+				if ( function_exists( $sites_func ) )
+				{
+					$sites = call_user_func( $sites_func );
+					
+					foreach( $sites as $site )
+					{
+						$site_data = (array) $site;
+						switch_to_blog( (int) $site_data['blog_id'] );
+						
+						// Drop tables
+						foreach( $build_meta[ 'ms_tables' ] as $table )
+						{
+							$this->db->query( "DROP TABLE IF EXISTS {$this->db->prefix}{$table['name']}" );
+						}
+						
+						restore_current_blog();
+					}
+				}
+			}
+			else
+			{
+				// Update tables under global context
+				foreach( $build_meta[ 'ms_tables' ] as $table )
+				{
+					$this->db->query( "DROP TABLE IF EXISTS {$this->db->base_prefix}{$table['name']}" );
+				}
+			}
+		}		
 		
 		$this->setData( 'install-meta', NULL );
 	}
@@ -501,12 +583,13 @@ abstract class Plugin extends Singleton
 	 *
 	 * @return	void
 	 */
-	public function pluginActivated()
+	public function _pluginActivated()
 	{
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
 		wp_schedule_event( time(), 'minutely', 'modern_wordpress_queue_run' );
 		wp_schedule_event( time(), 'hourly', 'modern_wordpress_queue_maintenance' );
+		$this->updateSchema();
 	}
 
 	/**
@@ -516,7 +599,7 @@ abstract class Plugin extends Singleton
 	 *
 	 * @return	void
 	 */
-	public function pluginDeactivated()
+	public function _pluginDeactivated()
 	{
 		
 	}
@@ -529,7 +612,7 @@ abstract class Plugin extends Singleton
 	 * @param	array		$plugins		Found plugins
 	 * @return	array
 	 */
-	public function rollCall( $plugins )
+	public function _rollCall( $plugins )
 	{
 		$plugins[] = $this;
 		return $plugins;
