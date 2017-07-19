@@ -652,6 +652,9 @@ class CLI extends \WP_CLI_Command {
 				$tables = explode( ',', $meta_data[ 'tables' ] );
 				foreach( $tables as $table )
 				{
+					// trim spaces from table names
+					$table = trim( $table );
+					
 					try
 					{
 						$build_meta[ 'tables' ][] = $dbHelper->getTableDefinition( $table );
