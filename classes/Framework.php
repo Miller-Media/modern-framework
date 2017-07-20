@@ -268,7 +268,8 @@ class Framework extends Plugin
 	 */
 	public function loadOtherResources()
 	{
-		
+		$form_validators = new \Modern\Wordpress\Helpers\Form\PiklistValidators;
+		$this->attach( $form_validators );		
 	}
 	
 	/**

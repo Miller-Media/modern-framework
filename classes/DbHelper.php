@@ -43,12 +43,15 @@ class DbHelper extends Singleton
 	/**
 	 * Get the table definition for an existing table
 	 *
-	 * @param	string	$table	Table Name
+	 * @param	string		$table			Table Name
+	 * @param	bool		$ms_context		Whether the table should be created in the context of the primary site or the current multisite
 	 * @return	array
 	 * @throws	\ErrorException
 	 */
-	public function getTableDefinition( $table )
+	public function getTableDefinition( $table, $ms_context=FALSE )
 	{
+		$prefix = $ms_context ? $this->db->prefix : $this->db->base_prefix;
+		
 		/* Init table definition */
 		$definition = array(
 			'name'		=> $table,
@@ -56,12 +59,12 @@ class DbHelper extends Singleton
 		);
 	
 		/* Check that table exists */
-		if( ! $this->tableExists( $table ) )
+		if( ! $this->tableExists( $table, $ms_context ) )
 		{
 			throw new \ErrorException;
 		}
 		
-		$columns = $this->db->get_results( "SHOW FULL COLUMNS FROM `{$this->db->prefix}" . esc_sql( $table ) . '`', ARRAY_A );
+		$columns = $this->db->get_results( "SHOW FULL COLUMNS FROM `{$prefix}" . esc_sql( $table ) . '`', ARRAY_A );
 		
 		foreach ( $columns as $row )
 		{
@@ -144,7 +147,7 @@ class DbHelper extends Singleton
 		
 		/* Look at table indexes */
 		$indexes = array();
-		$results = $this->db->get_results( "SHOW INDEXES FROM `{$this->db->prefix}" . esc_sql( $table ) . '`', ARRAY_A );
+		$results = $this->db->get_results( "SHOW INDEXES FROM `{$prefix}" . esc_sql( $table ) . '`', ARRAY_A );
 		
 		foreach ( $results as $row )
 		{
@@ -189,12 +192,14 @@ class DbHelper extends Singleton
 	/**
 	 * Build create table sql for wp dbDelta()
 	 *
-	 * @param	array		$data		Table definition data
+	 * @param	array		$data			Table definition data
+	 * @param	bool		$ms_context		Whether the table should be created in the context of the primary site or the current multisite
 	 * @return	string
 	 */
-	public function buildTableSQL( $data )
+	public function buildTableSQL( $data, $ms_context=FALSE )
 	{
-		$query = "CREATE TABLE {$this->db->prefix}{$data[ 'name' ]} (" . "\n";
+		$prefix = $ms_context ? $this->db->prefix : $this->db->base_prefix;
+		$query = "CREATE TABLE {$prefix}{$data[ 'name' ]} (" . "\n";
 		
 		foreach( $data[ 'columns' ] as $column )
 		{
@@ -386,10 +391,12 @@ class DbHelper extends Singleton
 	 * Check if a table exists
 	 *
 	 * @param	string		$table		Table name
+	 * @param	bool		$ms_context		Whether the table should be created in the context of the primary site or the current multisite
 	 * @return	bool
 	 */
-	public function tableExists( $table )
+	public function tableExists( $table, $ms_context=FALSE )
 	{
-		return ( count( $this->db->get_results( "SHOW TABLES LIKE '". esc_sql( "{$this->db->prefix}{$table}" ) . "'" ) ) > 0 );
+		$prefix = $ms_context ? $this->db->prefix : $this->db->base_prefix;
+		return ( count( $this->db->get_results( "SHOW TABLES LIKE '". esc_sql( "{$prefix}{$table}" ) . "'" ) ) > 0 );
 	}
 }

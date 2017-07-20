@@ -48,6 +48,16 @@ abstract class ActiveRecord
 	public static $prefix = '';
 	
 	/**
+	 * @var bool		Site specific table? (for multisites)
+	 */
+	public static $site_specific = FALSE;
+	
+	/**
+	 * @var	string		WP DB Prefix of loaded record
+	 */
+	public $_wpdb_prefix;
+	
+	/**
 	 * @var	array		Record data
 	 */
 	protected $_data = array();
@@ -198,11 +208,14 @@ abstract class ActiveRecord
 		}
 		
 		$db = Framework::instance()->db();
-		$row = $db->get_row( $db->prepare( "SELECT * FROM " . $db->prefix . static::$table . " WHERE " . static::$prefix . static::$key . "=%d", $id ), ARRAY_A );
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+		
+		$row = $db->get_row( $db->prepare( "SELECT * FROM " . $prefix . static::$table . " WHERE " . static::$prefix . static::$key . "=%d", $id ), ARRAY_A );
 		
 		if ( $row )
 		{
-			return static::loadFromRowData( $row );
+			$record = static::loadFromRowData( $row );
+			$record->_wpdb_prefix = $prefix;
 		}
 		
 		throw new \OutOfRangeException( 'Unable to find a record with the id: ' . $id );
@@ -225,11 +238,13 @@ abstract class ActiveRecord
 		}
 		
 		$db = Framework::instance()->db();
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+
 		$results = array();
 		$compiled = static::compileWhereClause( $where );
 		
 		/* Get results of the prepared query */
-		$query = "SELECT * FROM " . $db->prefix . static::$table . " WHERE " . $compiled[ 'where' ];
+		$query = "SELECT * FROM " . $prefix . static::$table . " WHERE " . $compiled[ 'where' ];
 		
 		if ( $order !== NULL )
 		{
@@ -256,6 +271,7 @@ abstract class ActiveRecord
 			foreach( $rows as $row )
 			{
 				$record = static::loadFromRowData( $row );
+				$record->_wpdb_prefix = $prefix;
 				$results[] = $record;
 			}
 		}
@@ -277,10 +293,12 @@ abstract class ActiveRecord
 		}
 		
 		$db = Framework::instance()->db();
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+
 		$compiled = static::compileWhereClause( $where );
 		
 		/* Get results of the prepared query */
-		$query = "SELECT COUNT(*) FROM " . $db->prefix . static::$table . " WHERE " . $compiled[ 'where' ];
+		$query = "SELECT COUNT(*) FROM " . $prefix . static::$table . " WHERE " . $compiled[ 'where' ];
 		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
 		$count = $db->get_var( $prepared_query );
 		
@@ -434,7 +452,7 @@ abstract class ActiveRecord
 		{
 			$format = array_map( function( $value ) use ( $self ) { return $self::dbFormat( $value ); }, $this->_data );
 			
-			if ( $db->insert( $db->prefix . static::$table, $this->_data, $format ) === FALSE )
+			if ( $db->insert( $this->get_db_prefix() . static::$table, $this->_data, $format ) === FALSE )
 			{
 				return FALSE;
 			}
@@ -450,7 +468,7 @@ abstract class ActiveRecord
 			$format = array_map( function( $value ) use ( $self ) { return $self::dbFormat( $value ); }, $this->_data );
 			$where_format = static::dbFormat( $this->_data[ $row_key ] );
 			
-			if ( $db->update( $db->prefix . static::$table, $this->_data, array( $row_key => $this->_data[ $row_key ] ), $format, $where_format ) === FALSE )
+			if ( $db->update( $this->get_db_prefix() . static::$table, $this->_data, array( $row_key => $this->_data[ $row_key ] ), $format, $where_format ) === FALSE )
 			{
 				return FALSE;
 			}
@@ -474,7 +492,7 @@ abstract class ActiveRecord
 			$id = $this->_data[ $row_key ];
 			$format = static::dbFormat( $id );
 			
-			if ( $db->delete( $db->prefix . static::$table, array( $row_key => $id ), $format ) )
+			if ( $db->delete( $this->get_db_prefix() . static::$table, array( $row_key => $id ), $format ) )
 			{
 				unset( static::$multitons[ $id ] );
 				return TRUE;
@@ -511,6 +529,24 @@ abstract class ActiveRecord
 		}
 		
 		return '%s';
+	}
+	
+	/**
+	 * Get the site db prefix for this record
+	 *
+	 * @return	string
+	 */
+	public function get_db_prefix()
+	{
+		if ( isset( $this->_wpdb_prefix ) )
+		{
+			return $this->_wpdb_prefix;
+		}
+		
+		$db = Framework::instance()->db();
+		$this->_wpdb_prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+		
+		return $this->_wpdb_prefix;
 	}
 	
 }

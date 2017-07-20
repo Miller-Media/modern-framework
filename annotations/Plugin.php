@@ -26,7 +26,7 @@ class Plugin extends \Modern\Wordpress\Annotation
 	/**
 	 * @var string
 	 */
-	public $file = 'Plugin.php';
+	public $file = 'plugin.php';
 	
 	/**
 	 * Apply to Method
@@ -45,15 +45,15 @@ class Plugin extends \Modern\Wordpress\Annotation
 			switch( $this->on )
 			{
 				case 'activation':
-					register_activation_hook( $plugin->getPath() . '/' . $this->file, array( $instance, $method->name ) );
+					register_activation_hook( $plugin->pluginSlug() . '/' . $this->file, array( $instance, $method->name ) );
 					break;
 					
 				case 'deactivation':
-					register_deactivation_hook( $plugin->getPath() . '/' . $this->file, array( $instance, $method->name ) );
+					register_deactivation_hook( $plugin->pluginSlug() . '/' . $this->file, array( $instance, $method->name ) );
 					break;
 				
 				case 'uninstall':
-					register_uninstall_hook( $plugin->getPath() . '/' . $this->file, array( $instance, $method->name ) );
+					register_uninstall_hook( $plugin->pluginSlug() . '/' . $this->file, array( $instance, $method->name ) );
 					break;
 			}
 		}
