@@ -55,7 +55,7 @@ abstract class ActiveRecord
 	/**
 	 * @var	string		WP DB Prefix of loaded record
 	 */
-	protected $_wpdb_prefix;
+	public $_wpdb_prefix;
 	
 	/**
 	 * @var	array		Record data
@@ -208,11 +208,14 @@ abstract class ActiveRecord
 		}
 		
 		$db = Framework::instance()->db();
-		$row = $db->get_row( $db->prepare( "SELECT * FROM " . $this->get_db_prefix() . static::$table . " WHERE " . static::$prefix . static::$key . "=%d", $id ), ARRAY_A );
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+		
+		$row = $db->get_row( $db->prepare( "SELECT * FROM " . $prefix . static::$table . " WHERE " . static::$prefix . static::$key . "=%d", $id ), ARRAY_A );
 		
 		if ( $row )
 		{
-			return static::loadFromRowData( $row );
+			$record = static::loadFromRowData( $row );
+			$record->_wpdb_prefix = $prefix;
 		}
 		
 		throw new \OutOfRangeException( 'Unable to find a record with the id: ' . $id );
@@ -235,11 +238,13 @@ abstract class ActiveRecord
 		}
 		
 		$db = Framework::instance()->db();
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+
 		$results = array();
 		$compiled = static::compileWhereClause( $where );
 		
 		/* Get results of the prepared query */
-		$query = "SELECT * FROM " . $this->get_db_prefix() . static::$table . " WHERE " . $compiled[ 'where' ];
+		$query = "SELECT * FROM " . $prefix . static::$table . " WHERE " . $compiled[ 'where' ];
 		
 		if ( $order !== NULL )
 		{
@@ -266,6 +271,7 @@ abstract class ActiveRecord
 			foreach( $rows as $row )
 			{
 				$record = static::loadFromRowData( $row );
+				$record->_wpdb_prefix = $prefix;
 				$results[] = $record;
 			}
 		}
@@ -287,10 +293,12 @@ abstract class ActiveRecord
 		}
 		
 		$db = Framework::instance()->db();
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+
 		$compiled = static::compileWhereClause( $where );
 		
 		/* Get results of the prepared query */
-		$query = "SELECT COUNT(*) FROM " . $this->get_db_prefix() . static::$table . " WHERE " . $compiled[ 'where' ];
+		$query = "SELECT COUNT(*) FROM " . $prefix . static::$table . " WHERE " . $compiled[ 'where' ];
 		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
 		$count = $db->get_var( $prepared_query );
 		
