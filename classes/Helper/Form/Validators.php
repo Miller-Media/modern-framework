@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * A container for our custom validation and sanitization routines 
  */
-class Validators
+class PiklistValidators
 {
 	/**
 	 * Register piklist validation rules
