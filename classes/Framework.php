@@ -180,6 +180,30 @@ class Framework extends Plugin
 		
 		return $options;
 	}
+	
+	/**
+	 * Return the form class for supported form engines
+	 * 
+	 * @Wordpress\Filter( for="mwp_form_class", args=6 )
+	 * 
+	 * @param	string			$form_class			The current form class
+	 * @param	string			$name				The form name
+	 * @param	Plugin			$plugin				The creating plugin
+	 * @param	array|NULL		$data				Default form data
+	 * @param	array			$options			Form options
+	 * @param	string|NULL		$implementation		The form implementation to use
+	 * @return	string
+	 */
+	public function mwpFormClass( $form_class, $name, $plugin, $data, $options, $implementation )
+	{
+		switch( $implementation ) 
+		{
+			case 'symfony':	return 'Modern\Wordpress\Helpers\Form\SymfonyForm';
+			case 'piklist': return 'Modern\Wordpress\Helpers\Form\PiklistForm';
+		}
+		
+		return $form_class;
+	}
 		
 	/**
 	 * Attach instances to wordpress

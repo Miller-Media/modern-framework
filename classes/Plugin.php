@@ -574,15 +574,20 @@ abstract class Plugin extends Singleton
 	/**
 	 * Create a new form
 	 *
-	 * @param	string		$name		The form name
+	 * @param	string			$name				The form name
+	 * @param	array|NULL		$data				Default form data
+	 * @param	array			$options			Form options
+	 * @param	string			$implementation		The form implementation to use
 	 * @return	Form
 	 */
-	public function createForm( $name, $data=null, $options=array() )
+	public function createForm( $name, $data=null, $options=array(), $implementation=null )
 	{
-		$form = new \Modern\Wordpress\Helpers\Form( $name, $this, $data, $options );
-		$form = $form->applyFilters( 'create', $form, $data, $options );
+		$formImplementation = apply_filters( 'mwp_form_implementation', $implementation, $name, $this, $data, $options );
+		$formClass = apply_filters( 'mwp_form_class', 'Modern\Wordpress\Helpers\SymfonyForm', $name, $this, $data, $options, $formImplementation );
 		
-		return $form;
+		$form = new $formClass( $name, $this, $data, $options );
+		
+		return $form->applyFilters( 'create', $form, $data, $options );		
 	}
 	
 	/**
