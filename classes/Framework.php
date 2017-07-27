@@ -271,6 +271,10 @@ class Framework extends Plugin
 		wp_localize_script( 'mwp', 'mw_localized_data', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
 		));
+
+		wp_register_script( 'mwp_settings', $this->fileUrl('assets/js/mwp.settings.js'), array('jquery'));
+		if( is_admin() )
+		    wp_enqueue_script('mwp_settings');
 	}
 	
 	/**
