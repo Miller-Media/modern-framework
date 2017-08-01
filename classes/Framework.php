@@ -470,7 +470,7 @@ class Framework extends Plugin
 	 * @api
 	 *
 	 * @param	array		$data		New plugin data
-	 * @return	this
+	 * @return	Plugin
 	 * @throws	\InvalidArgumentException	Throws exception when invalid plugin data is provided
 	 * @throws	\ErrorException			Throws an error when the plugin data conflicts with another plugin
 	 */
@@ -509,7 +509,7 @@ class Framework extends Plugin
 		$plugin->setPath( WP_PLUGIN_DIR . '/' . $plugin_dir );
 		$plugin->setData( 'plugin-meta', $data );
 		
-		return $this;
+		return $plugin;
 	}
 	
 	/**
@@ -574,7 +574,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The javascript module name
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createJavascript( $slug, $name )
@@ -612,7 +612,9 @@ class Framework extends Plugin
 		{
 			$plugin_data = json_decode( include $plugin_data_file, TRUE );
 			file_put_contents( $javascript_file, $this->replaceMetaContents( file_get_contents( $javascript_file ), $plugin_data ) );
-		}	
+		}
+
+		return $javascript_file;
 	}
 	
 	/**
@@ -620,7 +622,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The stylesheet name
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createStylesheet( $slug, $name )
@@ -658,7 +660,9 @@ class Framework extends Plugin
 		{
 			$plugin_data = json_decode( include $plugin_data_file, TRUE );
 			file_put_contents( $stylesheet_file, $this->replaceMetaContents( file_get_contents( $stylesheet_file ), $plugin_data ) );
-		}	
+		}
+		
+		return $stylesheet_file;
 	}
 
 	/**
@@ -666,7 +670,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The template name
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createTemplate( $slug, $name )
@@ -721,6 +725,8 @@ class Framework extends Plugin
 		}
 		
 		file_put_contents( $template_file, $template_contents );
+		
+		return $template_file;
 	}
 	
 	/**
@@ -728,7 +734,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The php classname
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createClass( $slug, $name )
@@ -840,6 +846,7 @@ class $classname
 CLASS;
 		file_put_contents( $class_file, $this->replaceMetaContents( $class_contents, $plugin_data ) );
 	
+		return $class_file;
 	}
 
 	/**
