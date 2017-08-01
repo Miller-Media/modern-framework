@@ -209,13 +209,14 @@ abstract class ActiveRecord
 		
 		$db = Framework::instance()->db();
 		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
-		
+
 		$row = $db->get_row( $db->prepare( "SELECT * FROM " . $prefix . static::$table . " WHERE " . static::$prefix . static::$key . "=%d", $id ), ARRAY_A );
-		
+
 		if ( $row )
 		{
 			$record = static::loadFromRowData( $row );
 			$record->_wpdb_prefix = $prefix;
+			return $record;
 		}
 		
 		throw new \OutOfRangeException( 'Unable to find a record with the id: ' . $id );
