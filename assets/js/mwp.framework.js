@@ -48,6 +48,7 @@ window.mwp = _.extend( {}, Backbone.Events );
 					mwp.trigger( controller.get( 'name' ) + '.ready', controller );
 					if( typeof controller.init == 'function' ) {
 						controller.init();
+						controller.viewModel._controller = controller;
 						mwp.trigger( controller.get( 'name' ) + '.init', controller );
 					}
 				});
