@@ -266,15 +266,24 @@ class Framework extends Plugin
 		wp_register_script( 'mwp-bootstrap', $this->fileUrl( 'assets/js/mwp.bootstrap.min.js', array( 'jquery' ) ) );
 		wp_register_style( 'mwp-bootstrap-theme', $this->getSetting( 'bootstrap_theme' ) ?: $this->fileUrl( 'assets/css/bootstrap-theme.min.css' ) );
 		wp_register_style( 'mwp-bootstrap', $this->fileUrl( 'assets/css/mwp-bootstrap.min.css' ) );
+		wp_register_script( 'mwp-settings', $this->fileUrl( 'assets/js/mwp.settings.js' ), array( 'mwp', 'knockback' ) );
 		
 		wp_register_script( 'mwp', $this->fileUrl( 'assets/js/mwp.framework.js' ), array( 'jquery', 'underscore', 'backbone', 'knockout' ) );
 		wp_localize_script( 'mwp', 'mw_localized_data', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
 		));
-
-		wp_register_script( 'mwp_settings', $this->fileUrl('assets/js/mwp.settings.js'), array('jquery'));
-		if( is_admin() )
-		    wp_enqueue_script('mwp_settings');
+	}
+	
+	/**
+	 * Register admin related scripts
+	 *
+	 * @Wordpress\Action( for="admin_enqueue_scripts" )
+	 *
+	 * @return	void
+	 */
+	public function adminEnqueueScripts()
+	{
+		wp_enqueue_script( 'mwp-settings' );
 	}
 	
 	/**
