@@ -128,14 +128,18 @@ abstract class Plugin extends Singleton
 	/**
 	 * Update the schema for this plugin
 	 * 
-	 * @return	void
+	 * @param	bool		$execute		Whether to execute the database changes or not
+	 * @return	array						Strings containing the results of the various update queries
 	 */
-	public function updateSchema()
+	public function updateSchema( $execute=TRUE )
 	{
+		global $wpdb;
 		$build_meta = $this->data( 'build-meta' );
 		
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$dbHelper = \Modern\Wordpress\DbHelper::instance();
+		
+		$delta_updates = array();
 		
 		/* Update global table definitions in database if needed */
 		if ( isset( $build_meta[ 'tables' ] ) and is_array( $build_meta[ 'tables' ] ) )
@@ -143,7 +147,10 @@ abstract class Plugin extends Singleton
 			foreach( $build_meta[ 'tables' ] as $table )
 			{
 				$tableSql = $dbHelper->buildTableSQL( $table, FALSE );
-				dbDelta( $tableSql );
+				$updates = dbDelta( $tableSql, $execute );
+				if ( $updates ) {
+					$delta_updates[ $wpdb->base_prefix . $table ] = $updates;
+				}
 			}
 		}
 		
@@ -164,7 +171,8 @@ abstract class Plugin extends Singleton
 					foreach( $sites as $site )
 					{
 						$site_data = (array) $site;
-						switch_to_blog( (int) $site_data['blog_id'] );
+						$site_id = (int) $site_data['blog_id'];
+						switch_to_blog( $site_id );
 						
 						if ( is_plugin_active_for_network( $plugin_path ) or is_plugin_active( $plugin_path ) )
 						{
@@ -172,7 +180,10 @@ abstract class Plugin extends Singleton
 							foreach( $build_meta[ 'ms_tables' ] as $table )
 							{
 								$tableSql = $dbHelper->buildTableSQL( $table, TRUE );
-								dbDelta( $tableSql );
+								$updates = dbDelta( $tableSql, $execute );
+								if ( $updates ) {
+									$delta_updates[ $wpdb->prefix . $table ]
+								}
 							}
 						}
 						
@@ -186,10 +197,15 @@ abstract class Plugin extends Singleton
 				foreach( $build_meta[ 'ms_tables' ] as $table )
 				{
 					$tableSql = $dbHelper->buildTableSQL( $table, FALSE );
-					dbDelta( $tableSql );
+					$updates = dbDelta( $tableSql, $execute );
+					if ( $updates ) {
+						$delta_updates[ $wpdb->base_prefix . $table ] = $updates;
+					}					
 				}
 			}
 		}
+		
+		return $delta_updates;
 	}
 	
 	/**
