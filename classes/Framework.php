@@ -34,19 +34,17 @@ class Framework extends Plugin
 	 * @var Annotations Reader
 	 */
 	protected $reader;
-		
+	
 	/**
 	 * Constructor
 	 */
 	protected function __construct()
 	{
-		/* Load Annotation Reader */
-		$bypass_cache = defined( 'MODERN_WORDPRESS_DEV' ) and \MODERN_WORDPRESS_DEV;
-		
+		/* Load Annotation Reader */		
 		try 
 		{
 			// Attempt to read from file caches
-			$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../annotations/cache", $bypass_cache );
+			$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../annotations/cache", $this->isDev() );
 		} 
 		catch( \InvalidArgumentException $e )
 		{
@@ -85,6 +83,16 @@ class Framework extends Plugin
 	}
 	
 	/**
+	 * Is development mode
+	 *
+	 * @return	bool
+	 */
+	public function isDev()
+	{
+		return ( defined( 'MODERN_WORDPRESS_DEV' ) and \MODERN_WORDPRESS_DEV === TRUE );
+	}
+	
+	/**
 	 * Initialization
 	 *
 	 * @Wordpress\Action( for="init" )
@@ -99,13 +107,16 @@ class Framework extends Plugin
 			$this->frameworkActivated();
 		}
 
-		$instance_meta = $this->data( 'instance-meta' ) ?: array();
-		$mwp_cache_latest = get_site_option( 'mwp_cache_latest' ) ?: 0;
-		
-		// Clear caches for this instance if we know they are out of date
-		if ( ! isset( $instance_meta[ 'cache_timestamp' ] ) or $instance_meta[ 'cache_timestamp' ] < $mwp_cache_latest ) 
+		if ( ! $this->isDev() )
 		{
-			$this->clearAnnotationsCache();
+			$instance_meta = $this->data( 'instance-meta' ) ?: array();
+			$mwp_cache_latest = get_site_option( 'mwp_cache_latest' ) ?: 0;
+			
+			// Clear caches for this instance if we know they are out of date
+			if ( ! isset( $instance_meta[ 'cache_timestamp' ] ) or $instance_meta[ 'cache_timestamp' ] < $mwp_cache_latest ) 
+			{
+				$this->clearAnnotationsCache();
+			}
 		}
 	}
 	
@@ -248,9 +259,12 @@ class Framework extends Plugin
 		// Delete files in cache folder
 		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*.cache.php" ) );
 		
-		$instance_meta = $this->data( 'instance-meta' ) ?: array();		
-		$instance_meta[ 'cache_timestamp' ] = time();
-		$this->setData( 'instance-meta', $instance_meta );
+		if ( ! $this->isDev() )
+		{
+			$instance_meta = $this->data( 'instance-meta' ) ?: array();		
+			$instance_meta[ 'cache_timestamp' ] = time();
+			$this->setData( 'instance-meta', $instance_meta );
+		}
 	}
 	
 	/**

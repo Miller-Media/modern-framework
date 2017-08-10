@@ -56,17 +56,19 @@ if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 		<input class="button" value="Clear Caches" type="submit" style="width: 100%;"/>
 	</form>
 
+	<?php if ( ! $framework->isDev() ) : ?>
 	<form method="post">
 		<input name="mwp_update_schema" type="hidden" value="1" />
 		<input class="button" value="Update DB Schema" type="submit" style="width: 100%;" />
 	</form>
+	<?php endif; ?>
 
 </div>
 
 <a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countWhere( 'task_completed=0' ) ?>
 
 <div style="clear:both; padding-top: 10px;">
-	<?php if ( defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV ) : ?>
+	<?php if ( $framework->isDev() ) : ?>
 		<br><strong>Development Mode: </strong><span style="color: green">On</span>
 	<?php endif; ?>
 	<?php if ( ! $framework->getAnnotationReader() instanceof \Doctrine\Common\Annotations\FileCacheReader ) : ?>

@@ -15,7 +15,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
-use \Modern\Wordpress\Pattern\Singleton;
+use Modern\Wordpress\Pattern\Singleton;
+use Modern\Wordpress\Framework;
 
 /**
  * All modern wordpress plugins should extend this class.
@@ -86,7 +87,7 @@ abstract class Plugin extends Singleton
 	 */
 	public function _versionUpdateCheck()
 	{
-		if ( ! defined( 'MODERN_WORDPRESS_DEV' ) or \MODERN_WORDPRESS_DEV == FALSE )
+		if ( ! Framework::instance()->isDev() )
 		{
 			$plugin_meta = $this->data( 'plugin-meta' );
 			if ( is_array( $plugin_meta ) and isset( $plugin_meta[ 'version' ] ) and $plugin_meta[ 'version' ] )
@@ -122,7 +123,7 @@ abstract class Plugin extends Singleton
 		$this->setData( 'install-meta', $install );
 		
 		/* Clear the annotations cache */
-		\Modern\Wordpress\Framework::instance()->clearAnnotationsCache();
+		Framework::instance()->clearAnnotationsCache();
 	}
 
 	/**
@@ -182,7 +183,7 @@ abstract class Plugin extends Singleton
 								$tableSql = $dbHelper->buildTableSQL( $table, TRUE );
 								$updates = dbDelta( $tableSql, $execute );
 								if ( $updates ) {
-									$delta_updates[ $wpdb->prefix . $table ]
+									$delta_updates[ $wpdb->prefix . $table ] = $updates;
 								}
 							}
 						}
@@ -542,7 +543,7 @@ abstract class Plugin extends Singleton
 				return $templateFile;
 			}
 			
-			return \Modern\Wordpress\Framework::instance()->pluginFile( 'templates/' . $template, 'php' );
+			return Framework::instance()->pluginFile( 'templates/' . $template, 'php' );
 		}
 	}
 

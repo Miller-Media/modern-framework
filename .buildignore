@@ -17,3 +17,5 @@ dev_config.php
 phpdoc.xml
 annotations/cache/*.cache.php
 includes/redux
+data/instance-meta.php
+data/install-meta.php
