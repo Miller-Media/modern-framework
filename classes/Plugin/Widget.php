@@ -157,7 +157,7 @@ abstract class Widget extends \WP_Widget
 	 */
 	public function widget( $args, $instance ) 
 	{
-		echo $this->getPlugin()->getTemplateContent( 'widget/layout/standard', array( 'args' => $args, 'title' => 'Modern Wordpress Widget', 'content' => 'Override the WP_Widget::widget() method in your widget class to output customized content.' ) );
+		return $this->getPlugin()->getTemplateContent( 'widget/layout/standard', array( 'args' => $args, 'title' => 'Modern Wordpress Widget', 'content' => 'Override the WP_Widget::widget() method in your widget class to output customized content.' ) );
 	}	
 	
 }

@@ -29,6 +29,7 @@ $framework = Framework::instance();
 
 if ( isset( $_POST['mwp_clear_caches'] ) and $_POST['mwp_clear_caches'] ) 
 {
+	update_site_option( 'mwp_cache_latest', time() );
 	$framework->clearAnnotationsCache();
 	$notices[] = __( "Temporary caches have been cleared.", 'modern-framework' );
 }

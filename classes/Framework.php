@@ -97,7 +97,16 @@ class Framework extends Plugin
 		if ( wp_get_schedule( 'modern_wordpress_queue_run' ) == false ) 
 		{
 			$this->frameworkActivated();
-		}	
+		}
+
+		$instance_meta = $this->data( 'instance-meta' ) ?: array();
+		$mwp_cache_latest = get_site_option( 'mwp_cache_latest' ) ?: 0;
+		
+		// Clear caches for this instance if we know they are out of date
+		if ( ! isset( $instance_meta[ 'cache_timestamp' ] ) or $instance_meta[ 'cache_timestamp' ] < $mwp_cache_latest ) 
+		{
+			$this->clearAnnotationsCache();
+		}
 	}
 	
 	/**
@@ -236,7 +245,12 @@ class Framework extends Plugin
 	 */
 	public function clearAnnotationsCache()
 	{
+		// Delete files in cache folder
 		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*.cache.php" ) );
+		
+		$instance_meta = $this->data( 'instance-meta' ) ?: array();		
+		$instance_meta[ 'cache_timestamp' ] = time();
+		$this->setData( 'instance-meta', $instance_meta );
 	}
 	
 	/**
@@ -338,7 +352,6 @@ class Framework extends Plugin
 		
 		return $tag;
 	}
-	
 	
 	/**
 	 * Add a one minute time period to the wordpress cron schedule

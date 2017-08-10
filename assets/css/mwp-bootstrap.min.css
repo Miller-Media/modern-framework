@@ -335,6 +335,7 @@
 .mwp-bootstrap .sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0,0,0,0);border:0}
 .mwp-bootstrap .sr-only-focusable:active,.mwp-bootstrap .sr-only-focusable:focus{position:static;width:auto;height:auto;margin:0;overflow:visible;clip:auto}
 .mwp-bootstrap [role="button"]{cursor:pointer}
+/*
 .mwp-bootstrap h1,.mwp-bootstrap h2,.mwp-bootstrap h3,.mwp-bootstrap h4,.mwp-bootstrap h5,.mwp-bootstrap h6,.mwp-bootstrap .h1,.mwp-bootstrap .h2,.mwp-bootstrap .h3,.mwp-bootstrap .h4,.mwp-bootstrap .h5,.mwp-bootstrap .h6{font-family:inherit;font-weight:500;line-height:1.1;color:inherit}
 .mwp-bootstrap h1 small,.mwp-bootstrap h2 small,.mwp-bootstrap h3 small,.mwp-bootstrap h4 small,.mwp-bootstrap h5 small,.mwp-bootstrap h6 small,.mwp-bootstrap .h1 small,.mwp-bootstrap .h2 small,.mwp-bootstrap .h3 small,.mwp-bootstrap .h4 small,.mwp-bootstrap .h5 small,.mwp-bootstrap .h6 small,.mwp-bootstrap h1 .small,.mwp-bootstrap h2 .small,.mwp-bootstrap h3 .small,.mwp-bootstrap h4 .small,.mwp-bootstrap h5 .small,.mwp-bootstrap h6 .small,.mwp-bootstrap .h1 .small,.mwp-bootstrap .h2 .small,.mwp-bootstrap .h3 .small,.mwp-bootstrap .h4 .small,.mwp-bootstrap .h5 .small,.mwp-bootstrap .h6 .small{font-weight:400;line-height:1;color:#777}
 .mwp-bootstrap h1,.mwp-bootstrap .h1,.mwp-bootstrap h2,.mwp-bootstrap .h2,.mwp-bootstrap h3,.mwp-bootstrap .h3{margin-top:20px;margin-bottom:10px}
@@ -347,6 +348,7 @@
 .mwp-bootstrap h4,.mwp-bootstrap .h4{font-size:18px}
 .mwp-bootstrap h5,.mwp-bootstrap .h5{font-size:14px}
 .mwp-bootstrap h6,.mwp-bootstrap .h6{font-size:12px}
+*/
 .mwp-bootstrap p{margin:0 0 10px}
 .mwp-bootstrap .lead{margin-bottom:20px;font-size:16px;font-weight:300;line-height:1.4}
 @media (min-width: 768px) {
@@ -1391,7 +1393,7 @@ to{background-position:0 0}
 .mwp-bootstrap .modal-backdrop.in{opacity:.5;filter:alpha(opacity=50)}
 .mwp-bootstrap .modal-header{padding:15px;border-bottom:1px solid #e5e5e5}
 .mwp-bootstrap .modal-header .close{margin-top:-2px}
-.mwp-bootstrap .modal-title{margin:0;line-height:1.42857143}
+.mwp-bootstrap .modal-title{margin:0;line-height:1.42857143;display:inline-block;}
 .mwp-bootstrap .modal-body{position:relative;padding:15px}
 .mwp-bootstrap .modal-footer{padding:15px;text-align:right;border-top:1px solid #e5e5e5}
 .mwp-bootstrap .modal-footer .btn + .btn{margin-left:5px;margin-bottom:0}
