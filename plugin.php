@@ -133,8 +133,12 @@ call_user_func( function() {
 					
 					if ( is_admin() ) {
 						$framework->attach( \Modern\Wordpress\Controller\Tasks::instance() );
-					}	
-						
+					}
+
+					$settings = \Modern\Wordpress\Settings::instance();
+					$framework->addSettings( $settings );
+					$framework->attach( $settings );
+					
 					do_action( 'modern_wordpress_init' );
 				}		
 			}

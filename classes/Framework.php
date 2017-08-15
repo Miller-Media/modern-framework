@@ -289,13 +289,18 @@ class Framework extends Plugin
 	 */
 	public function enqueueScripts()
 	{
+		$location = is_admin() ? 'admin' : 'front';
+		
 		wp_register_script( 'knockout', $this->fileUrl( 'assets/js/knockout.min.js' ) );
 		wp_register_script( 'knockback', $this->fileUrl( 'assets/js/knockback.min.js' ), array( 'underscore', 'backbone', 'knockout' ) );
-		wp_register_script( 'mwp-bootstrap', $this->fileUrl( 'assets/js/mwp.bootstrap.min.js', array( 'jquery' ) ) );
-		wp_register_style( 'mwp-bootstrap-theme', $this->getSetting( 'bootstrap_theme' ) ?: $this->fileUrl( 'assets/css/bootstrap-theme.min.css' ) );
-		wp_register_style( 'mwp-bootstrap', $this->fileUrl( 'assets/css/mwp-bootstrap.min.css' ) );
-		wp_register_script( 'mwp-settings', $this->fileUrl( 'assets/js/mwp.settings.js' ), array( 'mwp', 'knockback' ) );
 		
+		$bootstrap_js = $this->getSetting( "mwp_bootstrap_disable_{$location}_js" ) ? 'assets/js/mwp.bootstrap.disabled.js' : 'assets/js/mwp.bootstrap.min.js';
+		wp_register_script( 'mwp-bootstrap', $this->fileUrl( $bootstrap_js, array( 'jquery' ) ) );
+
+		$bootstrap_css = $this->getSetting( "mwp_bootstrap_disable_{$location}_css" ) ? 'assets/css/mwp-bootstrap.disabled.css' : 'assets/css/mwp-bootstrap.min.css';
+		wp_register_style( 'mwp-bootstrap', $this->fileUrl( $bootstrap_css ) );
+		
+		wp_register_script( 'mwp-settings', $this->fileUrl( 'assets/js/mwp.settings.js' ), array( 'mwp', 'knockback' ) );
 		wp_register_script( 'mwp', $this->fileUrl( 'assets/js/mwp.framework.js' ), array( 'jquery', 'underscore', 'backbone', 'knockout' ) );
 		wp_localize_script( 'mwp', 'mw_localized_data', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
