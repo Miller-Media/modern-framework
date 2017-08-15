@@ -628,8 +628,9 @@ class CLI extends \WP_CLI_Command {
 					break;
 				
 				case 'patch':
+					
 					$version_parts[3]++;
-					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2] . '.' . $version_parts[3];
+					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2] . '.' . ( isset( $version_parts[3] ) ? $version_parts[3] + 1 : 1 );
 					break;
 				
 				default:
