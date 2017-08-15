@@ -307,6 +307,30 @@ abstract class ActiveRecord
 	}
 	
 	/**
+	 * Delete records
+	 *
+	 * @param	array|string		$where 			Where clause with associated replacement values
+	 * @return	int									Number of rows affected
+	 */
+	public static function deleteWhere( $where )
+	{
+		if ( is_string( $where ) )
+		{
+			$where = array( $where );
+		}
+		
+		$db = Framework::instance()->db();
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+
+		$compiled = static::compileWhereClause( $where );
+		
+		/* Get results of the prepared query */
+		$query = "DELETE FROM " . $prefix . static::$table . " WHERE " . $compiled[ 'where' ];
+		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
+		return $db->query( $prepared_query );
+	}
+	
+	/**
 	 * Compile a where clause with params
 	 *
 	 * @param	array		$where			Where clauses
