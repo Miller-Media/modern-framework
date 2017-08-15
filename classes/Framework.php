@@ -531,7 +531,7 @@ class Framework extends Plugin
 		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided.' );  }
 		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided.' );    }
 		
-		if ( ! is_dir( $this->getPath() . '/boilerplate' ) )
+		if ( ! is_dir( WP_PLUGIN_DIR . '/modern-framework/boilerplate' ) )
 		{
 			throw new \ErrorException( "Boilerplate plugin not present. Can't create a new one.", 1 );
 		}
