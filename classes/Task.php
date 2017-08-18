@@ -271,7 +271,7 @@ class Task extends ActiveRecord
 	 *
 	 * @param	array|string		$config			Task configuration options
 	 * @param	mixed				$data			Task data
-	 * @return	void
+	 * @return	Task
 	 */
 	public static function queueTask( $config, $data=NULL )
 	{
@@ -307,6 +307,8 @@ class Task extends ActiveRecord
 		$task->blog_id = get_current_blog_id();
 		$task->data = $data;
 		$task->save();
+		
+		return $task;
 	}
 
 	/**
