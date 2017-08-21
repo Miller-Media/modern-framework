@@ -89,6 +89,9 @@ window.mwp = _.extend( {}, Backbone.Events );
 	 */
 	mwp.controller = _.extend( function( name, properties, classProperties ) 
 	{
+		if ( name in controllers ) {
+			throw new Error( 'Controller already exists. Use mwp.controller.get( name ) to get a controller' );
+		}
 		var controller = mwp.base.Controller.extend( properties, classProperties );
 		controllers[ name ] = new controller( { name: name } );
 		return controllers[ name ];	
