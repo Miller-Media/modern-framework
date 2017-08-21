@@ -65,7 +65,7 @@ if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 
 </div>
 
-<a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countWhere( 'task_completed=0' ) ?>
+<a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countTasks() ?>
 
 <div style="clear:both; padding-top: 10px;">
 	<?php if ( $framework->isDev() ) : ?>

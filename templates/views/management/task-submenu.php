@@ -32,13 +32,13 @@ use Modern\Wordpress\Task;
 	<li class="pending">
 		<a href="<?php echo add_query_arg( array( 'page' => 'mwp-tasks' ), admin_url( 'tools.php' ) ) ?>" class="<?php if ( ! isset( $_REQUEST[ 'status' ] ) and ! isset( $_REQUEST[ 'do' ] ) ) { echo "current"; } ?>">
 			Pending
-			<span class="count">(<?php echo Task::countWhere( array( 'task_completed=0' ) ) ?>)</span>
+			<span class="count">(<?php echo Task::countTasks() ?>)</span>
 		</a> | 
 	</li>
 	<li class="completed">
 		<a href="<?php echo add_query_arg( array( 'page' => 'mwp-tasks', 'status' => 'completed' ), admin_url( 'tools.php' ) ) ?>" class="<?php if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'completed' ) { echo "current"; } ?>">
 			Completed
-			<span class="count">(<?php echo Task::countWhere( array( 'task_completed>0' ) ) ?>)</span>
+			<span class="count">(<?php echo Task::countTasks( NULL, NULL, 1 ) ?>)</span>
 		</a>
 	</li>
 </ul>
