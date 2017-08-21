@@ -475,6 +475,7 @@ class Framework extends Plugin
 					
 					if ( $task->aborted )
 					{
+						$task->setData( 'status', 'Aborted' );
 						$task->running = 0;
 						$task->fails = 3;
 						$task->save();
@@ -488,11 +489,21 @@ class Framework extends Plugin
 				}
 				catch( \Exception $e )
 				{
-					$data = $task->data;
-					$data[ 'status' ] = $e->getMessage();
+					$task->running = 0;
+					$task->fails = 3;
+					$task->setData( 'status', 'Failed' );
+					$task->log( $e->getMessage() );
 					$task->data = $data;
 					$task->save();
 				}
+			}
+			else
+			{
+				$task->setData( 'status', 'Unavailable' );
+				$task->running = 0;
+				$task->fails = 3;
+				$task->log( 'Action not available for this task: ' . $task->action );
+				$task->save();
 			}
 		}
 	}
