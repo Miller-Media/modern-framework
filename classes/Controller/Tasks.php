@@ -130,8 +130,18 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 		
 		if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'completed' )
 		{
-			// Only show completed tasks
-			$where = array( 'task_completed > 0' );
+			switch( $_REQUEST[ 'status' ] )
+			{
+				case 'completed':
+				
+					$where = array( 'task_completed > 0' );
+					break;
+					
+				case 'failed':
+				
+					$where = array( 'task_fails>0' );
+					break;
+			}
 		}			
 		
 		$table->prepare_items( $where );

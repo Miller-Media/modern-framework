@@ -38,7 +38,13 @@ use Modern\Wordpress\Task;
 	<li class="completed">
 		<a href="<?php echo add_query_arg( array( 'page' => 'mwp-tasks', 'status' => 'completed' ), admin_url( 'tools.php' ) ) ?>" class="<?php if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'completed' ) { echo "current"; } ?>">
 			Completed
-			<span class="count">(<?php echo Task::countTasks( NULL, NULL, 1 ) ?>)</span>
+			<span class="count">(<?php echo Task::countTasks( NULL, NULL, 'completed' ) ?>)</span>
+		</a> | 
+	</li>
+	<li class="failed">
+		<a href="<?php echo add_query_arg( array( 'page' => 'mwp-tasks', 'status' => 'failed' ), admin_url( 'tools.php' ) ) ?>" class="<?php if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'failed' ) { echo "current"; } ?>">
+			Failed
+			<span class="count">(<?php echo Task::countTasks( NULL, NULL, 'failed' ) ?>)</span>
 		</a>
 	</li>
 </ul>

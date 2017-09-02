@@ -160,9 +160,10 @@ class Task extends ActiveRecord
 	 */
 	public function runNext()
 	{
-		if ( ! $this->running and ! $this->completed )
+		if ( ! $this->completed )
 		{
 			$this->unlock();
+			$this->running = 0;
 			$this->next_start = 0;
 			$this->priority = 99;
 			$this->save();
@@ -351,34 +352,51 @@ class Task extends ActiveRecord
 	 *
 	 * @param	string		$action			Count all tasks with specific action|NULL to ignore
 	 * @param	string		$tag			Count all tasks with specific tag|NULL to ignore
-	 * @param	int			$completed		0 to count incomplete tasks, 1 to count complete
+	 * @param	string		$status			Status to count (pending,complete,running,failed)
 	 * @return	int
 	 */
-	public static function countTasks( $action=NULL, $tag=NULL, $completed=0 )
+	public static function countTasks( $action=NULL, $tag=NULL, $status='pending' )
 	{
 		$db = Framework::instance()->db();
 		
+		$status_clause = "task_completed=0";
+		
+		switch( $status ) 
+		{
+			case 'completed':
+				$status_clause = "task_completed>0";
+				break;
+				
+			case 'running':
+				$status_clause = "task_running=1";
+				break;
+				
+			case 'failed':
+				$status_clause = "task_fails>0";
+				break;
+		}
+		
 		if ( $action === NULL and $tag === NULL )
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_blog_id=%d AND task_completed=%d", get_current_blog_id(), $completed ) );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_blog_id=%d AND {$status_clause}", get_current_blog_id() ) );
 		}
 		
 		/* Only action provided */
 		if ( $tag === NULL )
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d AND task_completed=%d", $action, get_current_blog_id(), $completed ) );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d AND {$status_clause}", $action, get_current_blog_id() ) );
 		}
 		
 		/* Only tag provided */
 		elseif ( $action === NULL )
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d AND task_completed=%d", $tag, get_current_blog_id(), $completed ) );		
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d AND {$status_clause}", $tag, get_current_blog_id() ) );		
 		}
 		
 		/* Both action and tag provided */
 		else
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d AND task_completed=%d", $action, $tag, get_current_blog_id(), $completed ) );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d AND {$status_clause}", $action, $tag, get_current_blog_id() ) );
 		}
 	}
 
