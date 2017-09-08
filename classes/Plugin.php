@@ -562,23 +562,19 @@ abstract class Plugin extends Singleton
 		
 		if ( ! file_exists( $templateFile ) )
 		{
-			/* Standardize path and make safe for output */
-			$missingFile = str_replace( '\\', '/', $templateFile );
-			$missingFile = str_replace( str_replace( '\\', '/', WP_PLUGIN_DIR ), '', $missingFile );
-			$missingFile = str_replace( '/modern-wordpress', '', $missingFile );
-			
-			return "[missing template file: {$missingFile}]";
+			return "[missing template file: {$this->pluginSlug()}/templates/{$template}]";
 		}
 		
 		if ( is_array( $vars ) )
 		{
-			unset( $vars[ 'templateFile' ] );
 			extract( $vars, EXTR_SKIP );
 		}
 
 		ob_start();
 		include $templateFile;
-		return ob_get_clean();
+		$templateContent = ob_get_clean();
+		
+		return apply_filters( 'mwp_tmpl', $templateContent, $this->pluginSlug(), $template, $vars );
 	}
 	
 	/**
