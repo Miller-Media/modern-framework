@@ -31,19 +31,22 @@
 	},
 	{
 		/**
-		 * Allow model methods to be overloaded
+		 * Allow model methods to be overridden
 		 *
-		 * @param	string|object		method			The method name to overload, or an object with properties corresponding to methods to overload
-		 * @param	function			newMethod		The new function to overload the method with
+		 * When a method is overridden, the overriding function will be passed the function it is overriding as its
+		 * first parameter, which can be called to retrieve the value of the overridden (parent) method.
+		 *
+		 * @param	string|object		method			The method name to override, or an object with properties corresponding to methods to override
+		 * @param	function			newMethod		The new function to override the method with
 		 * @return	void
 		 */
-		overload: function( method, newMethod )
+		override: function( method, newMethod )
 		{
 			var self = this;
 			
 			if ( typeof method == 'object' ) {
 				$.each( method, function( method, newMethod ) {
-					self.overload( method, newMethod );
+					self.override( method, newMethod );
 				});
 			}
 			else if ( typeof method == 'string' ) {
