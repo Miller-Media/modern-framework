@@ -19,3 +19,4 @@ annotations/cache/*.cache.php
 includes/redux
 data/instance-meta.php
 data/install-meta.php
+logo.png
