@@ -31,19 +31,27 @@
 	},
 	{
 		/**
-		 * Allow a model method to be overloaded
+		 * Allow model methods to be overloaded
 		 *
-		 * @param	string		method			The method name to overload
-		 * @param	function	newMethod		The new function to overload the method with
+		 * @param	string|object		method			The method name to overload, or an object with properties corresponding to methods to overload
+		 * @param	function			newMethod		The new function to overload the method with
 		 * @return	void
 		 */
 		overload: function( method, newMethod )
 		{
-			var parentMethod = this.prototype[method] || function(){};
+			var self = this;
 			
-			this.prototype[method] = function() {
-				return _.wrap( _.bind( parentMethod, this ), _.bind( newMethod, this ) ).apply( this, arguments );
-			};
+			if ( typeof method == 'object' ) {
+				$.each( method, function( method, newMethod ) {
+					self.overload( method, newMethod );
+				});
+			}
+			else if ( typeof method == 'string' ) {
+				var parentMethod = this.prototype[method] || function(){};
+				this.prototype[method] = function() {
+					return _.wrap( _.bind( parentMethod, this ), _.bind( newMethod, this ) ).apply( this, arguments );
+				};
+			}
 		}
 	});
 	
