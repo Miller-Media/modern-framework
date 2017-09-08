@@ -7,27 +7,60 @@
  * @author     Kevin Carwile
  * @since      1.0.3
  */
-
-"use strict";
-
-window.mwp = _.extend( {}, Backbone.Events );
-
-/**
- * Module Design Pattern
- */
-(function( $, undefined ) {
+;(function( $, undefined ) {
 	
+	"use strict";
+
+	window.mwp = _.extend( {}, Backbone.Events );
+
 	var controllers = {};
 	var models = {};
 	var collections = {};
 	var local = mw_localized_data;
 	
-	/**
-	 * Base models
-	 */
-	mwp.base = {
+	var BaseModel = Backbone.Model.extend(
+	{
+		/**
+		 * Return self for knockback binding compatibility
+		 *
+		 * @return	this
+		 */
+		model: function() {
+			return this;
+		}
+	},
+	{
+		/**
+		 * Allow a model method to be overloaded
+		 *
+		 * @param	string		method			The method name to overload
+		 * @param	function	newMethod		The new function to overload the method with
+		 * @return	void
+		 */
+		overload: function( method, newMethod )
+		{
+			var parentMethod = this.prototype[method] || function(){};
+			
+			this.prototype[method] = function() {
+				return _.wrap( _.bind( parentMethod, this ), _.bind( newMethod, this ) ).apply( this, arguments );
+			};
+		}
+	});
 	
-		Controller: Backbone.Model.extend({
+	/**
+	 * Base Classes
+	 */
+	mwp.classes = {
+	
+		/**
+		 * Model
+		 */
+		Model: BaseModel,
+		
+		/**
+		 * Controller (singleton)
+		 */
+		Controller: BaseModel.extend({
 		
 			/**
 			 * @var	object		Controller view model
@@ -52,32 +85,12 @@ window.mwp = _.extend( {}, Backbone.Events );
 						mwp.trigger( controller.get( 'name' ) + '.init', controller );
 					}
 				});
-			},
-			
-			/**
-			 * Return self for knockback binding compatibility
-			 *
-			 * @return	this
-			 */
-			model: function() {
-				return this;
 			}
-			
 		}),
 		
-		Model: Backbone.Model.extend({
-		
-			/**
-			 * Return self for knockback binding compatibility
-			 *
-			 * @return	this
-			 */
-			model: function() {
-				return this;
-			}
-			
-		}),
-		
+		/**
+		 * Collection
+		 */
 		Collection: Backbone.Collection.extend({
 		
 		})
@@ -92,7 +105,7 @@ window.mwp = _.extend( {}, Backbone.Events );
 		if ( name in controllers ) {
 			throw new Error( 'Controller already exists. Use mwp.controller.get( name ) to get a controller' );
 		}
-		var controller = mwp.base.Controller.extend( properties, classProperties );
+		var controller = mwp.classes.Controller.extend( properties, classProperties );
 		controllers[ name ] = new controller( { name: name } );
 		return controllers[ name ];	
 	}, 
@@ -118,7 +131,7 @@ window.mwp = _.extend( {}, Backbone.Events );
 	 */
 	mwp.model = _.extend( function( name, properties, classProperties )
 	{
-		models[ name ] = mwp.base.Model.extend( properties, classProperties );
+		models[ name ] = mwp.classes.Model.extend( properties, classProperties );
 		return models[ name ];
 	},
 	{
@@ -156,7 +169,7 @@ window.mwp = _.extend( {}, Backbone.Events );
 	 */
 	mwp.collection = _.extend( function( name, properties, classProperties )
 	{
-		collections[ name ] = mwp.base.Collection.extend( properties, classProperties );
+		collections[ name ] = mwp.classes.Collection.extend( properties, classProperties );
 		return collections[ name ];
 	},
 	{
