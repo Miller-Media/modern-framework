@@ -91,12 +91,12 @@
 				var self = this;
 				
 				$(document).ready( function() {
-					self.viewModel._controller = self;
 					mwp.trigger( self.get( 'name' ) + '.ready', self );
 					if( typeof self.init == 'function' ) {
 						self.init();
 						mwp.trigger( self.get( 'name' ) + '.init', self );
 					}
+					self.viewModel._controller = self;
 				});
 			}
 		},
