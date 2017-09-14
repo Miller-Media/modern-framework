@@ -43,6 +43,7 @@ class Task extends ActiveRecord
 		'next_start',
 		'running',
 		'last_start',
+		'last_iteration',
 		'tag',
 		'fails',
 		'completed',
@@ -409,9 +410,15 @@ class Task extends ActiveRecord
 	{		
 		$db = Framework::instance()->db();
 		
+		$running = $db->get_var( $db->prepare( "SELECT COUNT(*) FROM {$db->base_prefix}" . static::$table . " WHERE task_running=1 AND task_blog_id=%d", get_current_blog_id() ) );
+		
+		if ( $running >= Framework::instance()->getSetting( 'mwp_task_max_runners' ) ) {
+			return null;
+		}
+		
 		$row = $db->get_row( 
 			$db->prepare( "
-				SELECT * FROM {$db->prefix}" . static::$table . " 
+				SELECT * FROM {$db->base_prefix}" . static::$table . " 
 					WHERE task_completed=0 AND task_running=0 AND task_next_start <= %d AND task_fails < 3 AND task_blog_id=%d
 					ORDER BY task_priority DESC, task_last_start ASC, task_id ASC", time(), get_current_blog_id()
 			), ARRAY_A
@@ -419,7 +426,7 @@ class Task extends ActiveRecord
 		
 		if ( $row === NULL )
 		{
-			return NULL;
+			return null;
 		}
 		
 		return static::loadFromRowData( $row );
@@ -434,10 +441,12 @@ class Task extends ActiveRecord
 	{
 		$db = Framework::instance()->db();
 		
+		$max_execution_time = ini_get('max_execution_time');
+		
 		// Update failover status of tasks that appear to have ended abruptly
-		$db->query( "UPDATE " . $db->prefix . static::$table . " SET task_running=0, task_fails=task_fails + 1 WHERE task_running=1 AND task_last_start < " . ( time() - ( 60 * 60 ) ) );
+		$db->query( "UPDATE " . $db->prefix . static::$table . " SET task_running=0, task_fails=task_fails + 1 WHERE task_running=1 AND task_last_iteration < " . ( time() - $max_execution_time ) );
 		
 		// Remove completed tasks that are older than 24 hours
-		$db->query( "DELETE FROM " . $db->prefix . static::$table . " WHERE task_completed > 0 AND task_completed < " . ( time() - ( 60 * 60 * 24 ) ) );
+		$db->query( "DELETE FROM " . $db->prefix . static::$table . " WHERE task_completed > 0 AND task_completed < " . ( time() - ( 60 * 60 * Framework::instance()->getSetting( 'mwp_task_retainment_period' ) ) ) );
 	}
 }

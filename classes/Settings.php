@@ -50,6 +50,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   description="Disable inclusion of Bootstrap CSS by MWP on the admin side", 
  *   default=false 
  * )
+ *
+ * @Wordpress\Options\Section( title="Task Runner" )
+ * @Wordpress\Options\Field( name="mwp_task_max_runners", type="text", title="Max Concurrent Running Tasks", description="Configure the maximum amount of tasks that can be running at the same time.", default=4 )
+ * @Wordpress\Options\Field( name="mwp_task_retainment_period", type="text", title="Completed Task Retainment Period", description="Number of hours to retain completed tasks in the log for review.", default=24 )
  */
 class Settings extends \Modern\Wordpress\Plugin\Settings
 {
