@@ -400,9 +400,7 @@ class Framework extends Plugin
 	public function frameworkActivated()
 	{
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
-		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
 		wp_schedule_event( time(), 'minutely', 'modern_wordpress_queue_run' );
-		wp_schedule_event( time(), 'hourly', 'modern_wordpress_queue_maintenance' );
 	}
 	
 	/**
@@ -415,7 +413,6 @@ class Framework extends Plugin
 	public function frameworkDeactivated()
 	{
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
-		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
 	}
 	
 	/**
@@ -438,6 +435,8 @@ class Framework extends Plugin
 			}
 		}
 		
+		Task::runMaintenance();
+		
 		/* Run tasks */
 		while 
 		( 
@@ -452,6 +451,7 @@ class Framework extends Plugin
 			$data[ 'status' ] = NULL;
 			$task->data = $data;
 			$task->last_start = time();
+			$task->last_iteration = time();
 			$task->running = 1;
 			$task->save();
 			
@@ -469,7 +469,14 @@ class Framework extends Plugin
 						( time() - $begin_time < $max_execution_time - 10 )     // there is still time to run it
 					)
 					{
+						/**
+						 * Even though we are enforcing an overall max_execution_time limit, allow each individual iteration
+						 * to use a full execution time block if needed before being killed by the system.
+						 */
+						set_time_limit( $max_execution_time );
+						
 						$task->execute();
+						$task->last_iteration = time();
 						$task->save();
 					}
 					
@@ -506,18 +513,6 @@ class Framework extends Plugin
 				$task->save();
 			}
 		}
-	}
-	
-	/**
-	 * Perform task queue maintenance
-	 *
-	 * @Wordpress\Action( for="modern_wordpress_queue_maintenance" )
-	 *
-	 * @return	void
-	 */
-	public function runTasksMaintenance()
-	{
-		Task::runMaintenance();
 	}
 	
 	/**
