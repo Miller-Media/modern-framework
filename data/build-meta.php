@@ -98,6 +98,19 @@ return <<<'JSON'
                     "values": [],
                     "zerofill": false
                 },
+                "task_last_iteration": {
+                    "allow_null": false,
+                    "auto_increment": false,
+                    "binary": false,
+                    "decimals": null,
+                    "default": "0",
+                    "length": 11,
+                    "name": "task_last_iteration",
+                    "type": "INT",
+                    "unsigned": false,
+                    "values": [],
+                    "zerofill": false
+                },
                 "task_tag": {
                     "allow_null": true,
                     "auto_increment": false,
