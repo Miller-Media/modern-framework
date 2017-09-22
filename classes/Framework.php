@@ -89,7 +89,13 @@ class Framework extends Plugin
 	 */
 	public function isDev()
 	{
-		return ( defined( 'MODERN_WORDPRESS_DEV' ) and \MODERN_WORDPRESS_DEV === TRUE );
+		// Respect a hard setting
+		if ( defined( 'MODERN_WORDPRESS_DEV' ) ) {
+			return \MODERN_WORDPRESS_DEV === TRUE;
+		}
+		
+		// Fallback to soft setting
+		return (bool) $this->getSetting( 'mwp_developer_mode' );
 	}
 	
 	/**
