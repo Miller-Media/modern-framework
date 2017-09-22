@@ -442,6 +442,22 @@ class Framework extends Plugin
 		}
 		
 		Task::runMaintenance();
+		$task = null;
+		
+		/* Log Fatalities */
+		register_shutdown_function( function() use ( &$task ) 
+		{
+			if ( $task instanceof Task and $task->running ) {
+				$error = error_get_last();
+				$task->log( 'Runtime error interruption.' );
+				$task->log( print_r( $error, true ) );
+				$task->fails = $task->fails + 1;
+				$task->next_start = time() + 180;
+				$task->running = 0;
+				$task->setData( 'status', 'Failed' );
+				$task->save();
+			}
+		});
 		
 		/* Run tasks */
 		while 
@@ -453,6 +469,8 @@ class Framework extends Plugin
 			( time() - $begin_time < $max_execution_time - 10 )
 		)
 		{
+			$task->breaker = 0;
+			
 			$data = $task->data;
 			$data[ 'status' ] = NULL;
 			$task->data = $data;
@@ -481,9 +499,18 @@ class Framework extends Plugin
 						 */
 						set_time_limit( $max_execution_time );
 						
+						$task->breaker = $task->breaker + 1;
 						$task->execute();
 						$task->last_iteration = time();
 						$task->save();
+						
+						if ( $task->breaker >= 1000 ) {
+							$task->log( 'Circuit breaker switched after ' . $task->breaker . ' iterations. Set $task->breaker = 0 in the task callback to circumvent.' );
+							$task->fails = $task->fails + 1;
+							$task->failover = true;
+							$task->next_start = time() + 180;
+						}
+						
 					}
 					
 					if ( $task->aborted )
@@ -495,8 +522,17 @@ class Framework extends Plugin
 					}
 					else
 					{
+						if ( $task->completed ) {
+							$task->log( 'Complete.' );
+						} else {
+							$task->log( 'Suspended.' );
+						}
+						
+						if ( ! $task->failover ) {
+							$task->fails = 0;
+						}
+						
 						$task->running = 0;
-						$task->fails = 0;
 						$task->save();
 					}
 				}
@@ -505,7 +541,7 @@ class Framework extends Plugin
 					$task->running = 0;
 					$task->fails = 3;
 					$task->setData( 'status', 'Failed' );
-					$task->log( $e->getMessage() );
+					$task->log( 'Runtime exception encountered: ' . $e->getMessage() );
 					$task->data = $data;
 					$task->save();
 				}

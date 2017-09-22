@@ -66,6 +66,16 @@ class Task extends ActiveRecord
 	public $aborted = false;
 	
 	/**
+	 * @var	int			Circuit Breaker
+	 */
+	public $breaker;
+	
+	/**
+	 * @var	int			Failover
+	 */
+	public $failover = false;
+	
+	/**
 	 * Execute this task
 	 *
 	 * @return	void
@@ -360,7 +370,7 @@ class Task extends ActiveRecord
 	{
 		$db = Framework::instance()->db();
 		
-		$status_clause = "task_completed=0";
+		$status_clause = "task_completed=0 AND task_fails < 3";
 		
 		switch( $status ) 
 		{
@@ -373,7 +383,7 @@ class Task extends ActiveRecord
 				break;
 				
 			case 'failed':
-				$status_clause = "task_fails>0";
+				$status_clause = "task_fails>=3";
 				break;
 		}
 		
