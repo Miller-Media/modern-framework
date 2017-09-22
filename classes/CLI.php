@@ -570,7 +570,7 @@ class CLI extends \WP_CLI_Command {
 				
 				if ( $deltaUpdate ) {
 					foreach( $deltaUpdate as $table_name => $updates ) {
-						foreach( $updates as $updateDescription )
+						foreach( $updates as $updateDescription ) {
 							\WP_CLI::line( $updateDescription );
 						}
 					}
