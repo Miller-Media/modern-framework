@@ -150,7 +150,7 @@ abstract class Plugin extends Singleton
 				$tableSql = $dbHelper->buildTableSQL( $table, FALSE );
 				$updates = dbDelta( $tableSql, $execute );
 				if ( $updates ) {
-					$delta_updates[ $wpdb->base_prefix . $table ] = $updates;
+					$delta_updates[ $wpdb->base_prefix . $table['name'] ] = $updates;
 				}
 			}
 		}

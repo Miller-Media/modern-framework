@@ -569,8 +569,10 @@ class CLI extends \WP_CLI_Command {
 				$deltaUpdate = $plugin->updateSchema();
 				
 				if ( $deltaUpdate ) {
-					foreach( $deltaUpdate['wp_Array'] as $updateLine ) {
-						\WP_CLI::line( $updateLine );
+					foreach( $deltaUpdate as $table_name => $updates ) {
+						foreach( $updates as $updateDescription )
+							\WP_CLI::line( $updateDescription );
+						}
 					}
 					\WP_CLI::success( 'Database schema updated.' );
 				} else {
