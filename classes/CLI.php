@@ -519,6 +519,70 @@ class CLI extends \WP_CLI_Command {
 	}
 	
 	/**
+	 * Update plugin meta data contents
+	 * 
+	 * @param	$args		array		Positional command line arguments
+	 * @param	$assoc		array		Named command line arguments
+	 *
+	 * ## OPTIONS
+	 *
+	 * <slug>
+	 * : The slug of the modern wordpress plugin
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Update the meta data in a plugin file
+	 *     $ wp mwp update-meta my-plugin --auto-update --namespace="MyCompany\PluginPackage"
+	 *     Success: Meta data successfully updated.
+	 *
+	 * @subcommand update-database
+	 * @when after_wp_load
+	 */
+	public function updateDatabase( $args, $assoc )
+	{
+		$slug = $args[0];
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) )
+		{
+			\WP_CLI::error( 'Plugin directory is not valid: ' . $slug );
+		}
+		
+		$meta_data = array();
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) )
+		{
+			\WP_CLI::error( 'Could not find plugin meta data directory: ' . WP_PLUGIN_DIR . '/' . $slug . '/data' );
+		}
+		else
+		{
+			/* Read existing metadata */
+			if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php' ) )
+			{
+				$meta_data = json_decode( include WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', TRUE );
+				
+				if ( ! $meta_data['namespace'] ) {
+					\WP_CLI::error( 'Could not detect plugin namespace.' );
+				}
+				
+				$pluginClass = $meta_data['namespace'] . ( $slug == 'modern-framework' ? '\Framework' : '\Plugin' );
+				$plugin = $pluginClass::instance();
+				$deltaUpdate = $plugin->updateSchema();
+				
+				if ( $deltaUpdate ) {
+					foreach( $deltaUpdate as $table_name => $updates ) {
+						foreach( $updates as $updateDescription ) {
+							\WP_CLI::line( $updateDescription );
+						}
+					}
+					\WP_CLI::success( 'Database schema updated.' );
+				} else {
+					\WP_CLI::success( 'Database schema is already up to date.' );
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Build a new plugin package for release
 	 * 
 	 * @param	$args		array		Positional command line arguments

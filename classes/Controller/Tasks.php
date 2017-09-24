@@ -126,23 +126,23 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 		);
 		
 		// Default to all non-completed tasks
-		$where = array( 'task_completed=0' );
+		$where = array( 'task_completed=0 AND task_blog_id=%d AND task_fails<3', get_current_blog_id() );
 		
-		if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'completed' )
+		if ( isset( $_REQUEST[ 'status' ] ) )
 		{
 			switch( $_REQUEST[ 'status' ] )
 			{
 				case 'completed':
 				
-					$where = array( 'task_completed > 0' );
+					$where = array( 'task_completed>0 AND task_blog_id=%d', get_current_blog_id() );
 					break;
 					
 				case 'failed':
 				
-					$where = array( 'task_fails>0' );
+					$where = array( 'task_fails>=3 AND task_blog_id=%d', get_current_blog_id() );
 					break;
 			}
-		}			
+		}
 		
 		$table->prepare_items( $where );
 		

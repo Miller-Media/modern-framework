@@ -43,7 +43,7 @@ use Modern\Wordpress\Task;
 	</li>
 	<li class="failed">
 		<a href="<?php echo add_query_arg( array( 'page' => 'mwp-tasks', 'status' => 'failed' ), admin_url( 'tools.php' ) ) ?>" class="<?php if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'failed' ) { echo "current"; } ?>">
-			Failed
+			Failouts
 			<span class="count">(<?php echo Task::countTasks( NULL, NULL, 'failed' ) ?>)</span>
 		</a>
 	</li>

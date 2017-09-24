@@ -319,8 +319,9 @@ class ActiveRecordTable extends \WP_List_Table
 		$compiled      = $class::compileWhereClause( $where );
 		$per_page      = $this->perPage;
 		$start_at      = $current_page > 0 ? ( $current_page - 1 ) * $per_page : 0;
+		$prefix        = $class::$site_specific ? $db->prefix : $db->base_prefix;
 		
-		$query          = "SELECT * FROM {$db->prefix}{$class::$table} WHERE {$compiled['where']}";
+		$query          = "SELECT * FROM {$prefix}{$class::$table} WHERE {$compiled['where']}";
 		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
 		
 		
