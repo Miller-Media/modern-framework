@@ -953,6 +953,7 @@ CLASS;
 	{
 		$data = array_merge( array( 
 			'name' => '',
+			'url' => '',
 			'description' => '',
 			'namespace' => '',
 			'slug' => '',
@@ -971,6 +972,7 @@ CLASS;
 			'BoilerplatePlugin'                 => str_replace( '\\', '', $data[ 'namespace'] ) . 'Plugin',
 			'{vendor_name}'                     => $data[ 'vendor' ],
 			'{plugin_name}'                     => $data[ 'name' ],
+			'{plugin_url}'                      => $data[ 'url' ],
 			'{plugin_slug}'                     => $data[ 'slug' ],
 			'{plugin_description}'              => $data[ 'description' ],
 			'{plugin_dir}'                      => $data[ 'slug' ],
