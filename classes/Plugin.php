@@ -719,6 +719,7 @@ abstract class Plugin extends Singleton
 		/**
 		 * Create build meta data
 		 */
+		if ( ! isset( $options[ 'skip_db_dump' ] ) or ! $options[ 'skip_db_dump' ] ) 
 		{
 			$build_meta = array();
 			$dbHelper = \Modern\Wordpress\DbHelper::instance();
@@ -763,7 +764,7 @@ abstract class Plugin extends Singleton
 			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/build-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $build_meta, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
 		}
 		
-		$bundle = ( isset( $options['bundle'] ) and $options['bundle'] ) or ( ! isset( $options[ 'nobundle' ] ) or ! $options[ 'nobundle' ] );
+		$bundle = ( ( isset( $options['bundle'] ) and $options['bundle'] ) or ( ! isset( $options[ 'nobundle' ] ) or ! $options[ 'nobundle' ] ) );
 		
 		// Bundle the modern wordpress framework in with the plugin
 		if ( $slug !== 'modern-framework' and $bundle )
@@ -772,7 +773,7 @@ abstract class Plugin extends Singleton
 			static::rmdir( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework' );
 			
 			try {
-				$bundle_filename = \Modern\Wordpress\Plugin::createBuild( 'modern-framework', array( 'nobundle' => true ) );
+				$bundle_filename = \Modern\Wordpress\Plugin::createBuild( 'modern-framework', array( 'nobundle' => true, 'skip_db_dump' => true ) );
 			}
 			catch( \Exception $e ) {
 				$message = $e->getMessage();
@@ -890,7 +891,7 @@ abstract class Plugin extends Singleton
 			}
 			
 			return $zip_filename;
-		}	
+		}
 	}
 	
 	/**

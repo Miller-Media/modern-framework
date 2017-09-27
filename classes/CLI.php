@@ -587,7 +587,6 @@ class CLI extends \WP_CLI_Command {
 	 * 
 	 * @param	$args		array		Positional command line arguments
 	 * @param	$assoc		array		Named command line arguments
-	 * @param	$api_opts	array		Optional array of options to use this method as an api
 	 *
 	 * ## OPTIONS
 	 *
@@ -615,268 +614,21 @@ class CLI extends \WP_CLI_Command {
 	 * @subcommand build-plugin
 	 * @when after_wp_load
 	 */
-	public function buildPlugin( $args, $assoc, $api_opts=array() )
+	public function buildPlugin( $args, $assoc )
 	{
 		$slug = $args[0];
-		$cli_output = isset( $api_opts[ 'cli_output' ] ) ? $api_opts[ 'cli_output' ] : true;
 		
-		if ( ! $slug or ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) )
+		try {
+			\WP_CLI::line( 'Building...' );
+			$build_file = \Modern\Wordpress\Plugin::createBuild( $slug, $assoc );
+		}
+		catch( \Exception $e )
 		{
-			\WP_CLI::error( 'Plugin directory is not valid: ' . $slug );
+			\WP_CLI::error( $e->getMessage() );
 		}
 		
-		$ignorelist = array(
-			'data/install-meta.php',
-		);
-		
-		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/.buildignore' ) )
-		{
-			$fh = fopen( WP_PLUGIN_DIR . '/' . $slug . '/.buildignore', 'r' );
-			while( $line = fgets( $fh ) ) {
-				if ( $line ) {
-					$ignorelist[] = str_replace( '\\', '/', trim( $line ) );
-				}
-			}
-			fclose( $fh );
-		}
-		
-		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/builds' ) )
-		{
-			if ( ! mkdir( WP_PLUGIN_DIR . '/' . $slug . '/builds' ) )
-			{
-				\WP_CLI::error( 'Unable to create the /builds directory' );
-			}
-		}
-		
-		$plugin_version = "0.0.0";
-		$meta_data = array();
-		
-		/* Create data directory if needed */
-		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) )
-		{
-			if ( ! mkdir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) )
-			{
-				\WP_CLI::error( 'Unable to create the /data directory to store plugin meta data.' );
-			}
-		}
-		
-		/* Read existing metadata */
-		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php' ) )
-		{
-			$meta_data = json_decode( include WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', TRUE );
-			if ( isset( $meta_data[ 'version' ] ) and $meta_data[ 'version' ] )
-			{
-				$plugin_version = $meta_data[ 'version' ];
-			}
-		}
-		
-		/* Work out the new version number if needed */
-		if ( isset( $assoc[ 'version-update' ] ) and $assoc[ 'version-update' ] )
-		{
-			$version_parts = explode( '.', $plugin_version );
-			switch( $assoc[ 'version-update' ] )
-			{
-				case 'major':
-					$version_parts[0]++;
-					$plugin_version = $version_parts[0] . '.0.0';
-					break;
-					
-				case 'minor':
-					$version_parts[1]++;
-					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.0';
-					break;
-					
-				case 'point':
-					$version_parts[2]++;
-					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2];
-					break;
-				
-				case 'patch':
-					
-					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2] . '.' . ( isset( $version_parts[3] ) ? $version_parts[3] + 1 : 1 );
-					break;
-				
-				default:
-					$plugin_version = $assoc[ 'version-update' ];
-			}
-		}
-		
-		/**
-		 * Create build meta data
-		 */
-		{
-			$build_meta = array();
-			$dbHelper = \Modern\Wordpress\DbHelper::instance();
-			
-			/* Update table schema data file */
-			if ( isset( $meta_data[ 'tables' ] ) and $meta_data[ 'tables' ] )
-			{
-				$build_meta['tables'] = array();
-				
-				$tables = explode( ',', $meta_data[ 'tables' ] );
-				foreach( $tables as $table )
-				{
-					// trim spaces from table names
-					$table = trim( $table );
-					
-					try
-					{
-						$build_meta[ 'tables' ][] = $dbHelper->getTableDefinition( $table, FALSE );
-					}
-					catch( \ErrorException $e ) { }
-				}
-			}
-		
-			/* Update table schema data file */
-			if ( isset( $meta_data[ 'ms_tables' ] ) and $meta_data[ 'ms_tables' ] )
-			{
-				$build_meta['ms_tables'] = array();
-				
-				$tables = explode( ',', $meta_data[ 'ms_tables' ] );
-				foreach( $tables as $table )
-				{
-					// trim spaces from table names
-					$table = trim( $table );
-					
-					try
-					{
-						$build_meta[ 'ms_tables' ][] = $dbHelper->getTableDefinition( $table, FALSE );
-					}
-					catch( \ErrorException $e ) { }
-				}
-			}
-			
-			/* Save the build meta */
-			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/build-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $build_meta, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
-		}
-		
-		// Bundle the modern wordpress framework in with the plugin
-		if ( $slug !== 'modern-framework' and ! isset( $assoc[ 'nobundle' ] ) )
-		{
-			$this->rmdir( WP_PLUGIN_DIR . '/' . $slug . '/framework' );
-			$this->rmdir( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework' );
-			
-			$bundle_filename = $this->buildPlugin( array( 'modern-framework' ), array( 'nobundle' => true ), array( 'cli_output' => false, 'return_zip' => true ) );
-			
-			$framework_zip = new \ZipArchive();
-			$framework_zip->open( $bundle_filename );
-			$framework_zip->extractTo( WP_PLUGIN_DIR . '/' . $slug . '/' );
-			$framework_zip->close();
-			
-			/* Prevent bundled framework from being detected as another plugin by installer skin */
-			$contents = file_get_contents( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework/plugin.php' );
-			$contents = str_replace( '* Plugin Name:', '* Plugin:', $contents );
-			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework/plugin.php', $contents );
-			
-			rename( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework', WP_PLUGIN_DIR . '/' . $slug . '/framework' );
-		}
-		
-		/**
-		 * Create the ZIP Archive
-		 */
-		{
-			$zip_filename = WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip';
-			$zip = new \ZipArchive();
-			if ( $zip->open( $zip_filename, \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) !== TRUE ) 
-			{
-				\WP_CLI::error( 'Cannot create the archive file: ' . $zip_filename );
-			}
-			
-			/* Recursively build files into the archive */
-			$basedir = str_replace( '\\', '/', WP_PLUGIN_DIR . '/' . $slug . '/' );
-			$addToArchive = function( $source ) use ( $slug, $ignorelist, $basedir, $zip, &$addToArchive, $plugin_version )
-			{
-				$relativename = str_replace( $basedir, '', str_replace( '\\', '/', $source ) );
-				
-				// Check against ignore list
-				foreach( $ignorelist as $pattern ) {
-					if ( fnmatch( $pattern, $relativename ) ) {
-						return;
-					}
-				}
-				
-				// Add file to zip
-				if ( is_file( $source ) ) 
-				{
-					/* Replace tokens in source files */
-					$pathinfo = pathinfo( $source );
-					if ( isset( $pathinfo[ 'extension' ] ) and in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) and substr( $relativename, 0, 7 ) !== 'vendor/' )
-					{
-						$source_contents = file_get_contents( $source );
-						$updated_contents = strtr( $source_contents, array( '{' . 'build_version' . '}' => $plugin_version ) );
-						
-						if ( $relativename == 'plugin.php' )
-						{
-							$docComments = array_filter(
-								token_get_all( $updated_contents ), function( $token ) {
-									return $token[0] == T_DOC_COMMENT;
-								}
-							);
-							
-							/* Plugin Header */
-							$headerDoc = array_shift( $docComments );
-							$newHeaderDoc = preg_replace( '/Version:(.*?)\n/', "Version: " . $plugin_version . "\n", $headerDoc );
-							$updated_contents = str_replace( $headerDoc, $newHeaderDoc, $updated_contents );
-						}
-						
-						if ( $updated_contents != $source_contents )
-						{
-							file_put_contents( $source, $updated_contents );
-						}
-					}
-					
-					$zip->addFile( $source, $slug . '/' . $relativename );
-					return;
-				}
-
-				// Loop through the folder
-				$dir = dir( $source );
-				while ( false !== $entry = $dir->read() ) 
-				{
-					// Skip pointers & special dirs
-					if ( in_array( $entry, array( '.', '..' ) ) )
-					{
-						continue;
-					}
-
-					$addToArchive( "$source/$entry" );
-				}
-
-				// Clean up
-				$dir->close();
-			};
-			
-			/* Save new plugin meta data before building package */
-			$meta_data[ 'version' ] = $plugin_version;
-			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $meta_data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
-		
-			/* Build the release package */
-			$cli_output && \WP_CLI::line( 'Building release package... ' . $slug . '-' . $plugin_version . '.zip' );
-			
-			$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
-			$zip->close();
-			
-			$this->rmdir( WP_PLUGIN_DIR . '/' . $slug . '/framework' );
-			
-			if ( isset( $api_opts[ 'return_zip' ] ) and $api_opts[ 'return_zip' ] )
-			{
-				return $zip_filename;
-			}
-			
-			/* Copy to latest dev.zip */
-			if ( isset( $assoc[ 'dev' ] ) and $assoc[ 'dev' ] )
-			{
-				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-dev.zip' );
-			}
-			
-			/* Copy to latest stable.zip */
-			if ( isset( $assoc[ 'stable' ] ) and $assoc[ 'stable' ] )
-			{
-				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-stable.zip' );
-			}
-		}
-		
-		$cli_output && \WP_CLI::success( 'Plugin package successfully built.' );		
+		\WP_CLI::line( $build_file );
+		\WP_CLI::success( 'Plugin package successfully built.' );
 	}
 	
 	/**
