@@ -231,12 +231,9 @@ class Task extends ActiveRecord
 	 */
 	public function getStatusForDisplay()
 	{
-		if ( $this->completed )
-		{
-			return __( 'Completed', 'modern-framework' );
-		}
-		
-		return $this->getData( 'status' ) ?: '---';
+		$status = $this->getData( 'status' ) ?: '---';
+		$color = $this->completed ? 'green' : ( $this->fails > 2 ? 'red' : 'inherit' );
+		return apply_filters( 'mwp_task_status_display', "<span style='color:{$color}' class='task-status-" . sanitize_title( $status ) . "'>{$status}</span>", $this );
 	}
 
 	/**
@@ -248,17 +245,21 @@ class Task extends ActiveRecord
 	{
 		if ( $this->completed )
 		{
-			return __( 'N/A', 'modern-framework' );
+			$next_start = __( 'N/A', 'modern-framework' );
+		}
+		else 
+		{
+			if ( $this->next_start > 0 )
+			{
+				$next_start = get_date_from_gmt( date( 'Y-m-d H:i:s', $this->next_start ), 'F j, Y H:i:s' );
+			}
+			else
+			{
+				$next_start = __( 'ASAP', 'modern-framework' );
+			}
 		}
 		
-		if ( $this->next_start > 0 )
-		{
-			return get_date_from_gmt( date( 'Y-m-d H:i:s', $this->next_start ), 'F j, Y H:i:s' );
-		}
-		else
-		{
-			return __( 'ASAP', 'modern-framework' );
-		}
+		return apply_filters( 'mwp_task_next_start_display', $next_start, $this );
 	}
 
 	/**
@@ -270,12 +271,14 @@ class Task extends ActiveRecord
 	{
 		if ( $this->last_start > 0 )
 		{
-			return get_date_from_gmt( date( 'Y-m-d H:i:s', $this->last_start ), 'F j, Y H:i:s' );
+			$last_start = get_date_from_gmt( date( 'Y-m-d H:i:s', $this->last_start ), 'F j, Y H:i:s' );
 		}
 		else
 		{
-			return __( 'Never', 'modern-framework' );
-		}		
+			$last_start = __( 'Never', 'modern-framework' );
+		}
+		
+		return apply_filters( 'mwp_task_last_start_display', $last_start, $this );
 	}
 
 	/**
@@ -318,6 +321,7 @@ class Task extends ActiveRecord
 		
 		$task->blog_id = get_current_blog_id();
 		$task->data = $data;
+		$task->log( 'Task queued.' );
 		$task->save();
 		
 		return $task;

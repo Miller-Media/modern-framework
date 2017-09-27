@@ -115,12 +115,6 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			{
 				$taskObj = Task::loadFromRowData( $task );			
 				$status = $taskObj->getStatusForDisplay();
-				
-				if ( $task[ 'task_completed' ] )
-				{
-					return "<span style='color:green'>{$status}</span>";
-				}
-				
 				return $status;
 			},
 		);

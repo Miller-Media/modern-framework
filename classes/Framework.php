@@ -447,7 +447,8 @@ class Framework extends Plugin
 		/* Log Fatalities */
 		register_shutdown_function( function() use ( &$task ) 
 		{
-			if ( $task instanceof Task and $task->running ) {
+			if ( $task instanceof Task and $task->running ) 
+			{
 				$error = error_get_last();
 				$task->log( 'Runtime error interruption.' );
 				$task->log( print_r( $error, true ) );
@@ -471,9 +472,6 @@ class Framework extends Plugin
 		{
 			$task->breaker = 0;
 			
-			$data = $task->data;
-			$data[ 'status' ] = NULL;
-			$task->data = $data;
 			$task->last_start = time();
 			$task->last_iteration = time();
 			$task->running = 1;
@@ -509,13 +507,13 @@ class Framework extends Plugin
 							$task->fails = $task->fails + 1;
 							$task->failover = true;
 							$task->next_start = time() + 180;
-						}
-						
+						}						
 					}
 					
 					if ( $task->aborted )
 					{
 						$task->setData( 'status', 'Aborted' );
+						$task->log( 'Task aborted.' );
 						$task->running = 0;
 						$task->fails = 3;
 						$task->save();
@@ -523,9 +521,10 @@ class Framework extends Plugin
 					else
 					{
 						if ( $task->completed ) {
-							$task->log( 'Complete.' );
+							$task->setData( 'status', 'Completed' );
+							$task->log( 'Task Complete.' );
 						} else {
-							$task->log( 'Suspended.' );
+							$task->log( 'Task suspended.' );
 						}
 						
 						if ( ! $task->failover ) {
@@ -542,7 +541,6 @@ class Framework extends Plugin
 					$task->fails = 3;
 					$task->setData( 'status', 'Failed' );
 					$task->log( 'Runtime exception encountered: ' . $e->getMessage() );
-					$task->data = $data;
 					$task->save();
 				}
 			}

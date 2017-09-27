@@ -32,6 +32,9 @@ $displaydate = function( $timestamp, $default='' ) {
 	}
 };
 
+$task_data = $task->data;
+unset( $task_data['logs'] );
+unset( $task_data['status'] );
 ?>
 
 <div class="wrap">
@@ -45,12 +48,17 @@ $displaydate = function( $timestamp, $default='' ) {
 		
 		<hr style="clear:both">
 		
+		<div style="margin-left: 25px; float: right; width: 50%;">
+			<h2><?php _e( 'Task Data', 'modern-framework' ) ?></h2>
+			<pre style=" border: 1px solid #aaa; padding: 15px; background-color: #fff; max-width: 100%; overflow: auto;"><?php echo json_encode( $task_data, JSON_PRETTY_PRINT ) ?></pre>
+		</div>
+		
 		<h2><?php echo $task->getTitle() ?></h2>
 
 		<blockquote>
 			<ul>
-				<li><strong>Status:</strong> <?php if ( $task->completed ) { echo "<strong style='color:green'>" . $task->getStatusForDisplay() . "</strong>"; } else { echo $task->getStatusForDisplay(); } ?></li>
-				<li><strong>Action:</strong> <?php echo $task->action ?></li>
+				<li><strong>Status:</strong> <?php echo $task->getStatusForDisplay() ?></li>
+				<li><strong>Action:</strong> <code><?php echo $task->action ?></code></li>
 				<li><strong>Tag:</strong> <?php echo $task->tag ?: 'None' ?></li>
 				<li><strong>Last Start:</strong> <?php echo $task->getLastStartForDisplay(); ?></li>
 				<li><strong>Next Start:</strong> <?php echo $task->getNextStartForDisplay(); ?></li>
