@@ -460,7 +460,11 @@ class Task extends ActiveRecord
 		// Update failover status of tasks that appear to have ended abruptly
 		$db->query( "UPDATE " . $db->base_prefix . static::$table . " SET task_running=0, task_fails=task_fails + 1 WHERE task_running=1 AND task_last_iteration < " . ( time() - $max_execution_time ) );
 		
-		// Remove completed tasks that are older than 24 hours
-		$db->query( "DELETE FROM " . $db->base_prefix . static::$table . " WHERE task_completed > 0 AND task_completed < " . ( time() - ( 60 * 60 * Framework::instance()->getSetting( 'mwp_task_retainment_period' ) ) ) );
+		$retention_period = Framework::instance()->getSetting( 'mwp_task_retainment_period' );
+		
+		if ( $retention_period !== 'paranoid' ) { // Easter!
+			// Remove completed tasks older than the retention period
+			$db->query( "DELETE FROM " . $db->base_prefix . static::$table . " WHERE task_completed > 0 AND task_completed < " . ( time() - ( 60 * 60 * ( abs( intval( $retention_period ) ) ) ) ) );
+		}
 	}
 }
