@@ -50,7 +50,7 @@ unset( $task_data['status'] );
 		
 		<div style="margin-left: 25px; float: right; width: 50%;">
 			<h2><?php _e( 'Task Data', 'modern-framework' ) ?></h2>
-			<pre style=" border: 1px solid #aaa; padding: 15px; background-color: #fff; max-width: 100%; overflow: auto;"><?php echo json_encode( $task_data, JSON_PRETTY_PRINT ) ?></pre>
+			<pre style=" border: 1px solid #aaa; padding: 15px; background-color: #fff; max-width: 100%; overflow: auto;"><?php echo esc_html( json_encode( $task_data, JSON_PRETTY_PRINT ) ) ?></pre>
 		</div>
 		
 		<h2><?php echo $task->getTitle() ?></h2>
