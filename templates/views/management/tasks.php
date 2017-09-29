@@ -33,7 +33,8 @@ use Modern\Wordpress\Task;
 	<?php echo $this->getTemplateContent( 'views/management/task-submenu' ) ?>
 	
 	<form method="post">
-		<?php $table->display(); ?>
+		<?php $table->search_box('search', 'search_text'); ?>
+		<?php echo $table->getDisplay() ?>
 	</form>
 	
 </div>
