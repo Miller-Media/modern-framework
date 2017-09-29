@@ -346,16 +346,23 @@ abstract class ActiveRecord
 			'params' => array(),
 		);
 		
-		$where = array( $where );
+		if ( ! is_array( $where[0] ) ) {
+			$where = array( $where );
+		}
+		
 		$called_class_slug = strtolower( str_replace( '\\', '_', get_called_class() ) );
 		
 		/* Apply filters */
-		$where = apply_filters( 'active_record_where', $where, get_called_class() );
-		$where = apply_filters( 'active_record_where' . $called_class_slug, $where );
+		$where = apply_filters( 'mwp_active_record_where', $where, get_called_class() );
+		$where = apply_filters( 'mwp_active_record_where_' . $called_class_slug, $where );
 		
 		/* Iterate the clauses to compile the query and replacement values */
 		foreach( $where as $clause )
 		{
+			if ( empty( $clause ) ) {
+				continue;
+			}
+			
 			if ( is_array( $clause ) )
 			{
 				$clauses[] = array_shift( $clause );

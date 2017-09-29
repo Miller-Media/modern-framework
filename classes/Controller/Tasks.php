@@ -73,6 +73,7 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 	public function do_index()
 	{
 		$table = Task::createDisplayTable();
+		
 		$table->columns = array
 		( 
 			'task_action'       => __( 'Task Item', 'modern-framework' ), 
@@ -83,7 +84,28 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			'task_data'         => __( 'Status', 'modern-framework' ),
 			'task_priority'     => __( 'Priority', 'modern-framework' ),
 		);
-		$table->bulkActions = array( 'runNext' => 'Run Next', 'unlock' => 'Unlock', 'delete' => 'Delete'  );
+		
+		$table->sortableColumns = array(
+			'task_action'       => array( 'task_action', false ),
+			'task_last_start'   => array( 'task_last_start', false ), 
+			'task_next_start'   => array( 'task_next_start', false ), 
+			'task_running'      => array( 'task_running', false ), 
+			'task_fails'        => array( 'task_fails', false ), 
+			'task_priority'     => array( 'task_priority', false ),			
+		);
+		
+		$table->searchableColumns = array(
+			'task_action' => array( 'type' => 'contains', 'combine_words' => 'and' ),
+			'task_tag'    => array( 'type' => 'contains', 'combine_words' => 'and' ),
+			'task_data'   => array( 'type' => 'contains' ),
+		);
+		
+		$table->bulkActions = array( 
+			'runNext' => 'Run Next', 
+			'unlock' => 'Unlock', 
+			'delete' => 'Delete'  
+		);
+		
 		$table->sortBy = 'task_priority DESC, task_next_start';
 		$table->sortOrder = 'ASC';
 		
@@ -138,6 +160,7 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			}
 		}
 		
+		$table->read_inputs();
 		$table->prepare_items( $where );
 		
 		echo $this->getPlugin()->getTemplateContent( 'views/management/tasks', array( 'table' => $table ) );
