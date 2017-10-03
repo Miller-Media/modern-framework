@@ -43,6 +43,8 @@ if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 	$notices[] = __( "Database table schemas have been brought up to date.", 'modern-framework' );
 }
 
+$failed_task_count = Task::countTasks( null, null, 'failed' );
+
 ?>
 
 <div style="float: right; display: inline-block;">
@@ -66,6 +68,9 @@ if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 </div>
 
 <a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countTasks() ?>
+<?php if ( $failed_task_count ) : ?>
+  <br><a style="color: red" href="<?php echo admin_url( 'tools.php?page=mwp-tasks&status=failed' ) ?>">Tasks Failed</a>: <?php echo Task::countTasks( null, null, 'failed' ) ?>
+<?php endif ?>
 
 <div style="clear:both; padding-top: 10px;">
 	<?php if ( $framework->isDev() ) : ?>
