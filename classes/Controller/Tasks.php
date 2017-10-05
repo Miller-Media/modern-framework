@@ -19,7 +19,7 @@ use Modern\Wordpress\Task;
 /**
  * Tasks Controller
  *
- * @Wordpress\AdminPage( title="Tasks Management", menu="Wordpress Tasks", slug="mwp-tasks", type="management" )
+ * @Wordpress\AdminPage( title="Tasks Management", menu="MWP Task Runner", slug="mwp-tasks", type="management" )
  */
 class Tasks extends \Modern\Wordpress\Pattern\Singleton
 {
