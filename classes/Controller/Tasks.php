@@ -19,7 +19,7 @@ use Modern\Wordpress\Task;
 /**
  * Tasks Controller
  *
- * @Wordpress\AdminPage( title="Tasks Management", menu="Wordpress Tasks", slug="mwp-tasks", type="management" )
+ * @Wordpress\AdminPage( title="Tasks Management", menu="MWP Task Runner", slug="mwp-tasks", type="management" )
  */
 class Tasks extends \Modern\Wordpress\Pattern\Singleton
 {
@@ -73,6 +73,7 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 	public function do_index()
 	{
 		$table = Task::createDisplayTable();
+		
 		$table->columns = array
 		( 
 			'task_action'       => __( 'Task Item', 'modern-framework' ), 
@@ -83,7 +84,28 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			'task_data'         => __( 'Status', 'modern-framework' ),
 			'task_priority'     => __( 'Priority', 'modern-framework' ),
 		);
-		$table->bulkActions = array( 'runNext' => 'Run Next', 'unlock' => 'Unlock', 'delete' => 'Delete'  );
+		
+		$table->sortableColumns = array(
+			'task_action'       => array( 'task_action', false ),
+			'task_last_start'   => array( 'task_last_start', false ), 
+			'task_next_start'   => array( 'task_next_start', false ), 
+			'task_running'      => array( 'task_running', false ), 
+			'task_fails'        => array( 'task_fails', false ), 
+			'task_priority'     => array( 'task_priority', false ),			
+		);
+		
+		$table->searchableColumns = array(
+			'task_action' => array( 'type' => 'contains', 'combine_words' => 'and' ),
+			'task_tag'    => array( 'type' => 'contains', 'combine_words' => 'and' ),
+			'task_data'   => array( 'type' => 'contains' ),
+		);
+		
+		$table->bulkActions = array( 
+			'runNext' => 'Run Next', 
+			'unlock' => 'Unlock', 
+			'delete' => 'Delete'  
+		);
+		
 		$table->sortBy = 'task_priority DESC, task_next_start';
 		$table->sortOrder = 'ASC';
 		
@@ -115,25 +137,30 @@ class Tasks extends \Modern\Wordpress\Pattern\Singleton
 			{
 				$taskObj = Task::loadFromRowData( $task );			
 				$status = $taskObj->getStatusForDisplay();
-				
-				if ( $task[ 'task_completed' ] )
-				{
-					return "<span style='color:green'>{$status}</span>";
-				}
-				
 				return $status;
 			},
 		);
 		
 		// Default to all non-completed tasks
-		$where = array( 'task_completed=0' );
+		$where = array( 'task_completed=0 AND task_blog_id=%d AND task_fails<3', get_current_blog_id() );
 		
-		if ( isset( $_REQUEST[ 'status' ] ) and $_REQUEST[ 'status' ] == 'completed' )
+		if ( isset( $_REQUEST[ 'status' ] ) )
 		{
-			// Only show completed tasks
-			$where = array( 'task_completed > 0' );
-		}			
+			switch( $_REQUEST[ 'status' ] )
+			{
+				case 'completed':
+				
+					$where = array( 'task_completed>0 AND task_blog_id=%d', get_current_blog_id() );
+					break;
+					
+				case 'failed':
+				
+					$where = array( 'task_fails>=3 AND task_blog_id=%d', get_current_blog_id() );
+					break;
+			}
+		}
 		
+		$table->read_inputs();
 		$table->prepare_items( $where );
 		
 		echo $this->getPlugin()->getTemplateContent( 'views/management/tasks', array( 'table' => $table ) );

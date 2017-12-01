@@ -209,13 +209,14 @@ abstract class ActiveRecord
 		
 		$db = Framework::instance()->db();
 		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
-		
+
 		$row = $db->get_row( $db->prepare( "SELECT * FROM " . $prefix . static::$table . " WHERE " . static::$prefix . static::$key . "=%d", $id ), ARRAY_A );
-		
+
 		if ( $row )
 		{
 			$record = static::loadFromRowData( $row );
 			$record->_wpdb_prefix = $prefix;
+			return $record;
 		}
 		
 		throw new \OutOfRangeException( 'Unable to find a record with the id: ' . $id );
@@ -306,6 +307,30 @@ abstract class ActiveRecord
 	}
 	
 	/**
+	 * Delete records
+	 *
+	 * @param	array|string		$where 			Where clause with associated replacement values
+	 * @return	int									Number of rows affected
+	 */
+	public static function deleteWhere( $where )
+	{
+		if ( is_string( $where ) )
+		{
+			$where = array( $where );
+		}
+		
+		$db = Framework::instance()->db();
+		$prefix = static::$site_specific ? $db->prefix : $db->base_prefix;
+
+		$compiled = static::compileWhereClause( $where );
+		
+		/* Get results of the prepared query */
+		$query = "DELETE FROM " . $prefix . static::$table . " WHERE " . $compiled[ 'where' ];
+		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
+		return $db->query( $prepared_query );
+	}
+	
+	/**
 	 * Compile a where clause with params
 	 *
 	 * @param	array		$where			Where clauses
@@ -321,16 +346,23 @@ abstract class ActiveRecord
 			'params' => array(),
 		);
 		
-		$where = array( $where );
+		if ( ! is_array( $where[0] ) ) {
+			$where = array( $where );
+		}
+		
 		$called_class_slug = strtolower( str_replace( '\\', '_', get_called_class() ) );
 		
 		/* Apply filters */
-		$where = apply_filters( 'active_record_where', $where, get_called_class() );
-		$where = apply_filters( 'active_record_where' . $called_class_slug, $where );
+		$where = apply_filters( 'mwp_active_record_where', $where, get_called_class() );
+		$where = apply_filters( 'mwp_active_record_where_' . $called_class_slug, $where );
 		
 		/* Iterate the clauses to compile the query and replacement values */
 		foreach( $where as $clause )
 		{
+			if ( empty( $clause ) ) {
+				continue;
+			}
+			
 			if ( is_array( $clause ) )
 			{
 				$clauses[] = array_shift( $clause );

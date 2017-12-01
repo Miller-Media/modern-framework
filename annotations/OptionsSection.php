@@ -43,9 +43,17 @@ class Section extends \Modern\Wordpress\Annotation
 		{
 			$section_id = md5( $this->title );
 			$self = $this;
-			add_action( 'admin_init', function() use ( $section_id, $page_id, $self )
+			add_action( 'admin_init', function() use ( $instance, $section_id, $page_id, $self )
 			{
-				add_settings_section( $section_id, $self->title, function() use ( $self ) { return $self->description; }, $page_id );
+				add_settings_section( $section_id, $self->title, function() use ( $instance, $self ) { 
+					if ( $self->description ) {
+						if ( is_callable( array( $instance, $self->description ) ) ) {
+							echo call_user_func( array( $instance, $self->description ) );
+						} else {
+							echo $self->description;
+						}
+					}
+				}, $page_id );
 			});
 			
 			return array( 'section_id' => $section_id );

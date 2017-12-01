@@ -34,19 +34,17 @@ class Framework extends Plugin
 	 * @var Annotations Reader
 	 */
 	protected $reader;
-		
+	
 	/**
 	 * Constructor
 	 */
 	protected function __construct()
 	{
-		/* Load Annotation Reader */
-		$bypass_cache = defined( 'MODERN_WORDPRESS_DEV' ) and \MODERN_WORDPRESS_DEV;
-		
+		/* Load Annotation Reader */		
 		try 
 		{
 			// Attempt to read from file caches
-			$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../annotations/cache", $bypass_cache );
+			$this->reader = new FileCacheReader( new AnnotationReader(), __DIR__ . "/../annotations/cache", $this->isDev() );
 		} 
 		catch( \InvalidArgumentException $e )
 		{
@@ -105,7 +103,23 @@ class Framework extends Plugin
 	}
 	
 	/**
-	 * Run updates when new plugin version is uploaded
+	 * Is development mode
+	 *
+	 * @return	bool
+	 */
+	public function isDev()
+	{
+		// Respect a hard setting
+		if ( defined( 'MODERN_WORDPRESS_DEV' ) ) {
+			return \MODERN_WORDPRESS_DEV === TRUE;
+		}
+		
+		// Fallback to soft setting
+		return (bool) $this->getSetting( 'mwp_developer_mode' );
+	}
+	
+	/**
+	 * Initialization
 	 *
 	 * @Wordpress\Action( for="init" )
 	 *
@@ -117,7 +131,19 @@ class Framework extends Plugin
 		if ( wp_get_schedule( 'modern_wordpress_queue_run' ) == false ) 
 		{
 			$this->frameworkActivated();
-		}	
+		}
+
+		if ( ! $this->isDev() )
+		{
+			$instance_meta = $this->data( 'instance-meta' ) ?: array();
+			$mwp_cache_latest = get_site_option( 'mwp_cache_latest' ) ?: 0;
+			
+			// Clear caches for this instance if we know they are out of date
+			if ( ! isset( $instance_meta[ 'cache_timestamp' ] ) or $instance_meta[ 'cache_timestamp' ] < $mwp_cache_latest ) 
+			{
+				$this->clearAnnotationsCache();
+			}
+		}
 	}
 	
 	/**
@@ -280,7 +306,15 @@ class Framework extends Plugin
 	 */
 	public function clearAnnotationsCache()
 	{
+		// Delete files in cache folder
 		array_map( 'unlink', glob( __DIR__ . "/../annotations/cache/*.cache.php" ) );
+		
+		if ( ! $this->isDev() )
+		{
+			$instance_meta = $this->data( 'instance-meta' ) ?: array();		
+			$instance_meta[ 'cache_timestamp' ] = time();
+			$this->setData( 'instance-meta', $instance_meta );
+		}
 	}
 	
 	/**
@@ -305,16 +339,34 @@ class Framework extends Plugin
 	 */
 	public function enqueueScripts()
 	{
+		$location = is_admin() ? 'admin' : 'front';
+		
 		wp_register_script( 'knockout', $this->fileUrl( 'assets/js/knockout.min.js' ) );
 		wp_register_script( 'knockback', $this->fileUrl( 'assets/js/knockback.min.js' ), array( 'underscore', 'backbone', 'knockout' ) );
-		wp_register_script( 'mwp-bootstrap', $this->fileUrl( 'assets/js/mwp.bootstrap.min.js', array( 'jquery' ) ) );
-		wp_register_style( 'mwp-bootstrap-theme', $this->getSetting( 'bootstrap_theme' ) ?: $this->fileUrl( 'assets/css/bootstrap-theme.min.css' ) );
-		wp_register_style( 'mwp-bootstrap', $this->fileUrl( 'assets/css/mwp-bootstrap.min.css' ) );
 		
+		$bootstrap_js = $this->getSetting( "mwp_bootstrap_disable_{$location}_js" ) ? 'assets/js/mwp.bootstrap.disabled.js' : 'assets/js/mwp.bootstrap.min.js';
+		wp_register_script( 'mwp-bootstrap', $this->fileUrl( $bootstrap_js, array( 'jquery' ) ) );
+
+		$bootstrap_css = $this->getSetting( "mwp_bootstrap_disable_{$location}_css" ) ? 'assets/css/mwp-bootstrap.disabled.css' : 'assets/css/mwp-bootstrap.min.css';
+		wp_register_style( 'mwp-bootstrap', $this->fileUrl( $bootstrap_css ) );
+		
+		wp_register_script( 'mwp-settings', $this->fileUrl( 'assets/js/mwp.settings.js' ), array( 'mwp', 'knockback' ) );
 		wp_register_script( 'mwp', $this->fileUrl( 'assets/js/mwp.framework.js' ), array( 'jquery', 'underscore', 'backbone', 'knockout' ) );
 		wp_localize_script( 'mwp', 'mw_localized_data', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
 		));
+	}
+	
+	/**
+	 * Register admin related scripts
+	 *
+	 * @Wordpress\Action( for="admin_enqueue_scripts" )
+	 *
+	 * @return	void
+	 */
+	public function adminEnqueueScripts()
+	{
+		wp_enqueue_script( 'mwp-settings' );
 	}
 	
 	/**
@@ -370,7 +422,6 @@ class Framework extends Plugin
 		return $tag;
 	}
 	
-	
 	/**
 	 * Add a one minute time period to the wordpress cron schedule
 	 *
@@ -399,9 +450,7 @@ class Framework extends Plugin
 	public function frameworkActivated()
 	{
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
-		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
 		wp_schedule_event( time(), 'minutely', 'modern_wordpress_queue_run' );
-		wp_schedule_event( time(), 'hourly', 'modern_wordpress_queue_maintenance' );
 	}
 	
 	/**
@@ -414,7 +463,6 @@ class Framework extends Plugin
 	public function frameworkDeactivated()
 	{
 		wp_clear_scheduled_hook( 'modern_wordpress_queue_run' );
-		wp_clear_scheduled_hook( 'modern_wordpress_queue_maintenance' );
 	}
 	
 	/**
@@ -429,13 +477,33 @@ class Framework extends Plugin
 		$db = $this->db();
 		$begin_time = time();
 		$max_execution_time = ini_get( 'max_execution_time' );
+		$max_task_runners = $this->getSetting( 'mwp_task_max_runners' ) ?: 4;
 		
 		/* Attempt to increase execution time if it is set to less than 60 seconds */
-		if ( $max_execution_time < 60 ) {
-			if ( set_time_limit( 60 ) ) {
-				$max_execution_time = 60;
+		if ( $max_execution_time < ( 60 * $max_task_runners ) ) {
+			if ( set_time_limit( ( 60 * $max_task_runners ) ) ) {
+				$max_execution_time = ( 60 * $max_task_runners );
 			}
 		}
+		
+		Task::runMaintenance();
+		$task = null;
+		
+		/* Log Fatalities */
+		register_shutdown_function( function() use ( &$task ) 
+		{
+			if ( $task instanceof Task and $task->running ) 
+			{
+				$error = error_get_last();
+				$task->log( 'Runtime error interruption.' );
+				$task->log( print_r( $error, true ) );
+				$task->fails = $task->fails + 1;
+				$task->next_start = time() + 180;
+				$task->running = 0;
+				$task->setData( 'status', 'Failed' );
+				$task->save();
+			}
+		});
 		
 		/* Run tasks */
 		while 
@@ -447,10 +515,10 @@ class Framework extends Plugin
 			( time() - $begin_time < $max_execution_time - 10 )
 		)
 		{
-			$data = $task->data;
-			$data[ 'status' ] = NULL;
-			$task->data = $data;
+			$task->breaker = 0;
+			
 			$task->last_start = time();
+			$task->last_iteration = time();
 			$task->running = 1;
 			$task->save();
 			
@@ -468,30 +536,66 @@ class Framework extends Plugin
 						( time() - $begin_time < $max_execution_time - 10 )     // there is still time to run it
 					)
 					{
+						/**
+						 * Even though we are enforcing an overall max_execution_time limit, allow each individual iteration
+						 * to use a full execution time block if needed before being killed by the system.
+						 */
+						set_time_limit( $max_execution_time );
+						
+						$task->breaker = $task->breaker + 1;
 						$task->execute();
+						$task->last_iteration = time();
 						$task->save();
+						
+						if ( $task->breaker >= 1000 ) {
+							$task->log( 'Circuit breaker switched after ' . $task->breaker . ' iterations. Set $task->breaker = 0 in the task callback to circumvent.' );
+							$task->fails = $task->fails + 1;
+							$task->failover = true;
+							$task->next_start = time() + 180;
+						}						
 					}
 					
 					if ( $task->aborted )
 					{
+						$task->setData( 'status', 'Aborted' );
+						$task->log( 'Task aborted.' );
 						$task->running = 0;
 						$task->fails = 3;
 						$task->save();
 					}
 					else
 					{
+						if ( $task->completed ) {
+							$task->setData( 'status', 'Completed' );
+							$task->log( 'Task Complete.' );
+						} else {
+							$task->log( 'Task suspended.' );
+						}
+						
+						if ( ! $task->failover ) {
+							$task->fails = 0;
+						}
+						
 						$task->running = 0;
-						$task->fails = 0;
 						$task->save();
 					}
 				}
 				catch( \Exception $e )
 				{
-					$data = $task->data;
-					$data[ 'status' ] = $e->getMessage();
-					$task->data = $data;
+					$task->running = 0;
+					$task->fails = 3;
+					$task->setData( 'status', 'Failed' );
+					$task->log( 'Runtime exception encountered: ' . $e->getMessage() );
 					$task->save();
 				}
+			}
+			else
+			{
+				$task->setData( 'status', 'Unavailable' );
+				$task->running = 0;
+				$task->fails = 3;
+				$task->log( 'Action not available for this task: ' . $task->action );
+				$task->save();
 			}
 		}
 	}
@@ -514,7 +618,7 @@ class Framework extends Plugin
 	 * @api
 	 *
 	 * @param	array		$data		New plugin data
-	 * @return	this
+	 * @return	Plugin
 	 * @throws	\InvalidArgumentException	Throws exception when invalid plugin data is provided
 	 * @throws	\ErrorException			Throws an error when the plugin data conflicts with another plugin
 	 */
@@ -530,7 +634,7 @@ class Framework extends Plugin
 		if ( ! $data[ 'vendor' ] )    { throw new \InvalidArgumentException( 'No vendor name provided.' );  }
 		if ( ! $data[ 'namespace' ] ) { throw new \InvalidArgumentException( 'No namespace provided.' );    }
 		
-		if ( ! is_dir( $this->getPath() . '/boilerplate' ) )
+		if ( ! is_dir( WP_PLUGIN_DIR . '/modern-framework/boilerplate' ) )
 		{
 			throw new \ErrorException( "Boilerplate plugin not present. Can't create a new one.", 1 );
 		}
@@ -553,7 +657,7 @@ class Framework extends Plugin
 		$plugin->setPath( WP_PLUGIN_DIR . '/' . $plugin_dir );
 		$plugin->setData( 'plugin-meta', $data );
 		
-		return $this;
+		return $plugin;
 	}
 	
 	/**
@@ -618,7 +722,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The javascript module name
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createJavascript( $slug, $name )
@@ -656,7 +760,9 @@ class Framework extends Plugin
 		{
 			$plugin_data = json_decode( include $plugin_data_file, TRUE );
 			file_put_contents( $javascript_file, $this->replaceMetaContents( file_get_contents( $javascript_file ), $plugin_data ) );
-		}	
+		}
+
+		return $javascript_file;
 	}
 	
 	/**
@@ -664,7 +770,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The stylesheet name
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createStylesheet( $slug, $name )
@@ -702,7 +808,9 @@ class Framework extends Plugin
 		{
 			$plugin_data = json_decode( include $plugin_data_file, TRUE );
 			file_put_contents( $stylesheet_file, $this->replaceMetaContents( file_get_contents( $stylesheet_file ), $plugin_data ) );
-		}	
+		}
+		
+		return $stylesheet_file;
 	}
 
 	/**
@@ -710,7 +818,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The template name
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createTemplate( $slug, $name )
@@ -765,6 +873,8 @@ class Framework extends Plugin
 		}
 		
 		file_put_contents( $template_file, $template_contents );
+		
+		return $template_file;
 	}
 	
 	/**
@@ -772,7 +882,7 @@ class Framework extends Plugin
 	 *
 	 * @param	string		$slug		The plugin slug
 	 * @param	string		$name		The php classname
-	 * @return	void
+	 * @return	string
 	 * @throws	\ErrorException
 	 */
 	public function createClass( $slug, $name )
@@ -884,6 +994,7 @@ class $classname
 CLASS;
 		file_put_contents( $class_file, $this->replaceMetaContents( $class_contents, $plugin_data ) );
 	
+		return $class_file;
 	}
 
 	/**
@@ -897,6 +1008,7 @@ CLASS;
 	{
 		$data = array_merge( array( 
 			'name' => '',
+			'url' => '',
 			'description' => '',
 			'namespace' => '',
 			'slug' => '',
@@ -915,6 +1027,7 @@ CLASS;
 			'BoilerplatePlugin'                 => str_replace( '\\', '', $data[ 'namespace'] ) . 'Plugin',
 			'{vendor_name}'                     => $data[ 'vendor' ],
 			'{plugin_name}'                     => $data[ 'name' ],
+			'{plugin_url}'                      => $data[ 'url' ],
 			'{plugin_slug}'                     => $data[ 'slug' ],
 			'{plugin_description}'              => $data[ 'description' ],
 			'{plugin_dir}'                      => $data[ 'slug' ],

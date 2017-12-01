@@ -43,6 +43,7 @@ class Task extends ActiveRecord
 		'next_start',
 		'running',
 		'last_start',
+		'last_iteration',
 		'tag',
 		'fails',
 		'completed',
@@ -63,6 +64,16 @@ class Task extends ActiveRecord
 	 * @var bool		Task aborted
 	 */
 	public $aborted = false;
+	
+	/**
+	 * @var	int			Circuit Breaker
+	 */
+	public $breaker;
+	
+	/**
+	 * @var	int			Failover
+	 */
+	public $failover = false;
 	
 	/**
 	 * Execute this task
@@ -160,9 +171,10 @@ class Task extends ActiveRecord
 	 */
 	public function runNext()
 	{
-		if ( ! $this->running and ! $this->completed )
+		if ( ! $this->completed )
 		{
 			$this->unlock();
+			$this->running = 0;
 			$this->next_start = 0;
 			$this->priority = 99;
 			$this->save();
@@ -219,12 +231,9 @@ class Task extends ActiveRecord
 	 */
 	public function getStatusForDisplay()
 	{
-		if ( $this->completed )
-		{
-			return __( 'Completed', 'modern-framework' );
-		}
-		
-		return $this->getData( 'status' ) ?: '---';
+		$status = $this->getData( 'status' ) ?: '---';
+		$color = $this->completed ? 'green' : ( $this->fails > 2 ? 'red' : 'inherit' );
+		return apply_filters( 'mwp_task_status_display', "<span style='color:{$color}' class='task-status-" . sanitize_title( $status ) . "'>{$status}</span>", $this );
 	}
 
 	/**
@@ -236,17 +245,21 @@ class Task extends ActiveRecord
 	{
 		if ( $this->completed )
 		{
-			return __( 'N/A', 'modern-framework' );
+			$next_start = __( 'N/A', 'modern-framework' );
+		}
+		else 
+		{
+			if ( $this->next_start > 0 )
+			{
+				$next_start = get_date_from_gmt( date( 'Y-m-d H:i:s', $this->next_start ), 'F j, Y H:i:s' );
+			}
+			else
+			{
+				$next_start = __( 'ASAP', 'modern-framework' );
+			}
 		}
 		
-		if ( $this->next_start > 0 )
-		{
-			return get_date_from_gmt( date( 'Y-m-d H:i:s', $this->next_start ), 'F j, Y H:i:s' );
-		}
-		else
-		{
-			return __( 'ASAP', 'modern-framework' );
-		}
+		return apply_filters( 'mwp_task_next_start_display', $next_start, $this );
 	}
 
 	/**
@@ -258,12 +271,14 @@ class Task extends ActiveRecord
 	{
 		if ( $this->last_start > 0 )
 		{
-			return get_date_from_gmt( date( 'Y-m-d H:i:s', $this->last_start ), 'F j, Y H:i:s' );
+			$last_start = get_date_from_gmt( date( 'Y-m-d H:i:s', $this->last_start ), 'F j, Y H:i:s' );
 		}
 		else
 		{
-			return __( 'Never', 'modern-framework' );
-		}		
+			$last_start = __( 'Never', 'modern-framework' );
+		}
+		
+		return apply_filters( 'mwp_task_last_start_display', $last_start, $this );
 	}
 
 	/**
@@ -271,7 +286,7 @@ class Task extends ActiveRecord
 	 *
 	 * @param	array|string		$config			Task configuration options
 	 * @param	mixed				$data			Task data
-	 * @return	void
+	 * @return	Task
 	 */
 	public static function queueTask( $config, $data=NULL )
 	{
@@ -306,7 +321,10 @@ class Task extends ActiveRecord
 		
 		$task->blog_id = get_current_blog_id();
 		$task->data = $data;
+		$task->log( 'Task queued.' );
 		$task->save();
+		
+		return $task;
 	}
 
 	/**
@@ -328,19 +346,19 @@ class Task extends ActiveRecord
 		/* Only action provided */
 		if ( $tag === NULL )
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d", $action, get_current_blog_id() ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d AND task_completed=0", $action, get_current_blog_id() ) );
 		}
 		
 		/* Only tag provided */
 		elseif ( $action === NULL )
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d", $tag, get_current_blog_id() ) );		
+			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d AND task_completed=0", $tag, get_current_blog_id() ) );		
 		}
 		
 		/* Both action and tag provided */
 		else
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d", $action, $tag, get_current_blog_id() ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d AND task_completed=0", $action, $tag, get_current_blog_id() ) );
 		}
 	}
 	
@@ -349,33 +367,51 @@ class Task extends ActiveRecord
 	 *
 	 * @param	string		$action			Count all tasks with specific action|NULL to ignore
 	 * @param	string		$tag			Count all tasks with specific tag|NULL to ignore
+	 * @param	string		$status			Status to count (pending,complete,running,failed)
 	 * @return	int
 	 */
-	public static function countTasks( $action=NULL, $tag=NULL )
+	public static function countTasks( $action=NULL, $tag=NULL, $status='pending' )
 	{
 		$db = Framework::instance()->db();
 		
+		$status_clause = "task_completed=0 AND task_fails < 3";
+		
+		switch( $status ) 
+		{
+			case 'completed':
+				$status_clause = "task_completed>0";
+				break;
+				
+			case 'running':
+				$status_clause = "task_running=1";
+				break;
+				
+			case 'failed':
+				$status_clause = "task_fails>=3";
+				break;
+		}
+		
 		if ( $action === NULL and $tag === NULL )
 		{
-			return $db->get_var( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_blog_id=%d", get_current_blog_id() );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->base_prefix . static::$table . " WHERE task_blog_id=%d AND {$status_clause}", get_current_blog_id() ) );
 		}
 		
 		/* Only action provided */
 		if ( $tag === NULL )
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d", $action, get_current_blog_id() ) );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d AND {$status_clause}", $action, get_current_blog_id() ) );
 		}
 		
 		/* Only tag provided */
 		elseif ( $action === NULL )
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d", $tag, get_current_blog_id() ) );		
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->base_prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d AND {$status_clause}", $tag, get_current_blog_id() ) );		
 		}
 		
 		/* Both action and tag provided */
 		else
 		{
-			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d", $action, $tag, get_current_blog_id() ) );
+			return $db->get_var( $db->prepare( "SELECT COUNT(*) FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d AND {$status_clause}", $action, $tag, get_current_blog_id() ) );
 		}
 	}
 
@@ -388,9 +424,15 @@ class Task extends ActiveRecord
 	{		
 		$db = Framework::instance()->db();
 		
+		$running = $db->get_var( $db->prepare( "SELECT COUNT(*) FROM {$db->base_prefix}" . static::$table . " WHERE task_running=1 AND task_blog_id=%d", get_current_blog_id() ) );
+		
+		if ( $running >= Framework::instance()->getSetting( 'mwp_task_max_runners' ) ) {
+			return null;
+		}
+		
 		$row = $db->get_row( 
 			$db->prepare( "
-				SELECT * FROM {$db->prefix}" . static::$table . " 
+				SELECT * FROM {$db->base_prefix}" . static::$table . " 
 					WHERE task_completed=0 AND task_running=0 AND task_next_start <= %d AND task_fails < 3 AND task_blog_id=%d
 					ORDER BY task_priority DESC, task_last_start ASC, task_id ASC", time(), get_current_blog_id()
 			), ARRAY_A
@@ -398,7 +440,7 @@ class Task extends ActiveRecord
 		
 		if ( $row === NULL )
 		{
-			return NULL;
+			return null;
 		}
 		
 		return static::loadFromRowData( $row );
@@ -413,10 +455,16 @@ class Task extends ActiveRecord
 	{
 		$db = Framework::instance()->db();
 		
-		// Update failover status of tasks that appear to have ended abruptly
-		$db->query( "UPDATE " . $db->prefix . static::$table . " SET task_running=0, task_fails=task_fails + 1 WHERE task_running=1 AND task_last_start < " . ( time() - ( 60 * 60 ) ) );
+		$max_execution_time = ini_get('max_execution_time');
 		
-		// Remove completed tasks that are older than 24 hours
-		$db->query( "DELETE FROM " . $db->prefix . static::$table . " WHERE task_completed > 0 AND task_completed < " . ( time() - ( 60 * 60 * 24 ) ) );
+		// Update failover status of tasks that appear to have ended abruptly
+		$db->query( "UPDATE " . $db->base_prefix . static::$table . " SET task_running=0, task_fails=task_fails + 1 WHERE task_running=1 AND task_last_iteration < " . ( time() - $max_execution_time ) );
+		
+		$retention_period = Framework::instance()->getSetting( 'mwp_task_retainment_period' );
+		
+		if ( $retention_period !== 'paranoid' ) { // Easter!
+			// Remove completed tasks older than the retention period
+			$db->query( "DELETE FROM " . $db->base_prefix . static::$table . " WHERE task_completed > 0 AND task_completed < " . ( time() - ( 60 * 60 * ( abs( intval( $retention_period ) ) ) ) ) );
+		}
 	}
 }

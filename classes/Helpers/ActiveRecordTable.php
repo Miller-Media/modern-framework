@@ -78,6 +78,21 @@ class ActiveRecordTable extends \WP_List_Table
 	public $columns;
 	
 	/**
+	 * @var	array			Sortable columns
+	 */
+	public $sortableColumns = array();
+	
+	/**
+	 * @var	array			Searchable columns
+	 */
+	public $searchableColumns = array();
+	
+	/**
+	 * @var	string			Hard filters (ActiveRecord where clauses)
+	 */
+	public $hardFilters = array();
+	
+	/**
 	 * @var array			Optional display handlers for columns
 	 */
 	public $handlers = array();
@@ -98,8 +113,7 @@ class ActiveRecordTable extends \WP_List_Table
 				'ajax'      => true
 			), 
 			$args 
-		));
-        
+		));        
     }
 	
 	/**
@@ -211,6 +225,32 @@ class ActiveRecordTable extends \WP_List_Table
 	}
 
 	/**
+	 * Get a list of sortable columns. The format is:
+	 * 'internal-name' => 'orderby'
+	 * or
+	 * 'internal-name' => array( 'orderby', true )
+	 *
+	 * The second format will make the initial sorting order be descending
+	 *
+	 * @since 3.1.0
+	 * @access protected
+	 *
+	 * @return array
+	 */
+	protected function get_sortable_columns() {
+		return $this->sortableColumns;
+	}
+	
+	/**
+	 * Get searchable columns
+	 * 
+	 * @return	array
+	 */
+	public function get_searchable_columns() {
+		return $this->searchableColumns;
+	}
+	
+	/**
 	 * Optional. If you need to include bulk actions in your list table, this is
 	 * the place to define them. Bulk actions are an associative array in the format
 	 * 'slug'=>'Visible Title'
@@ -254,6 +294,67 @@ class ActiveRecordTable extends \WP_List_Table
 					}
 				}
 				catch( \Exception $e ) { }
+			}
+		}
+	}
+	
+	/**
+	 * Read inputs
+	 *
+	 * This method will read script input parameters to the script and set the state 
+	 * of the table accordingly.
+	 *
+	 * @return	 void
+	 */
+	public function read_inputs()
+	{
+		if ( isset( $_REQUEST['orderby'] ) and in_array( $_REQUEST['orderby'], array_map( function( $arr ) { return is_array( $arr ) ? $arr[0] : $arr; }, $this->get_sortable_columns() ) ) ) {
+			$this->sortBy = $_REQUEST['orderby'];
+		}
+		
+		if ( isset( $_REQUEST['order'] ) and in_array( strtolower( $_REQUEST['order'] ), array( 'asc', 'desc' ) ) ) {
+			$this->order = $_REQUEST['order'];
+		}
+		
+		if ( $searchable_columns = $this->get_searchable_columns() ) 
+		{
+			if ( isset( $_REQUEST['s'] ) and $_REQUEST['s'] ) 
+			{
+				$phrase = $_REQUEST['s'];
+				$clauses = array();
+				$where = array();
+				foreach( $searchable_columns as $column_name => $column_config ) 
+				{
+					$column_config = is_array( $column_config ) ? $column_config : array( 'type' => 'contains', 'combine_words' => 'OR' );
+					$type = is_array( $column_config ) and isset( $column_config['type'] ) ? $column_config['type'] : 'contains';
+					
+					switch( $type ) 
+					{
+						case 'contains':
+						
+							if ( isset( $column_config['combine_words'] ) ) {
+								$word_clauses = array();
+								foreach( explode( ' ', $phrase ) as $word ) {
+									$word_clauses[] = 'LOWER(' . $column_name . ') LIKE %s';
+									$where[] = '%' . mb_strtolower( $word ) . '%';								
+								}
+								$clauses[] = '(' . implode( ( strtolower( $column_config['combine_words'] ) == 'or' ? ' OR ' : ' AND ' ), $word_clauses ) . ')';
+							} else {
+								$clauses[] = 'LOWER(' . $column_name . ') LIKE %s';
+								$where[] = '%' . mb_strtolower( $phrase ) . '%';
+							}
+							break;
+							
+						case 'equals':
+						
+							$clauses[] = '$column_name = %s';
+							$where[] = $phrase;
+							break;
+							
+					}
+				}
+				array_unshift( $where, '(' . implode( ') OR (', $clauses ) . ')' );
+				$this->hardFilters[] = $where;
 			}
 		}
 	}
@@ -316,13 +417,13 @@ class ActiveRecordTable extends \WP_List_Table
 		
 		$sortBy        = isset( $this->sortBy ) ? $this->sortBy : $class::$prefix . $class::$key;
 		$sortOrder     = $this->sortOrder;
-		$compiled      = $class::compileWhereClause( $where );
+		$compiled      = $class::compileWhereClause( array_merge( $this->hardFilters, array( $where ) ) );
 		$per_page      = $this->perPage;
 		$start_at      = $current_page > 0 ? ( $current_page - 1 ) * $per_page : 0;
+		$prefix        = $class::$site_specific ? $db->prefix : $db->base_prefix;
 		
-		$query          = "SELECT * FROM {$db->prefix}{$class::$table} WHERE {$compiled['where']}";
-		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;
-		
+		$query          = "SELECT * FROM {$prefix}{$class::$table} WHERE {$compiled['where']}";
+		$prepared_query = ! empty( $compiled[ 'params' ] ) ? $db->prepare( $query, $compiled[ 'params' ] ) : $query;		
 		
 		$total_items   = $db->get_var( str_replace( 'SELECT * ', 'SELECT COUNT(*) ', $prepared_query ) );
 		$this->items   = $db->get_results( $prepared_query . " ORDER BY {$sortBy} {$sortOrder} LIMIT {$start_at}, {$per_page}", ARRAY_A );
@@ -336,6 +437,18 @@ class ActiveRecordTable extends \WP_List_Table
 			'per_page'    => $this->perPage,
 			'total_pages' => ceil( $total_items / $per_page ),
 		) );
+	}
+	
+	/**
+	 * Get the table display and return it
+	 *
+	 * @return	string
+	 */
+	public function getDisplay()
+	{
+		ob_start();
+		$this->display();
+		return ob_get_clean();
 	}
 
 }

@@ -1,0 +1,1 @@
+;console.log( 'MWP Bootstrap JS disabled by admin' );

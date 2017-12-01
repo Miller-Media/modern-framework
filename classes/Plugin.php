@@ -94,7 +94,7 @@ abstract class Plugin extends Singleton
 	 */
 	public function _versionUpdateCheck()
 	{
-		if ( ! defined( 'MODERN_WORDPRESS_DEV' ) or \MODERN_WORDPRESS_DEV == FALSE )
+		if ( ! Framework::instance()->isDev() )
 		{
 			$plugin_meta = $this->data( 'plugin-meta' );
 			if ( is_array( $plugin_meta ) and isset( $plugin_meta[ 'version' ] ) and $plugin_meta[ 'version' ] )
@@ -102,6 +102,7 @@ abstract class Plugin extends Singleton
 				$install = $this->data( 'install-meta' );
 				if ( ! is_array( $install ) or version_compare( $install[ 'version' ], $plugin_meta[ 'version' ] ) == -1 )
 				{
+					update_site_option( 'mwp_cache_latest', time() );
 					$this->versionUpdated();
 				}
 			}
@@ -129,20 +130,24 @@ abstract class Plugin extends Singleton
 		$this->setData( 'install-meta', $install );
 		
 		/* Clear the annotations cache */
-		\Modern\Wordpress\Framework::instance()->clearAnnotationsCache();
+		Framework::instance()->clearAnnotationsCache();
 	}
 
 	/**
 	 * Update the schema for this plugin
 	 * 
-	 * @return	void
+	 * @param	bool		$execute		Whether to execute the database changes or not
+	 * @return	array						Strings containing the results of the various update queries
 	 */
-	public function updateSchema()
+	public function updateSchema( $execute=TRUE )
 	{
+		global $wpdb;
 		$build_meta = $this->data( 'build-meta' );
 		
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		$dbHelper = \Modern\Wordpress\DbHelper::instance();
+		
+		$delta_updates = array();
 		
 		/* Update global table definitions in database if needed */
 		if ( isset( $build_meta[ 'tables' ] ) and is_array( $build_meta[ 'tables' ] ) )
@@ -150,7 +155,10 @@ abstract class Plugin extends Singleton
 			foreach( $build_meta[ 'tables' ] as $table )
 			{
 				$tableSql = $dbHelper->buildTableSQL( $table, FALSE );
-				dbDelta( $tableSql );
+				$updates = dbDelta( $tableSql, $execute );
+				if ( $updates ) {
+					$delta_updates[ $wpdb->base_prefix . $table['name'] ] = $updates;
+				}
 			}
 		}
 		
@@ -171,7 +179,8 @@ abstract class Plugin extends Singleton
 					foreach( $sites as $site )
 					{
 						$site_data = (array) $site;
-						switch_to_blog( (int) $site_data['blog_id'] );
+						$site_id = (int) $site_data['blog_id'];
+						switch_to_blog( $site_id );
 						
 						if ( is_plugin_active_for_network( $plugin_path ) or is_plugin_active( $plugin_path ) )
 						{
@@ -179,7 +188,10 @@ abstract class Plugin extends Singleton
 							foreach( $build_meta[ 'ms_tables' ] as $table )
 							{
 								$tableSql = $dbHelper->buildTableSQL( $table, TRUE );
-								dbDelta( $tableSql );
+								$updates = dbDelta( $tableSql, $execute );
+								if ( $updates ) {
+									$delta_updates[ $wpdb->prefix . $table ] = $updates;
+								}
 							}
 						}
 						
@@ -193,10 +205,15 @@ abstract class Plugin extends Singleton
 				foreach( $build_meta[ 'ms_tables' ] as $table )
 				{
 					$tableSql = $dbHelper->buildTableSQL( $table, FALSE );
-					dbDelta( $tableSql );
+					$updates = dbDelta( $tableSql, $execute );
+					if ( $updates ) {
+						$delta_updates[ $wpdb->base_prefix . $table ] = $updates;
+					}					
 				}
 			}
 		}
+		
+		return $delta_updates;
 	}
 	
 	/**
@@ -533,7 +550,7 @@ abstract class Plugin extends Singleton
 				return $templateFile;
 			}
 			
-			return \Modern\Wordpress\Framework::instance()->pluginFile( 'templates/' . $template, 'php' );
+			return Framework::instance()->pluginFile( 'templates/' . $template, 'php' );
 		}
 	}
 
@@ -552,23 +569,19 @@ abstract class Plugin extends Singleton
 		
 		if ( ! file_exists( $templateFile ) )
 		{
-			/* Standardize path and make safe for output */
-			$missingFile = str_replace( '\\', '/', $templateFile );
-			$missingFile = str_replace( str_replace( '\\', '/', WP_PLUGIN_DIR ), '', $missingFile );
-			$missingFile = str_replace( '/modern-wordpress', '', $missingFile );
-			
-			return "[missing template file: {$missingFile}]";
+			return "[missing template file: {$this->pluginSlug()}/templates/{$template}]";
 		}
 		
 		if ( is_array( $vars ) )
 		{
-			unset( $vars[ 'templateFile' ] );
 			extract( $vars, EXTR_SKIP );
 		}
 
 		ob_start();
 		include $templateFile;
-		return ob_get_clean();
+		$templateContent = ob_get_clean();
+		
+		return apply_filters( 'mwp_tmpl', $templateContent, $this->pluginSlug(), $template, $vars );
 	}
 	
 	/**
@@ -632,4 +645,302 @@ abstract class Plugin extends Singleton
 		return $plugins;
 	}
 	
+	/**
+	 * Create a new plugin build
+	 *
+	 * @param	string			$slug					The plugin slug
+	 * @param	array			$options				Build options
+	 * @return	string									Build filename
+	 * @throws	ErrorException
+	 */
+	public static function createBuild( $slug, $options=array() )
+	{
+		if ( ! $slug or ! is_dir( WP_PLUGIN_DIR . '/' . $slug ) ) {
+			throw new \ErrorException( 'Plugin directory is not valid: ' . $slug );
+		}
+		
+		$ignorelist = array(
+			'data/install-meta.php',
+			'data/instance-meta.php'
+		);
+		
+		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/.buildignore' ) ) {
+			$fh = fopen( WP_PLUGIN_DIR . '/' . $slug . '/.buildignore', 'r' );
+			while( $line = fgets( $fh ) ) {
+				if ( $line ) {
+					$ignorelist[] = str_replace( '\\', '/', trim( $line ) );
+				}
+			}
+			fclose( $fh );
+		}
+		
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/builds' ) ) {
+			if ( ! mkdir( WP_PLUGIN_DIR . '/' . $slug . '/builds' ) ) {
+				throw new \ErrorException( 'Unable to create the /builds directory' );
+			}
+		}
+		
+		$plugin_version = "0.0.0";
+		$meta_data = array();
+		
+		/* Create data directory if needed */
+		if ( ! is_dir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) ) {
+			if ( ! mkdir( WP_PLUGIN_DIR . '/' . $slug . '/data' ) ) {
+				throw new \ErrorException( 'Unable to create the /data directory to store plugin meta data.' );
+			}
+		}
+		
+		/* Read existing metadata */
+		if ( file_exists( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php' ) ) {
+			$meta_data = json_decode( include WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', TRUE );
+			if ( isset( $meta_data[ 'version' ] ) and $meta_data[ 'version' ] ) {
+				$plugin_version = $meta_data[ 'version' ];
+			}
+		}
+		
+		/* Work out the new version number if needed */
+		if ( isset( $options[ 'version-update' ] ) and $options[ 'version-update' ] )
+		{
+			$version_parts = explode( '.', $plugin_version );
+			switch( $options[ 'version-update' ] )
+			{
+				case 'major':
+					$version_parts[0]++;
+					$plugin_version = $version_parts[0] . '.0.0';
+					break;
+					
+				case 'minor':
+					$version_parts[1]++;
+					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.0';
+					break;
+					
+				case 'point':
+					$version_parts[2]++;
+					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2];
+					break;
+				
+				case 'patch':
+					
+					$plugin_version = $version_parts[0] . '.' . $version_parts[1] . '.' . $version_parts[2] . '.' . ( isset( $version_parts[3] ) ? $version_parts[3] + 1 : 1 );
+					break;
+				
+				default:
+					$plugin_version = $options[ 'version-update' ];
+			}
+		}
+		
+		/**
+		 * Create build meta data
+		 */
+		if ( ! isset( $options[ 'skip_db_dump' ] ) or ! $options[ 'skip_db_dump' ] ) 
+		{
+			$build_meta = array();
+			$dbHelper = \Modern\Wordpress\DbHelper::instance();
+			
+			/* Update table schema data file */
+			if ( isset( $meta_data[ 'tables' ] ) and $meta_data[ 'tables' ] )
+			{
+				$build_meta['tables'] = array();
+				
+				$tables = explode( ',', $meta_data[ 'tables' ] );
+				foreach( $tables as $table )
+				{
+					// trim spaces from table names
+					$table = trim( $table );
+					
+					try {
+						$build_meta[ 'tables' ][] = $dbHelper->getTableDefinition( $table, FALSE );
+					}
+					catch( \ErrorException $e ) { }
+				}
+			}
+		
+			/* Update table schema data file */
+			if ( isset( $meta_data[ 'ms_tables' ] ) and $meta_data[ 'ms_tables' ] )
+			{
+				$build_meta['ms_tables'] = array();
+				
+				$tables = explode( ',', $meta_data[ 'ms_tables' ] );
+				foreach( $tables as $table )
+				{
+					// trim spaces from table names
+					$table = trim( $table );
+					
+					try {
+						$build_meta[ 'ms_tables' ][] = $dbHelper->getTableDefinition( $table, FALSE );
+					}
+					catch( \ErrorException $e ) { }
+				}
+			}
+			
+			/* Save the build meta */
+			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/build-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $build_meta, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
+		}
+		
+		$bundle = ( ( isset( $options['bundle'] ) and $options['bundle'] ) or ( ! isset( $options[ 'nobundle' ] ) or ! $options[ 'nobundle' ] ) );
+		
+		// Bundle the modern wordpress framework in with the plugin
+		if ( $slug !== 'modern-framework' and $bundle )
+		{
+			static::rmdir( WP_PLUGIN_DIR . '/' . $slug . '/framework' );
+			static::rmdir( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework' );
+			
+			try {
+				$bundle_filename = \Modern\Wordpress\Plugin::createBuild( 'modern-framework', array( 'nobundle' => true, 'skip_db_dump' => true ) );
+			}
+			catch( \Exception $e ) {
+				$message = $e->getMessage();
+				throw new \ErrorException( $message );
+			}
+			
+			$framework_zip = new \ZipArchive();
+			$framework_zip->open( $bundle_filename );
+			$framework_zip->extractTo( WP_PLUGIN_DIR . '/' . $slug . '/' );
+			$framework_zip->close();
+			
+			/* Prevent bundled framework from being detected as another plugin by installer skin */
+			$contents = file_get_contents( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework/plugin.php' );
+			$contents = str_replace( '* Plugin Name:', '* Plugin:', $contents );
+			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework/plugin.php', $contents );
+			
+			rename( WP_PLUGIN_DIR . '/' . $slug . '/modern-framework', WP_PLUGIN_DIR . '/' . $slug . '/framework' );
+		}
+		
+		/**
+		 * Create the ZIP Archive
+		 */
+		{
+			$zip_filename = WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip';
+			$zip = new \ZipArchive();
+			if ( $zip->open( $zip_filename, \ZipArchive::CREATE | \ZipArchive::OVERWRITE ) !== TRUE ) 
+			{
+				throw new \ErrorException( 'Cannot create the archive file: ' . $zip_filename );
+			}
+			
+			/* Recursively build files into the archive */
+			$basedir = str_replace( '\\', '/', WP_PLUGIN_DIR . '/' . $slug . '/' );
+			$addToArchive = function( $source ) use ( $slug, $ignorelist, $basedir, $zip, &$addToArchive, $plugin_version )
+			{
+				$relativename = str_replace( $basedir, '', str_replace( '\\', '/', $source ) );
+				
+				// Check against ignore list
+				foreach( $ignorelist as $pattern ) {
+					if ( fnmatch( $pattern, $relativename ) ) {
+						return;
+					}
+				}
+				
+				// Add file to zip
+				if ( is_file( $source ) ) 
+				{
+					/* Replace tokens in source files */
+					$pathinfo = pathinfo( $source );
+					if ( isset( $pathinfo[ 'extension' ] ) and in_array( $pathinfo[ 'extension' ], array( 'php', 'js', 'json', 'css' ) ) and substr( $relativename, 0, 7 ) !== 'vendor/' )
+					{
+						$source_contents = file_get_contents( $source );
+						$updated_contents = strtr( $source_contents, array( '{' . 'build_version' . '}' => $plugin_version ) );
+						
+						if ( $relativename == 'plugin.php' )
+						{
+							$docComments = array_filter(
+								token_get_all( $updated_contents ), function( $token ) {
+									return $token[0] == T_DOC_COMMENT;
+								}
+							);
+							
+							/* Plugin Header */
+							$headerDoc = array_shift( $docComments );
+							$newHeaderDoc = preg_replace( '/Version:(.*?)\n/', "Version: " . $plugin_version . "\n", $headerDoc );
+							$updated_contents = str_replace( $headerDoc, $newHeaderDoc, $updated_contents );
+						}
+						
+						if ( $updated_contents != $source_contents )
+						{
+							file_put_contents( $source, $updated_contents );
+						}
+					}
+					
+					$zip->addFile( $source, $slug . '/' . $relativename );
+					return;
+				}
+
+				// Loop through the folder
+				$dir = dir( $source );
+				while ( false !== $entry = $dir->read() ) 
+				{
+					// Skip pointers & special dirs
+					if ( in_array( $entry, array( '.', '..' ) ) )
+					{
+						continue;
+					}
+
+					$addToArchive( "$source/$entry" );
+				}
+
+				// Clean up
+				$dir->close();
+			};
+			
+			/* Save new plugin meta data before building package */
+			$meta_data[ 'version' ] = $plugin_version;
+			file_put_contents( WP_PLUGIN_DIR . '/' . $slug . '/data/plugin-meta.php', "<?php\nreturn <<<'JSON'\n" . json_encode( $meta_data, JSON_PRETTY_PRINT ) . "\nJSON;\n" );
+		
+			/* Build the release package */
+			$addToArchive( WP_PLUGIN_DIR . '/' . $slug );
+			$zip->close();
+			
+			static::rmdir( WP_PLUGIN_DIR . '/' . $slug . '/framework' );
+
+			/* Copy to latest dev.zip */
+			if ( isset( $options[ 'dev' ] ) and $options[ 'dev' ] )
+			{
+				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-dev.zip' );
+			}
+			
+			/* Copy to latest stable.zip */
+			if ( isset( $options[ 'stable' ] ) and $options[ 'stable' ] )
+			{
+				copy( WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-' . $plugin_version . '.zip', WP_PLUGIN_DIR . '/' . $slug . '/builds/' . $slug . '-stable.zip' );
+			}
+			
+			return $zip_filename;
+		}
+	}
+	
+	/**
+	 * Delete a directory and all files in it
+	 *
+	 * @param	string		$dir			The directory to delete
+	 * @return	void
+	 */
+	protected static function rmdir( $dir )
+	{
+		if ( ! is_dir( $dir ) )
+		{
+			return;
+		}
+		
+		$_dir = dir( $dir );
+		while ( false !== $file = $_dir->read() ) 
+		{
+			// Skip pointers & special dirs
+			if ( in_array( $file, array( '.', '..' ) ) )
+			{
+				continue;
+			}
+
+			if( is_dir( $dir . '/' . $file ) ) 
+			{
+				static::rmdir( $dir . '/' . $file ); 
+			}
+			else 
+			{
+				unlink( $dir . '/' . $file );
+			}
+			
+		}
+		$_dir->close();
+		
+		rmdir( $dir ); 
+	}	
 }

@@ -29,6 +29,7 @@ $framework = Framework::instance();
 
 if ( isset( $_POST['mwp_clear_caches'] ) and $_POST['mwp_clear_caches'] ) 
 {
+	update_site_option( 'mwp_cache_latest', time() );
 	$framework->clearAnnotationsCache();
 	$notices[] = __( "Temporary caches have been cleared.", 'modern-framework' );
 }
@@ -41,6 +42,8 @@ if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 	}
 	$notices[] = __( "Database table schemas have been brought up to date.", 'modern-framework' );
 }
+
+$failed_task_count = Task::countTasks( null, null, 'failed' );
 
 ?>
 
@@ -55,17 +58,22 @@ if ( isset( $_POST['mwp_update_schema'] ) and $_POST['mwp_update_schema'] )
 		<input class="button" value="Clear Caches" type="submit" style="width: 100%;"/>
 	</form>
 
+	<?php if ( ! $framework->isDev() ) : ?>
 	<form method="post">
 		<input name="mwp_update_schema" type="hidden" value="1" />
 		<input class="button" value="Update DB Schema" type="submit" style="width: 100%;" />
 	</form>
+	<?php endif; ?>
 
 </div>
 
-<a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countWhere( 'task_completed=0' ) ?>
+<a href="<?php echo admin_url( 'tools.php?page=mwp-tasks' ) ?>">Tasks Pending</a>: <?php echo Task::countTasks() ?>
+<?php if ( $failed_task_count ) : ?>
+  <br><a style="color: red" href="<?php echo admin_url( 'tools.php?page=mwp-tasks&status=failed' ) ?>">Tasks Failed</a>: <?php echo Task::countTasks( null, null, 'failed' ) ?>
+<?php endif ?>
 
 <div style="clear:both; padding-top: 10px;">
-	<?php if ( defined( 'MODERN_WORDPRESS_DEV' ) and MODERN_WORDPRESS_DEV ) : ?>
+	<?php if ( $framework->isDev() ) : ?>
 		<br><strong>Development Mode: </strong><span style="color: green">On</span>
 	<?php endif; ?>
 	<?php if ( ! $framework->getAnnotationReader() instanceof \Doctrine\Common\Annotations\FileCacheReader ) : ?>
