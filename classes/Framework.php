@@ -433,11 +433,12 @@ class Framework extends Plugin
 		$db = $this->db();
 		$begin_time = time();
 		$max_execution_time = ini_get( 'max_execution_time' );
+		$max_task_runners = $this->getSetting( 'mwp_task_max_runners' ) ?: 4;
 		
 		/* Attempt to increase execution time if it is set to less than 60 seconds */
-		if ( $max_execution_time < 60 ) {
-			if ( set_time_limit( 60 ) ) {
-				$max_execution_time = 60;
+		if ( $max_execution_time < ( 60 * $max_task_runners ) ) {
+			if ( set_time_limit( ( 60 * $max_task_runners ) ) ) {
+				$max_execution_time = ( 60 * $max_task_runners );
 			}
 		}
 		
