@@ -60,11 +60,14 @@ class Symfony extends Singleton
 			$validatorExtension = new \Symfony\Component\Form\Extension\Validator\ValidatorExtension( $validator );
 			
 			$httpFoundationExtension = new \Symfony\Component\Form\Extension\HttpFoundation\HttpFoundationExtension();
+			
+			$formTypeExtension = new \Modern\Wordpress\Helpers\Form\SymfonyForm\FormTypeExtension();
 
 			$formFactory = \Symfony\Component\Form\Forms::createFormFactoryBuilder()
 				->addExtension( $csrfExtension )
 				->addExtension( $validatorExtension )
 				->addExtension( $httpFoundationExtension )
+				->addTypeExtension( $formTypeExtension )
 				->getFormFactory();
 				
 			$this->setFormFactory( $formFactory );

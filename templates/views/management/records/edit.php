@@ -22,6 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<div class="wrap mwp-bootstrap">
+<div class="wrap">
 	<?php echo $form->render() ?>
 </div>

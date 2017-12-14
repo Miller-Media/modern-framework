@@ -204,8 +204,7 @@ class SymfonyForm extends Form
 	 */
 	public function getFormBuilder()
 	{
-		if ( ! isset( $this->formBuilder ) )
-		{
+		if ( ! isset( $this->formBuilder ) ) {
 			$this->setFormBuilder( Symfony::instance()->getFormFactory()->createNamedBuilder( $this->name, 'Symfony\Component\Form\Extension\Core\Type\FormType', $this->data, $this->options ) );
 		}
 		
@@ -282,39 +281,42 @@ class SymfonyForm extends Form
 	/**
 	 * @var	array		Form field class shorthand map
 	 */
-	public $formFieldClasses = array(
-		'text' => '',
-		'textarea' => '',
-		'email' => '',
-		'integer' => '',
-		'money' => '',
-		'number' => '',
-		'password' => '',
-		'percent' => '',
-		'search' => '',
-		'url' => '',
-		'range' => '',
-		'choice' => '',
-		'entity' => '',
-		'country' => '',
-		'language' => '',
-		'locale' => '',
-		'timezone' => '',
-		'currency' => '',
-		'date' => '',
-		'dateinterval' => '',
-		'datetime' => '',
-		'time' => '',
-		'birthday' => '',
-		'checkbox' => '',
-		'file' => '',
-		'radio' => '',
-		'collection' => '',
-		'repeated' => '',
-		'hidden' => '',
-		'button' => '',
-		'reset' => '',
-		'submit' => '',
+	public static $formFieldClasses = array(
+		'text'         => 'Symfony\Component\Form\Extension\Core\Type\TextType',
+		'textarea'     => 'Symfony\Component\Form\Extension\Core\Type\TextareaType',
+		'email'        => 'Symfony\Component\Form\Extension\Core\Type\EmailType',
+		'integer'      => 'Symfony\Component\Form\Extension\Core\Type\IntegerType',
+		'money'        => 'Symfony\Component\Form\Extension\Core\Type\MoneyType',
+		'number'       => 'Symfony\Component\Form\Extension\Core\Type\NumberType',
+		'password'     => 'Symfony\Component\Form\Extension\Core\Type\PasswordType',
+		'percent'      => 'Symfony\Component\Form\Extension\Core\Type\PercentType',
+		'search'       => 'Symfony\Component\Form\Extension\Core\Type\SearchType',
+		'url'          => 'Symfony\Component\Form\Extension\Core\Type\UrlType',
+		'range'        => 'Symfony\Component\Form\Extension\Core\Type\RangeType',
+		'choice'       => 'Symfony\Component\Form\Extension\Core\Type\ChoiceType',
+		'entity'       => 'Symfony\Component\Form\Extension\Core\Type\EntityType',
+		'country'      => 'Symfony\Component\Form\Extension\Core\Type\CountryType',
+		'language'     => 'Symfony\Component\Form\Extension\Core\Type\LanguageType',
+		'locale'       => 'Symfony\Component\Form\Extension\Core\Type\LocaleType',
+		'timezone'     => 'Symfony\Component\Form\Extension\Core\Type\TimezoneType',
+		'currency'     => 'Symfony\Component\Form\Extension\Core\Type\CurrencyType',
+		'date'         => 'Symfony\Component\Form\Extension\Core\Type\DateType',
+		'dateinterval' => 'Symfony\Component\Form\Extension\Core\Type\DateintervalType',
+		'datetime'     => 'Symfony\Component\Form\Extension\Core\Type\DatetimeType',
+		'time'         => 'Symfony\Component\Form\Extension\Core\Type\TimeType',
+		'birthday'     => 'Symfony\Component\Form\Extension\Core\Type\BirthdayType',
+		'checkbox'     => 'Symfony\Component\Form\Extension\Core\Type\CheckboxType',
+		'file'         => 'Symfony\Component\Form\Extension\Core\Type\FileType',
+		'radio'        => 'Symfony\Component\Form\Extension\Core\Type\RadioType',
+		'collection'   => 'Symfony\Component\Form\Extension\Core\Type\CollectionType',
+		'repeated'     => 'Symfony\Component\Form\Extension\Core\Type\RepeatedType',
+		'hidden'       => 'Symfony\Component\Form\Extension\Core\Type\HiddenType',
+		'button'       => 'Symfony\Component\Form\Extension\Core\Type\ButtonType',
+		'reset'        => 'Symfony\Component\Form\Extension\Core\Type\ResetType',
+		'submit'       => 'Symfony\Component\Form\Extension\Core\Type\SubmitType',
+		'fieldset'     => 'Modern\Wordpress\Helpers\Form\SymfonyForm\FieldsetType',
+		'tab'          => 'Modern\Wordpress\Helpers\Form\SymfonyForm\TabType',
+		'html'         => 'Modern\Wordpress\Helpers\Form\SymfonyForm\HtmlType',
 	);
 	
 	/**
@@ -325,37 +327,49 @@ class SymfonyForm extends Form
 	/**
 	 * Add a field to the form
 	 *
-	 * @param	array		$field			The piklist field definition
+	 * @param	string		$name			The field name
+	 * @param	string		$type			The field type (registered shorthand or a class name)
+	 * @param	array		$options		The field options
+	 * @param	string		$parent_name	The parent field name to add this field to
 	 * @return	this						Chainable
 	 */
-	public function addField( $name, $type='text', $options=array() )
-	{	
-		$options = array_merge( array( 'translation_domain' => $this->getPlugin()->pluginSlug() ), $options );
-		
-		if ( ! isset( $options['attr'] ) ) {
-			$options['attr'] = array();
+	public function addField( $name, $type='text', $options=array(), $parent_name=NULL )
+	{
+		$builder = $this->getFormBuilder();
+		if ( $parent_name ) {
+			try {
+				$builder = $builder->get( $parent_name );
+			} catch( \InvalidArgumentException $e ) { }
 		}
 		
-		$options['attr']['class'] = ( isset( $options['attr']['class'] ) ? $options['attr']['class'] . ' ' : '' ) . 'form-control';
-		
-		
+		$options = array_merge( array( 'translation_domain' => $this->getPlugin()->pluginSlug() ), $options );	
 		$field = $this->applyFilters( 'field', array( 'name' => $name, 'type' => $type, 'options' => $options ) );
 		
-		if ( empty( $field ) )
-		{
+		if ( empty( $field ) ) {
 			return $this;
 		}
 		
-		/* Translate a shorthand type to its concrete class implementation */
-		if ( $field[ 'type' ] and ! class_exists( $field[ 'type' ] ) and array_key_exists( $field[ 'type' ], $this->formFieldClasses ) )
-		{
-			$field[ 'type' ] = $this->formFieldClasses[ $form[ 'type' ] ] ?: 'Symfony\Component\Form\Extension\Core\Type\\' . ucfirst( $field[ 'type' ] ) . 'Type';
-		}
+		$field[ 'type' ] = static::getFieldClass( $field['type'] );
 		
-		$this->getFormBuilder()->add( $field[ 'name' ], $field[ 'type' ], $field[ 'options' ] );
+		$builder->add( $field[ 'name' ], $field[ 'type' ], $field[ 'options' ] );
 		$this->fields[ $field[ 'name' ] ] = $field;
 		
 		return $this;
+	}
+	
+	/**
+	 * Get a field type class
+	 *
+	 * @param	string			$type			Either a class or a shorthand key to lookup in the types array
+	 * @return	string
+	 */
+	public static function getFieldClass( $type )
+	{
+		if ( isset( static::$formFieldClasses[ $type ] ) ) {
+			return static::$formFieldClasses[ $type ];
+		}
+		
+		return apply_filters( 'mwp_form_field_class', $type );
 	}
 	
 	/**
@@ -492,7 +506,7 @@ class SymfonyForm extends Form
 			$engine->addHelpers( array( $this->renderHelper, $this->translatorHelper ) );
 		}
 		
-		return $this->renderHelper->form( $template_vars[ 'form' ], $template_vars );
+		return $this->getPlugin()->getTemplateContent( 'form/symfony/wrapper', array( 'form' => $this, 'form_html' => $this->renderHelper->form( $template_vars[ 'form' ], $template_vars ) ) );
 	}
 	
 }
