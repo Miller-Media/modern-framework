@@ -331,6 +331,14 @@ class SymfonyForm extends Form
 	public function addField( $name, $type='text', $options=array() )
 	{	
 		$options = array_merge( array( 'translation_domain' => $this->getPlugin()->pluginSlug() ), $options );
+		
+		if ( ! isset( $options['attr'] ) ) {
+			$options['attr'] = array();
+		}
+		
+		$options['attr']['class'] = ( isset( $options['attr']['class'] ) ? $options['attr']['class'] . ' ' : '' ) . 'form-control';
+		
+		
 		$field = $this->applyFilters( 'field', array( 'name' => $name, 'type' => $type, 'options' => $options ) );
 		
 		if ( empty( $field ) )
@@ -473,7 +481,7 @@ class SymfonyForm extends Form
 		$this->renderHelper = new \Modern\Wordpress\Symfony\FormRenderHelper( 
 			new \Symfony\Component\Form\FormRenderer( 
 				new \Symfony\Component\Form\Extension\Templating\TemplatingRendererEngine(
-					$this->getTemplateEngine(), array_merge( $this->themes, array( 'form/generic' ) )
+					$this->getTemplateEngine(), array_merge( $this->themes, array( 'form/symfony' ) )
 				)
 			)
 		);

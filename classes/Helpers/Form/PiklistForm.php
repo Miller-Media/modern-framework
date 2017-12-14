@@ -8,7 +8,7 @@
  * @author:   Kevin Carwile
  * @since:    1.1.4
  */
-namespace Modern\Wordpress\Helper;
+namespace Modern\Wordpress\Helpers\Form;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
@@ -49,7 +49,7 @@ class PiklistForm extends Form
 	/**
 	 * @var	string		Output template
 	 */
-	public $template = 'form/form';
+	public $template = 'form/piklist/form';
 	
 	/**
 	 * Set template
@@ -85,6 +85,11 @@ class PiklistForm extends Form
 	}
 	
 	/**
+	 * @var array
+	 */
+	public $defaultData = array();
+	
+	/**
 	 * Constructor
 	 *
 	 * @param	\Modern\Wordpress\Plugin	$plugin			The plugin to associate this class with, or NULL to auto-associate
@@ -95,10 +100,8 @@ class PiklistForm extends Form
 		$this->name = $name;
 		$this->plugin = $plugin ?: \Modern\Wordpress\Framework::instance();
 		
-		if ( $data ) {
-			foreach( $data as $field ) {
-				$this->addField
-			}
+		if ( isset( $data ) ) {
+			$this->defaultData = $data;
 		}
 	}
 	
@@ -142,14 +145,15 @@ class PiklistForm extends Form
 	 * @param	array		$field			The field settings
 	 * @return	this						Chainable
 	 */
-	public function addField( $name, $type='text', $field=array() );
+	public function addField( $name, $type='text', $field=array() )
 	{
 		if ( ! class_exists( 'Piklist' ) )
 		{
 			return $this;
 		}
 		
-		$field['field'] = $type;
+		$field['type'] = $type;
+		$field['field'] = $name;
 		
 		if ( ! isset( $field[ 'field' ] ) or ! $field[ 'field' ] ) {
 			return $this;
@@ -339,7 +343,7 @@ class PiklistForm extends Form
 		
 		foreach( $this->fields as $field_name => $field )
 		{
-			$form_rows[ $field_name ] = $this->getPlugin()->getTemplateContent( 'form/form-row', array( 
+			$form_rows[ $field_name ] = $this->getPlugin()->getTemplateContent( 'form/piklist/form-row', array( 
 				'field_name' => $field_name, 
 				'field' => $field, 
 				'field_html' => \Piklist_Form::render_field( $field, true ) 

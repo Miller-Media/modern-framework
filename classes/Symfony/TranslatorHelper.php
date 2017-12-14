@@ -6,7 +6,7 @@
  *
  * @package:  Modern Framework for Wordpress
  * @author:   Kevin Carwile
- * @since:    {build_version}
+ * @since:    1.3.12
  */
 namespace Modern\Wordpress\Symfony;
 

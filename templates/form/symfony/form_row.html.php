@@ -14,4 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 ?>
-<?php echo $view['form']->block($form, 'form_widget_simple', array('type' => isset($type) ? $type : 'email')) ?>
+<div class="form-row form-group">
+    <?php echo $view['form']->label($form) ?>
+    <?php echo $view['form']->widget($form) ?>
+    <?php echo $view['form']->errors($form) ?>
+</div>

@@ -387,12 +387,54 @@ abstract class ActiveRecord
 	
 	/**
 	 * Create a table for viewing active records
+	 *
+	 * @return	Modern\Wordpress\Helpers\ActiveRecordTable
 	 */
 	public static function createDisplayTable()
 	{
 		$table = new \Modern\Wordpress\Helpers\ActiveRecordTable;
 		$table->activeRecordClass = get_called_class();
 		return $table;
+	}
+	
+	/**
+	 * Build an editing form
+	 *
+	 * @param	ActiveRecord		$record					The record to edit
+	 * @return	Modern\Wordpress\Helpers\Form
+	 */
+	public static function getForm( $record, $formOptions=array(), $formImplementation='symfony' )
+	{
+		$name = strtolower( str_replace( '\\', '_', get_called_class() ) ) . '_form';
+		$form = Framework::instance()->createForm( $name, $record->dataArray() );
+		
+		return $form;
+	}
+	
+	/**
+	 * Process submitted form values 
+	 *
+	 * @param	array			$values				Submitted form values
+	 * @return	void
+	 */
+	public function processForm( $values )
+	{
+		$record_properties = array();
+		
+		foreach( static::$columns as $col => $opts ) 
+		{
+			$col_key = is_array( $opts ) ? $col : $opts;
+			
+			if ( $col_key !== static::$key ) {
+				$record_properties[] = $col_key;
+			}
+		}
+		
+		foreach( $values as $key => $value ) {
+			if ( in_array( $key, $record_properties ) ) {
+				$this->$key = $value;
+			}
+		}
 	}
 	
 	/**

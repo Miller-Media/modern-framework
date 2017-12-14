@@ -29,5 +29,9 @@ function mwp_add_action( $action, $callback, $priority=10, $args=1 )
 		'args'      => $args,
 	) );
 	
+	if ( $priority == -10 ) {
+		print_r( $action_params );
+		exit;
+	}
 	return add_action( $action_params[ 'action' ], $action_params[ 'callback' ], $action_params[ 'priority' ], $action_params[ 'args' ] );
 }
