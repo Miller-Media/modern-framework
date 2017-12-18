@@ -314,16 +314,20 @@ class SymfonyForm extends Form
 		'button'       => 'Symfony\Component\Form\Extension\Core\Type\ButtonType',
 		'reset'        => 'Symfony\Component\Form\Extension\Core\Type\ResetType',
 		'submit'       => 'Symfony\Component\Form\Extension\Core\Type\SubmitType',
-		'fieldset'     => 'Modern\Wordpress\Helpers\Form\SymfonyForm\FieldsetType',
+		'fieldgroup'   => 'Modern\Wordpress\Helpers\Form\SymfonyForm\FieldgroupType',
 		'tab'          => 'Modern\Wordpress\Helpers\Form\SymfonyForm\TabType',
-		'html'         => 'Modern\Wordpress\Helpers\Form\SymfonyForm\HtmlType',
 	);
 	
 	/**
 	 * @var	array		Added fields
 	 */
-	protected $fields = array();
-
+	public $fields = array();
+	
+	/**
+	 * @var	array
+	 */
+	public $formRefs = array();
+	
 	/**
 	 * Add a field to the form
 	 *
@@ -333,26 +337,54 @@ class SymfonyForm extends Form
 	 * @param	string		$parent_name	The parent field name to add this field to
 	 * @return	this						Chainable
 	 */
-	public function addField( $name, $type='text', $options=array(), $parent_name=NULL )
+	public function addField( $name, $type='text', $options=array(), $parent_name='' )
 	{
-		$builder = $this->getFormBuilder();
-		if ( $parent_name ) {
-			try {
-				$builder = $builder->get( $parent_name );
-			} catch( \InvalidArgumentException $e ) { }
-		}
-		
+		$builder = $this->getFormBuilder();	
 		$options = array_merge( array( 'translation_domain' => $this->getPlugin()->pluginSlug() ), $options );	
-		$field = $this->applyFilters( 'field', array( 'name' => $name, 'type' => $type, 'options' => $options ) );
+		
+		$field = $this->applyFilters( 'field', array( 'name' => $name, 'type' => $type, 'options' => $options, 'parent_name' => $parent_name ) );
+		
+		$wrap_bootstrap = isset( $field['options']['wrap_bootstrap'] ) ? $field['options']['wrap_bootstrap'] : in_array( $field['type'], array(
+			'text', 'textarea', 'email', 'integer', 'money', 'number', 'password', 'url', 'choice', 'date', 'checkbox', 'radio', 'file'
+		) );
+		unset( $field['options']['wrap_bootstrap'] );
+		
+		if ( $wrap_bootstrap ) {
+			$field['options']['row_attr']['class'] = ( isset( $field['options']['row_attr']['class'] ) ? $field['options']['row_attr']['class'] . ' ' : '' ) . 'form-group';
+			$field['options']['label_attr']['class'] = ( isset( $field['options']['label_attr']['class'] ) ? $field['options']['label_attr']['class'] . ' ' : '' ) . 'col-lg-1 col-md-3 col-sm-4 form-label';
+			$field['options']['attr']['class'] = ( isset( $field['options']['attr']['class'] ) ? $field['options']['attr']['class'] . ' ' : '' ) . 'form-control';
+			$field['options']['row_attr']['class'] = ( isset( $field['options']['row_attr']['class'] ) ? $field['options']['row_attr']['class'] . ' ' : '' ) . 'form-group';
+			$field['options']['field_prefix'] = '<div class="col-lg-6 col-md-7 col-sm-8">' . ( isset( $field['options']['field_prefix'] ) ? $field['options']['field_prefix'] : '' );
+			$field['options']['field_suffix'] = ( isset( $field['options']['field_suffix'] ) ? $field['options']['field_suffix'] : '' ) . '</div>';			
+		}
 		
 		if ( empty( $field ) ) {
 			return $this;
 		}
 		
-		$field[ 'type' ] = static::getFieldClass( $field['type'] );
+		/* Adding a child element requires us to get the reference to the parent element */
+		if ( $field['parent_name'] ) {
+			if ( array_key_exists( $field['parent_name'], $this->formRefs ) ) {				
+				$builder = $this->formRefs[ $field['parent_name'] ];
+			}
+		}
 		
-		$builder->add( $field[ 'name' ], $field[ 'type' ], $field[ 'options' ] );
-		$this->fields[ $field[ 'name' ] ] = $field;
+		/* Adding a fieldgroup as a tab requires an intermediate 'tab' form element to exist */
+		if ( $field['type'] == 'fieldgroup' and ( isset( $field['options']['type'] ) and $field['options']['type'] == 'tab' ) ) 
+		{
+			try {
+				$builder = $builder->get( $field['parent_name'] . '_tabs' );
+			} catch ( \InvalidArgumentException $e ) {
+				$builder->add( $field['parent_name'] . '_tabs', static::getFieldClass( 'tab' ), array( 'attr' => array( 'class' => 'mwp-form-tabs' ) ) );
+				$builder = $builder->get( $field['parent_name'] . '_tabs' );
+			}			
+		}
+		
+		$field['type'] = static::getFieldClass( $field['type'] );
+		
+		$builder->add( $field['name'], $field['type'], $field['options'] );
+		$this->fields[ $field['name'] ] = $field;
+		$this->formRefs[ $field['name'] ] = $builder->get( $field['name'] );
 		
 		return $this;
 	}

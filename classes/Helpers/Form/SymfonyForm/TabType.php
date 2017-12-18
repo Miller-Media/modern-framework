@@ -33,11 +33,8 @@ class TabType extends AbstractType
         $resolver
             ->setDefaults([
                 'inherit_data' => true,
-                'options' => array(),
-                'fields' => array(),
                 'label' => false,
-            ])
-            ->addAllowedTypes('fields', ['array', 'callable']);
+            ]);
     }
 	
     /**
@@ -46,15 +43,7 @@ class TabType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        if (!empty($options['fields'])) {
-            if (is_callable($options['fields'])) {
-                $options['fields']($builder);
-            } elseif (is_array($options['fields'])) {
-                foreach ($options['fields'] as $field) {
-                    $builder->add($field['name'], $field['type'], $field['attr']);
-                }
-            }
-        }
+		
     }
 	
     /**
@@ -64,9 +53,7 @@ class TabType extends AbstractType
      */
     public function buildView(FormView $view, FormInterface $form, array $options)
     {
-        if (false !== $options['legend']) {
-            $view->vars['legend'] = $options['legend'];
-        }
+        
     }
 	
     /**

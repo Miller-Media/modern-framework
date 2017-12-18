@@ -340,15 +340,25 @@ class Framework extends Plugin
 	public function enqueueScripts()
 	{
 		$location = is_admin() ? 'admin' : 'front';
+		$use_bootstrap_js = $this->getSetting( "mwp_bootstrap_disable_{$location}_js" ) ? false : true;
+		$use_bootstrap_css = $this->getSetting( "mwp_bootstrap_disable_{$location}_css" ) ? false : true;
 		
 		wp_register_script( 'knockout', $this->fileUrl( 'assets/js/knockout.min.js' ) );
-		wp_register_script( 'knockback', $this->fileUrl( 'assets/js/knockback.min.js' ), array( 'underscore', 'backbone', 'knockout' ) );
+		wp_register_script( 'knockback', $this->fileUrl( 'assets/js/knockback.min.js' ), array( 'underscore', 'backbone', 'knockout' ) );		
 		
-		$bootstrap_js = $this->getSetting( "mwp_bootstrap_disable_{$location}_js" ) ? 'assets/js/mwp.bootstrap.disabled.js' : 'assets/js/mwp.bootstrap.min.js';
-		wp_register_script( 'mwp-bootstrap', $this->fileUrl( $bootstrap_js, array( 'jquery' ) ) );
+		$bootstrap_js = $use_bootstrap_js ? 'assets/js/mwp.bootstrap.min.js' : 'assets/js/mwp.bootstrap.disabled.js';
+		wp_register_script( 'mwp-bootstrap-js', $this->fileUrl( $bootstrap_js, array( 'jquery' ) ) );
 
-		$bootstrap_css = $this->getSetting( "mwp_bootstrap_disable_{$location}_css" ) ? 'assets/css/mwp-bootstrap.disabled.css' : 'assets/css/mwp-bootstrap.min.css';
+		$bootstrap_css = $use_bootstrap_css ? 'assets/css/mwp-bootstrap.min.css' : 'assets/css/mwp-bootstrap.disabled.css';
 		wp_register_style( 'mwp-bootstrap', $this->fileUrl( $bootstrap_css ) );
+		
+		if ( $use_bootstrap_js ) {
+			wp_enqueue_script( 'mwp-bootstrap-js' );
+		}
+		
+		if ( $use_bootstrap_css ) {
+			wp_enqueue_style( 'mwp-bootstrap' );
+		}
 		
 		wp_register_script( 'mwp-settings', $this->fileUrl( 'assets/js/mwp.settings.js' ), array( 'mwp', 'knockback' ) );
 		wp_register_script( 'mwp', $this->fileUrl( 'assets/js/mwp.framework.js' ), array( 'jquery', 'underscore', 'backbone', 'knockout' ) );

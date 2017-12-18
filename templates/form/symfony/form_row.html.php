@@ -14,18 +14,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 ?>
-<?php if ( isset( $row_prefix ) ) { echo $prefix; } ?>
-<div <?php if ( isset( $row_attr ) ) { foreach ($row_attr as $k => $v) { ?>
-<?php if ($v === true): ?>
-<?php printf('%s="%s" ', $view->escape($k), $view->escape($k)) ?>
-<?php elseif ($v !== false): ?>
-<?php printf('%s="%s" ', $view->escape($k), $view->escape($v)) ?>
-<?php endif ?>
-<?php } } ?>>
-	<?php if ( isset( $prefix ) ) { echo $prefix; } ?>
+<?php echo $row_prefix ?>
+<div <?php 
+	foreach ($row_attr as $k => $v) { 
+		if ($v === true) {
+			printf('%s="%s" ', $view->escape($k), $view->escape($k));
+		} elseif ($v !== false){
+			printf('%s="%s" ', $view->escape($k), $view->escape($v));
+		} 
+	} ?>>
+	<?php echo $prefix; ?>
     <?php echo $view['form']->label($form) ?>
+	<?php echo $field_prefix ?>
     <?php echo $view['form']->widget($form) ?>
     <?php echo $view['form']->errors($form) ?>
-	<?php if ( isset( $suffix ) ) { echo $suffix; } ?>
+	<?php echo $field_suffix ?>
+	<?php echo $suffix ?>
 </div>
-<?php if ( isset( $row_suffix ) ) { echo $suffix; } ?>
+<?php echo $row_suffix ?>

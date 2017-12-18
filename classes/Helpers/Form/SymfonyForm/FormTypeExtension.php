@@ -48,6 +48,8 @@ class FormTypeExtension extends AbstractTypeExtension
             'suffix' => '',
 			'row_prefix' => '',
 			'row_suffix' => '',
+			'field_prefix' => '',
+			'field_suffix' => '',
         ));
     }
 
@@ -60,8 +62,12 @@ class FormTypeExtension extends AbstractTypeExtension
      */
     public function buildView( FormView $view, FormInterface $form, array $options )
     {
-        $view->vars['row_attr'] = $options['row_attr'];
-		$view->vars['prefix'] = $options['prefix'];
-		$view->vars['suffix'] = $options['suffix'];
+        $view->vars['row_attr']     = $options['row_attr'];
+		$view->vars['prefix']       = $options['prefix'];
+		$view->vars['suffix']       = $options['suffix'];
+		$view->vars['row_prefix']   = $options['row_prefix'];
+		$view->vars['row_suffix']   = $options['row_suffix'];
+		$view->vars['field_prefix'] = $options['field_prefix'];
+		$view->vars['field_suffix'] = $options['field_suffix'];
     }
 }

@@ -19,11 +19,12 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Modern\Wordpress\Helpers\Form\SymfonyForm;
 
 /**
- * HtmlType Class
+ * FieldgroupType Class
  */
-class HtmlType extends AbstractType
+class FieldgroupType extends AbstractType
 {
     /**
      * @param OptionsResolverInterface $resolver
@@ -32,8 +33,11 @@ class HtmlType extends AbstractType
     {
         $resolver
             ->setDefaults([
-                'html' => '',
-				'label' => false,
+				'type' => '',
+                'title' => '',
+                'inherit_data' => true,
+                'options' => array(),
+                'label' => false,
             ]);
     }
 	
@@ -43,7 +47,7 @@ class HtmlType extends AbstractType
      */
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        
+
     }
 	
     /**
@@ -53,7 +57,8 @@ class HtmlType extends AbstractType
      */
     public function buildView(FormView $view, FormInterface $form, array $options)
     {
-        
+		$view->vars['title'] = $options['title'];
+		$view->vars['type'] = $options['type'];
     }
 	
     /**
@@ -61,6 +66,6 @@ class HtmlType extends AbstractType
      */
     public function getName()
     {
-        return 'html';
+        return 'fieldgroup';
     }
 }

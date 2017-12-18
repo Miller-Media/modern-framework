@@ -14,6 +14,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 ?>
-<div class="mwp-bootstrap">
+<style>
+  .mwp-bootstrap-form {
+	padding: 25px 10px;
+  }
+  .mwp-bootstrap-form .tab-content {
+	padding: 15px;
+  }
+  .mwp-bootstrap-form .mwp-form-tabs {
+	margin-bottom: 20px;
+	margin-top: 20px;
+  }
+</style>
+
+
+<div class="mwp-bootstrap mwp-bootstrap-form">
 	<?php echo $form_html ?>
 </div>
