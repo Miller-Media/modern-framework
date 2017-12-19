@@ -24,10 +24,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 		} 
 	} ?>>
 	<?php echo $prefix; ?>
+	<?php echo $label_prefix; ?>
     <?php echo $view['form']->label($form) ?>
+	<?php echo $label_suffix; ?>
 	<?php echo $field_prefix ?>
     <?php echo $view['form']->widget($form) ?>
     <?php echo $view['form']->errors($form) ?>
+	<?php if ( $description ) { echo '<div class="field-description">' . $description . '</div>'; } ?>
 	<?php echo $field_suffix ?>
 	<?php echo $suffix ?>
 </div>

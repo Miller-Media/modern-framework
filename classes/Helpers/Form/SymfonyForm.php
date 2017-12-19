@@ -316,6 +316,7 @@ class SymfonyForm extends Form
 		'submit'       => 'Symfony\Component\Form\Extension\Core\Type\SubmitType',
 		'fieldgroup'   => 'Modern\Wordpress\Helpers\Form\SymfonyForm\FieldgroupType',
 		'tab'          => 'Modern\Wordpress\Helpers\Form\SymfonyForm\TabType',
+		'html'         => 'Modern\Wordpress\Helpers\Form\SymfonyForm\HtmlType',
 	);
 	
 	/**
@@ -337,25 +338,71 @@ class SymfonyForm extends Form
 	 * @param	string		$parent_name	The parent field name to add this field to
 	 * @return	this						Chainable
 	 */
-	public function addField( $name, $type='text', $options=array(), $parent_name='' )
+	public function addField( $name, $type='text', $options=array(), $parent_name=NULL )
 	{
 		$builder = $this->getFormBuilder();	
 		$options = array_merge( array( 'translation_domain' => $this->getPlugin()->pluginSlug() ), $options );	
+		$parent_name = $parent_name ?: $this->currentParent;
+		
+		/* Automatically add a NonBlank constraint to required fields */
+		if ( ! isset( $options['constraints'] ) and isset( $options['required'] ) and $options['required'] ) {
+			$options['constraints'] = array( 'NonBlank' );
+		}
 		
 		$field = $this->applyFilters( 'field', array( 'name' => $name, 'type' => $type, 'options' => $options, 'parent_name' => $parent_name ) );
 		
+		/* Prepare any provided constraints */
+		if ( isset( $field['options']['constraints'] ) ) {
+			$processed_constraints = array();
+			foreach( $field['options']['constraints'] as $class => $config ) {
+				if ( is_object( $config ) ) {
+					$processed_constraints[] = $config;
+				}
+				else 
+				{
+					if ( is_string( $config ) ) 
+					{
+						$_class = class_exists( $config ) ? $config : 'Symfony\Component\Validator\Constraints\\' . $config;
+						if ( class_exists( $_class ) ) {
+							$processed_constraints[] = new $_class;
+						}
+					} 
+					else if ( is_array( $config ) ) 
+					{
+						$_class = class_exists( $class ) ? $class : 'Symfony\Component\Validator\Constraints\\' . $class;
+						if ( class_exists( $_class ) ) {
+							$processed_constraints[] = new $_class( $config );
+						}
+					}
+				}
+			}
+			$field['options']['constraints'] = $processed_constraints;
+		}
+		
+		/**
+		 * Automatically wrap certain fields with bootstrap classes for display purposes unless asked not to
+		 */
 		$wrap_bootstrap = isset( $field['options']['wrap_bootstrap'] ) ? $field['options']['wrap_bootstrap'] : in_array( $field['type'], array(
 			'text', 'textarea', 'email', 'integer', 'money', 'number', 'password', 'url', 'choice', 'date', 'checkbox', 'radio', 'file'
 		) );
+		
 		unset( $field['options']['wrap_bootstrap'] );
 		
 		if ( $wrap_bootstrap ) {
 			$field['options']['row_attr']['class'] = ( isset( $field['options']['row_attr']['class'] ) ? $field['options']['row_attr']['class'] . ' ' : '' ) . 'form-group';
-			$field['options']['label_attr']['class'] = ( isset( $field['options']['label_attr']['class'] ) ? $field['options']['label_attr']['class'] . ' ' : '' ) . 'col-lg-1 col-md-3 col-sm-4 form-label';
-			$field['options']['attr']['class'] = ( isset( $field['options']['attr']['class'] ) ? $field['options']['attr']['class'] . ' ' : '' ) . 'form-control';
+			$field['options']['label_attr']['class'] = ( isset( $field['options']['label_attr']['class'] ) ? $field['options']['label_attr']['class'] . ' ' : '' ) . 'col-lg-2 col-md-3 col-sm-4 form-label';
 			$field['options']['row_attr']['class'] = ( isset( $field['options']['row_attr']['class'] ) ? $field['options']['row_attr']['class'] . ' ' : '' ) . 'form-group';
 			$field['options']['field_prefix'] = '<div class="col-lg-6 col-md-7 col-sm-8">' . ( isset( $field['options']['field_prefix'] ) ? $field['options']['field_prefix'] : '' );
-			$field['options']['field_suffix'] = ( isset( $field['options']['field_suffix'] ) ? $field['options']['field_suffix'] : '' ) . '</div>';			
+			$field['options']['field_suffix'] = ( isset( $field['options']['field_suffix'] ) ? $field['options']['field_suffix'] : '' ) . '</div>';
+
+			if ( $field['type'] == 'choice' and isset( $field['options']['expanded'] ) and $field['options']['expanded'] == true ) {
+				$field['options']['choice_prefix'] = ( isset( $field['options']['choice_prefix'] ) ? $field['options']['choice_prefix'] : '' ) . (( isset( $field['options']['multiple'] ) and $field['options']['multiple'] == true ) ? '<div class="checkbox">' : '<div class="radio">');
+				$field['options']['choice_suffix'] = '</div>' . ( isset( $field['options']['choice_suffix'] ) ? $field['options']['choice_suffix'] : '' );
+			} else {
+				if ( ! in_array( $field['type'], array( 'checkbox', 'radio' ) ) ) {
+					$field['options']['attr']['class'] = ( isset( $field['options']['attr']['class'] ) ? $field['options']['attr']['class'] . ' ' : '' ) . 'form-control';
+				}
+			}
 		}
 		
 		if ( empty( $field ) ) {
@@ -385,6 +432,42 @@ class SymfonyForm extends Form
 		$builder->add( $field['name'], $field['type'], $field['options'] );
 		$this->fields[ $field['name'] ] = $field;
 		$this->formRefs[ $field['name'] ] = $builder->get( $field['name'] );
+		
+		return $this;
+	}
+	
+	/**
+	 * @var	string
+	 */
+	public $currentParent = NULL;
+	
+	/**
+	 * Add a form tab
+	 * 
+	 * @param	string		$name			The tab name
+	 * @param	array		$options		The tab options
+	 * @param	string		$parent_name	The parent element to add to
+	 * @return	this
+	 */
+	public function addTab( $name, $options, $parent_name=NULL )
+	{
+		$options['type'] = 'tab';
+		$this->addField( $name, 'fieldgroup', $options, $parent_name );
+
+		return $this;
+	}
+	
+	/**
+	 * Add some arbitrary html to the form
+	 *
+	 * @param	string			$html_content			The html content to add
+	 * @param	string			$parent_name	The parent element to add to
+	 * @return	this
+	 */
+	public function addHtml( $html_content, $parent_name=NULL )
+	{
+		$name = md5( $html_content . uniqid() );
+		$this->addField( $name, 'html', array( 'html_content' => $html_content ), $parent_name );
 		
 		return $this;
 	}

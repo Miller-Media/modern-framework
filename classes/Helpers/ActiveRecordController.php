@@ -104,6 +104,32 @@ class ActiveRecordController
 	}
 	
 	/**
+	 * Get action buttons
+	 *
+	 * @return	array
+	 */
+	public function getActionButtons()
+	{
+		return array( 
+			'new' => array(
+				'title' => __( 'Create New', 'mwp-framework' ),
+				'href' => $this->getUrl( array( 'do' => 'edit' ) ),
+				'class' => 'btn btn-primary',
+			)
+		);
+	}
+	
+	/**
+	 * Get the action menu for this controller
+	 *
+	 * @return	string
+	 */
+	public function getActionsHtml()
+	{
+		return $this->getPlugin()->getTemplateContent( 'views/management/records/table_actions', array( 'plugin' => $plugin, 'class' => $class, 'controller' => $this, 'buttons' => $this->getActionButtons() ) );
+	}
+	
+	/**
 	 * Get the active record display table
 	 *
 	 * @return	Modern\Wordpress\Helpers\ActiveRecordTable
@@ -131,8 +157,10 @@ class ActiveRecordController
 			}
 		}
 		
-		if ( ! isset( $this->options['templates']['row_buttons'] ) or $this->options['templates']['row_buttons'] !== FALSE ) {
-			$buttons_template = isset( $this->options['templates']['row_buttons'] ) ? $this->options['templates']['row_buttons'] : 'views/management/records/buttons';
+		/** Record row buttons **/
+		if ( ! isset( $this->options['templates']['row_buttons'] ) or $this->options['templates']['row_buttons'] !== FALSE ) 
+		{
+			$buttons_template = isset( $this->options['templates']['row_buttons'] ) ? $this->options['templates']['row_buttons'] : 'views/management/records/row_buttons';
 			$table->columns[ 'buttons' ] = '';
 			$table->handlers[ 'buttons' ] = function( $row ) use ( $class, $controller, $plugin, $buttons_template ) {
 				return $plugin->getTemplateContent( $buttons_template, array( 'plugin' => $plugin, 'class' => $class, 'row' => $row, 'controller' => $controller ) );				
@@ -165,8 +193,8 @@ class ActiveRecordController
 		
 		if ( isset( $this->options['handlers'] ) ) {
 			$table->handlers = array_merge( $table->handlers, $this->options['handlers'] );
-		}		
-
+		}
+		
 		return $table;
 	}
 	
@@ -205,10 +233,10 @@ class ActiveRecordController
 	public function do_view( $record_id=NULL )
 	{
 		$class = static::$recordClass;
-		$record_id = $record_id ?: $_REQUEST[ 'id' ];
+		$record_id = $record_id ?: ( isset( $_REQUEST[ 'id' ] ) ? $_REQUEST[ 'id' ] : 0 );
 		$record = NULL;
 		
-		if ( isset( $_REQUEST[ 'id' ] ) )
+		if ( $record_id )
 		{
 			try
 			{
@@ -230,10 +258,10 @@ class ActiveRecordController
 	{
 		$controller = $this;
 		$class = static::$recordClass;
-		$record_id = $record_id ?: $_REQUEST[ 'id' ];
+		$record_id = $record_id ?: ( isset( $_REQUEST[ 'id' ] ) ? $_REQUEST[ 'id' ] : 0 );
 		$record = NULL;
 		
-		if ( isset( $_REQUEST[ 'id' ] ) )
+		if ( $record_id )
 		{
 			try
 			{
@@ -268,10 +296,10 @@ class ActiveRecordController
 	public function do_delete( $record_id=NULL )
 	{
 		$class = static::$recordClass;
-		$record_id = $record_id ?: $_REQUEST[ 'id' ];
+		$record_id = $record_id ?: ( isset( $_REQUEST[ 'id' ] ) ? $_REQUEST[ 'id' ] : 0 );
 		$record = NULL;
 		
-		if ( isset( $_REQUEST[ 'id' ] ) )
+		if ( $record_id )
 		{
 			try
 			{

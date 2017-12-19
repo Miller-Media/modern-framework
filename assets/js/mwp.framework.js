@@ -325,7 +325,7 @@
 			views.each( function() {
 				var view = $(this);
 				var view_name = view.data( 'view-model' );
-				var controller = mwp.controller.get( view.data( 'view-model' ) );
+				var controller = mwp.controller.get( view_name );
 				if ( typeof controller !== 'undefined' && typeof controller.viewModel !== 'undefined' ) {
 					ko.applyBindings( controller.viewModel, this );
 				}

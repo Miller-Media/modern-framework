@@ -347,13 +347,13 @@ class Framework extends Plugin
 		wp_register_script( 'knockback', $this->fileUrl( 'assets/js/knockback.min.js' ), array( 'underscore', 'backbone', 'knockout' ) );		
 		
 		$bootstrap_js = $use_bootstrap_js ? 'assets/js/mwp.bootstrap.min.js' : 'assets/js/mwp.bootstrap.disabled.js';
-		wp_register_script( 'mwp-bootstrap-js', $this->fileUrl( $bootstrap_js, array( 'jquery' ) ) );
+		wp_register_script( 'mwp-bootstrap', $this->fileUrl( $bootstrap_js, array( 'jquery' ) ) );
 
 		$bootstrap_css = $use_bootstrap_css ? 'assets/css/mwp-bootstrap.min.css' : 'assets/css/mwp-bootstrap.disabled.css';
 		wp_register_style( 'mwp-bootstrap', $this->fileUrl( $bootstrap_css ) );
 		
 		if ( $use_bootstrap_js ) {
-			wp_enqueue_script( 'mwp-bootstrap-js' );
+			wp_enqueue_script( 'mwp-bootstrap' );
 		}
 		
 		if ( $use_bootstrap_css ) {

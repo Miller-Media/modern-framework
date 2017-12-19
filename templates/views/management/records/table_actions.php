@@ -12,7 +12,7 @@
  *
  * @param	Modern\Wordpress\Plugin								$plugin			The plugin that created the controller
  * @param	Modern\Wordpress\Helpers\ActiveRecordController		$controller		The active record controller
- * @param	Modern\Wordpress\Helpers\ActiveRecordTable			$table			The active record display table
+ * @param	array												$buttons		Buttons to display
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -21,14 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<div class="wrap">
-
-	<h1><?php echo $controller->adminPage->title ?></h1>
-
-	<?php echo $controller->getActionsHtml() ?>
-	
-	<form method="post">
-		<?php echo $table->getDisplay() ?>
-	</form>
-	
+<div class="mwp-bootstrap" style="text-align:right">
+	<?php foreach( $buttons as $button ) : ?>
+	<a href="<?php echo $button['href'] ?>" class="<?php echo $button['class']?>"><?php echo $button['title'] ?></a>
+	<?php endforeach ?>
 </div>

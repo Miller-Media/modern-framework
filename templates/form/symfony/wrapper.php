@@ -25,6 +25,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 	margin-bottom: 20px;
 	margin-top: 20px;
   }
+  .mwp-bootstrap-form ul.form-errors {
+	background-color: #f2dede;
+	padding: 10px;
+	margin-top: 5px;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border: 1px solid #f2bbbb;
+  }
+  .mwp-bootstrap-form .field-description {
+	margin: 5px 0 10px 0;
+  }
+  .mwp-bootstrap-form .form-group > label.form-label {
+	font-size: 1.25em;
+	line-height: 1.4em;
+	text-align: right;
+	font-weight: normal;
+	padding: 6px;
+  }
 </style>
 
 
