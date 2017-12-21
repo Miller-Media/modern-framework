@@ -353,6 +353,7 @@ class Framework extends Plugin
 		wp_register_style( 'mwp-bootstrap', $this->fileUrl( $bootstrap_css ) );
 		
 		if ( $use_bootstrap_js ) {
+			wp_enqueue_script( 'jquery' );
 			wp_enqueue_script( 'mwp-bootstrap' );
 		}
 		
@@ -377,6 +378,7 @@ class Framework extends Plugin
 	public function adminEnqueueScripts()
 	{
 		wp_enqueue_script( 'mwp-settings' );
+		wp_enqueue_style( 'mwp-admin-css', $this->fileUrl( 'assets/css/mwp-admin.css' ) );
 	}
 	
 	/**

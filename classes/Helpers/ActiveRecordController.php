@@ -113,7 +113,7 @@ class ActiveRecordController
 		return array( 
 			'new' => array(
 				'title' => __( 'Create New', 'mwp-framework' ),
-				'href' => $this->getUrl( array( 'do' => 'edit' ) ),
+				'href' => $this->getUrl( array( 'do' => 'new' ) ),
 				'class' => 'btn btn-primary',
 			)
 		);
@@ -199,7 +199,7 @@ class ActiveRecordController
 	}
 	
 	/**
-	 * Get a controller url
+	 * Get the controller url
 	 *
 	 * @param	array			$args			Optional query args
 	 */
@@ -249,6 +249,32 @@ class ActiveRecordController
 	}
 
 	/**
+	 * Create a new active record
+	 * 
+	 * @param	int			$record_id				The active record id
+	 * @return	void
+	 */
+	public function do_new()
+	{
+		$controller = $this;
+		$class = static::$recordClass;		
+		$form = $class::getForm();
+		
+		if ( $form->isValidSubmission() ) 
+		{
+			$record = new $class;
+			$record->processForm( $form->getValues() );			
+			$record->save();
+			
+			$form->processComplete( function() use ( $controller ) {
+				wp_redirect( $controller->getUrl() );
+			});
+		}
+		
+		echo $this->getPlugin()->getTemplateContent( 'views/management/records/create', array( 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this ) );
+	}
+	
+	/**
 	 * Edit an active record
 	 * 
 	 * @param	int			$record_id				The active record id
@@ -258,18 +284,15 @@ class ActiveRecordController
 	{
 		$controller = $this;
 		$class = static::$recordClass;
-		$record_id = $record_id ?: ( isset( $_REQUEST[ 'id' ] ) ? $_REQUEST[ 'id' ] : 0 );
-		$record = NULL;
+		$record_id = $_REQUEST['id'];
 		
-		if ( $record_id )
+		try
 		{
-			try
-			{
-				$record = $class::load( $record_id );
-			}
-			catch( \OutOfRangeException $e ) { 
-				$record = new $class;
-			}
+			$record = $class::load( $record_id );
+		}
+		catch( \OutOfRangeException $e ) { 
+			echo $this->getPlugin()->getTemplateContent( 'component/error', array( 'message' => __( 'The record could not be found.', 'mwp-framework' ) ) );
+			return;
 		}
 		
 		$form = $class::getForm( $record );
@@ -295,20 +318,32 @@ class ActiveRecordController
 	 */
 	public function do_delete( $record_id=NULL )
 	{
+		$controller = $this;
 		$class = static::$recordClass;
-		$record_id = $record_id ?: ( isset( $_REQUEST[ 'id' ] ) ? $_REQUEST[ 'id' ] : 0 );
-		$record = NULL;
+		$record_id = $_REQUEST['id'];
 		
-		if ( $record_id )
+		try
 		{
-			try
+			$record = $class::load( $record_id );
+			$form = $record->getDeleteForm();
+			
+			if ( $form->isValidSubmission() )
 			{
-				$record = $class::load( $record_id );
+				if ( $form->getForm()->getClickedButton()->getName() == 'confirm' ) {
+					$record->delete();
+				}
+				
+				$form->processComplete( function() use ( $controller ) {
+					wp_redirect( $controller->getUrl() );
+				});
 			}
-			catch( \OutOfRangeException $e ) { }
+		}
+		catch( \OutOfRangeException $e ) { 
+			echo $this->getPlugin()->getTemplateContent( 'component/error', array( 'message' => __( 'The record could not be found.', 'mwp-framework' ) ) );
+			return;
 		}
 		
-		wp_redirect( add_query_arg( array( 'do' => false, 'id' => false ) ) );
+		echo $this->getPlugin()->getTemplateContent( 'views/management/records/delete', array( 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this, 'record' => $record ) );
 	}	
 	
 }

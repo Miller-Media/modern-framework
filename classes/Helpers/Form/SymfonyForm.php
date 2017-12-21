@@ -458,6 +458,18 @@ class SymfonyForm extends Form
 	}
 	
 	/**
+	 * Add a form heading
+	 *
+	 * @param	string			$heading			The heading html
+	 * @return	this
+	 */
+	public function addHeading( $heading, $parent_name=NULL )
+	{
+		$this->addHtml( $this->getPlugin()->getTemplateContent( 'form/heading', array( 'heading' => $heading ) ), $parent_name );
+		return $this;
+	}
+	
+	/**
 	 * Add some arbitrary html to the form
 	 *
 	 * @param	string			$html_content			The html content to add
@@ -621,7 +633,7 @@ class SymfonyForm extends Form
 			$engine->addHelpers( array( $this->renderHelper, $this->translatorHelper ) );
 		}
 		
-		return $this->getPlugin()->getTemplateContent( 'form/symfony/wrapper', array( 'form' => $this, 'form_html' => $this->renderHelper->form( $template_vars[ 'form' ], $template_vars ) ) );
+		return $this->getPlugin()->getTemplateContent( 'form/wrapper', array( 'form' => $this, 'form_html' => $this->renderHelper->form( $template_vars[ 'form' ], $template_vars ) ) );
 	}
 	
 }

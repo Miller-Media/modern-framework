@@ -403,10 +403,33 @@ abstract class ActiveRecord
 	 * @param	ActiveRecord		$record					The record to edit
 	 * @return	Modern\Wordpress\Helpers\Form
 	 */
-	public static function getForm( $record, $formOptions=array(), $formImplementation='symfony' )
+	public static function getForm( $record=null )
 	{
 		$name = strtolower( str_replace( '\\', '_', get_called_class() ) ) . '_form';
-		$form = Framework::instance()->createForm( $name, $record->dataArray() );
+		$form = Framework::instance()->createForm( $name );
+		
+		return $form;
+	}
+	
+	/**
+	 * Confirm delete form
+	 *
+	 * @return	Modern\Wordpress\Helpers\Form
+	 */
+	public function getDeleteForm()
+	{
+		$name = strtolower( str_replace( '\\', '_', get_called_class() ) ) . '_delete_form';
+		$form = Framework::instance()->createForm( $name );
+		
+		$form->addField( 'cancel', 'submit', array( 
+			'label' => __( 'Cancel', 'mwp-framework' ), 
+			'attr' => array( 'class' => 'btn btn-default' ) 
+		));
+		
+		$form->addField( 'confirm', 'submit', array( 
+			'label' => __( 'Confirm Delete', 'mwp-framework' ), 
+			'attr' => array( 'class' => 'btn btn-danger' ) 
+		));
 		
 		return $form;
 	}
