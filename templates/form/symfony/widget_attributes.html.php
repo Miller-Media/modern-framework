@@ -22,6 +22,6 @@ id="<?php echo $view->escape($id) ?>" name="<?php echo $view->escape($full_name)
 <?php elseif ($v === true): ?>
 <?php printf(' %s="%s"', $view->escape($k), $view->escape($k)) ?>
 <?php elseif ($v !== false): ?>
-<?php printf(' %s="%s"', $view->escape($k), $view->escape($v)) ?>
+<?php if ( is_array( $v ) ) { $v = json_encode( $v ); }	printf(' %s="%s"', $view->escape($k), $view->escape($v)) ?>
 <?php endif ?>
 <?php endforeach ?>

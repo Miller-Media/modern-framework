@@ -32,7 +32,7 @@ foreach ( $attr as $k => $v)
 	}
 	elseif ( $v !== false ) 
 	{
-		printf( '%s="%s" ', $view->escape( $k ), $view->escape( $v ) );
+		if ( is_array( $v ) ) { $v = json_encode( $v ); } printf( '%s="%s" ', $view->escape( $k ), $view->escape( $v ) );
 	}
 }
 
