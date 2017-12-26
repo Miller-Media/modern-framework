@@ -34,7 +34,7 @@ class Framework extends Plugin
 	 * @var Annotations Reader
 	 */
 	protected $reader;
-	
+		
 	/**
 	 * Constructor
 	 */
@@ -230,7 +230,7 @@ class Framework extends Plugin
 		
 		return $form_class;
 	}
-		
+	
 	/**
 	 * Attach instances to wordpress
 	 *
@@ -340,6 +340,7 @@ class Framework extends Plugin
 	public function enqueueScripts()
 	{
 		$location = is_admin() ? 'admin' : 'front';
+		
 		$use_bootstrap_js = $this->getSetting( "mwp_bootstrap_disable_{$location}_js" ) ? false : true;
 		$use_bootstrap_css = $this->getSetting( "mwp_bootstrap_disable_{$location}_css" ) ? false : true;
 		
@@ -366,6 +367,16 @@ class Framework extends Plugin
 		wp_localize_script( 'mwp', 'mw_localized_data', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
 		));
+
+		/* Forms */
+		wp_register_script( 'mwp-forms-controller', $this->fileUrl( 'assets/js/mwp-forms-controller.js' ), array( 'mwp' ) );
+		wp_enqueue_style( 'mwp-forms-css', $this->fileUrl( 'assets/css/mwp-forms.css' ) );
+		
+		if ( is_admin() ) {
+			wp_enqueue_script( 'mwp-settings' );
+			wp_enqueue_style( 'mwp-forms-css' );
+			wp_enqueue_script( 'mwp-forms-controller' );
+		}
 	}
 	
 	/**
@@ -377,8 +388,6 @@ class Framework extends Plugin
 	 */
 	public function adminEnqueueScripts()
 	{
-		wp_enqueue_script( 'mwp-settings' );
-		wp_enqueue_style( 'mwp-admin-css', $this->fileUrl( 'assets/css/mwp-admin.css' ) );
 	}
 	
 	/**

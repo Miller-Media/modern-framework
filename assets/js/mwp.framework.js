@@ -347,6 +347,7 @@
 			/* Double ready means that this will be executed last */
 			$(document).ready( function() {
 				mwp.applyViews( document );
+				mwp.trigger( 'views.ready' );
 			});
 		});
 	}
