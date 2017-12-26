@@ -15,6 +15,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<div class="mwp-bootstrap mwp-bootstrap-form">
+<div class="mwp-bootstrap mwp-form mwp-bootstrap-form">
 	<?php echo $form_html ?>
 </div>
