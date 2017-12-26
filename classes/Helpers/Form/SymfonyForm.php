@@ -327,29 +327,87 @@ class SymfonyForm extends Form
 	/**
 	 * @var	array
 	 */
-	public $formRefs = array();
+	public $fieldRefs = array();
+	
+	/**
+	 * @var	array
+	 */
+	public $parentRefs = array();
+	
+	/**
+	 * Add a form tab
+	 * 
+	 * @param	string			$name				The tab name
+	 * @param	array			$options			The tab options
+	 * @param	string			$parent_name		The parent element to add to
+	 * @param	string|NULL		$insert_name		The name of a field around which this field should be inserted
+	 * @param	string			$insert_position	The position at which to insert this field if using $insert_name 
+	 * @return	object								The added form element
+	 */
+	public function addTab( $name, $options, $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
+	{
+		$options['type'] = 'tab';
+		return $this->addField( $name, 'fieldgroup', $options, $parent_name, $insert_name, $insert_position );
+	}
+	
+	/**
+	 * Add a form heading
+	 *
+	 * @param	string			$heading			The heading html
+	 * @param	string			$parent_name		The parent element to add to
+	 * @param	string|NULL		$insert_name		The name of a field around which this field should be inserted
+	 * @param	string			$insert_position	The position at which to insert this field if using $insert_name 
+	 * @return	object								The added form element
+	 */
+	public function addHeading( $heading, $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
+	{
+		return $this->addHtml( $this->getPlugin()->getTemplateContent( 'form/heading', array( 'heading' => $heading ) ), $parent_name, $insert_name, $insert_position );
+	}
+	
+	/**
+	 * Add some arbitrary html to the form
+	 *
+	 * @param	string			$html_content		The html content to add
+	 * @param	string			$parent_name		The parent element to add to
+	 * @param	string|NULL		$insert_name		The name of a field around which this field should be inserted
+	 * @param	string			$insert_position	The position at which to insert this field if using $insert_name 
+	 * @return	object								The added form element
+	 */
+	public function addHtml( $html_content, $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
+	{
+		$name = md5( $html_content . uniqid() );
+		return $this->addField( $name, 'html', array( 'html_content' => $html_content ), $parent_name, $insert_name, $insert_position );
+	}
 	
 	/**
 	 * Add a field to the form
 	 *
-	 * @param	string		$name			The field name
-	 * @param	string		$type			The field type (registered shorthand or a class name)
-	 * @param	array		$options		The field options
-	 * @param	string		$parent_name	The parent field name to add this field to
-	 * @return	this						Chainable
+	 * @param	string			$name				The field name
+	 * @param	string			$type				The field type (registered shorthand or a class name)
+	 * @param	array			$options			The field options
+	 * @param	string|NULL		$parent_name		The parent field name to add this field to
+	 * @param	string|NULL		$insert_name		The name of a field around which this field should be inserted
+	 * @param	string			$insert_position	The position at which to insert this field if using $insert_name 
+	 * @return	object 								The added form element
 	 */
-	public function addField( $name, $type='text', $options=array(), $parent_name=NULL )
+	public function addField( $name, $type='text', $options=array(), $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
 	{
 		$builder = $this->getFormBuilder();	
 		$options = array_merge( array( 'translation_domain' => $this->getPlugin()->pluginSlug() ), $options );	
-		$parent_name = $parent_name ?: $this->currentParent;
 		
 		/* Automatically add a NonBlank constraint to required fields */
 		if ( ! isset( $options['constraints'] ) and isset( $options['required'] ) and $options['required'] ) {
 			$options['constraints'] = array( 'NonBlank' );
 		}
 		
-		$field = $this->applyFilters( 'field', array( 'name' => $name, 'type' => $type, 'options' => $options, 'parent_name' => $parent_name ) );
+		$field = $this->applyFilters( 'field', array( 
+			'name' => $name, 
+			'type' => $type, 
+			'options' => $options, 
+			'parent_name' => $parent_name, 
+			'insert_name' => $insert_name, 
+			'insert_position' => $insert_position,
+		));
 		
 		/* Prepare any provided constraints */
 		if ( isset( $field['options']['constraints'] ) ) {
@@ -405,14 +463,10 @@ class SymfonyForm extends Form
 			}
 		}
 		
-		if ( empty( $field ) ) {
-			return $this;
-		}
-		
 		/* Adding a child element requires us to get the reference to the parent element */
 		if ( $field['parent_name'] ) {
-			if ( array_key_exists( $field['parent_name'], $this->formRefs ) ) {				
-				$builder = $this->formRefs[ $field['parent_name'] ];
+			if ( array_key_exists( $field['parent_name'], $this->fieldRefs ) ) {				
+				$builder = $this->fieldRefs[ $field['parent_name'] ];
 			}
 		}
 		
@@ -429,59 +483,46 @@ class SymfonyForm extends Form
 		
 		$field['type'] = static::getFieldClass( $field['type'] );
 		
-		$builder->add( $field['name'], $field['type'], $field['options'] );
+		/* Are we attempting to insert the field in a specific position? */
+		if( $field['insert_name'] ) 
+		{
+			$inserted = false;
+			foreach( $builder->all() as $formField ) {
+				// We must remove each field and re-add it to create a new field order
+				$builder->remove( $formField->getName() );
+				
+				// Are we at the insert point?
+				if( $formField->getName() == $field['insert_name'] ) 
+				{
+					if ( $field['insert_position'] == 'before' ) {
+						$builder->add( $field['name'], $field['type'], $field['options'] );
+						$builder->add( $formField );
+					} else {
+						$builder->add( $formField );
+						$builder->add( $field['name'], $field['type'], $field['options'] );						
+					}
+					$inserted = true;
+				} 
+				else {
+					$builder->add( $formField );
+				}
+			}
+			
+			// If the insert point wasn't found, just add it to the end
+			if ( ! $inserted ) {
+				$builder->add( $field['name'], $field['type'], $field['options'] );
+			}
+		} 
+		else {
+			$builder->add( $field['name'], $field['type'], $field['options'] );
+		}
+		
+		/* Cache field references */
 		$this->fields[ $field['name'] ] = $field;
-		$this->formRefs[ $field['name'] ] = $builder->get( $field['name'] );
+		$this->fieldRefs[ $field['name'] ] = $builder->get( $field['name'] );
+		$this->parentRefs[ $field['name'] ] = $builder;
 		
-		return $this;
-	}
-	
-	/**
-	 * @var	string
-	 */
-	public $currentParent = NULL;
-	
-	/**
-	 * Add a form tab
-	 * 
-	 * @param	string		$name			The tab name
-	 * @param	array		$options		The tab options
-	 * @param	string		$parent_name	The parent element to add to
-	 * @return	this
-	 */
-	public function addTab( $name, $options, $parent_name=NULL )
-	{
-		$options['type'] = 'tab';
-		$this->addField( $name, 'fieldgroup', $options, $parent_name );
-
-		return $this;
-	}
-	
-	/**
-	 * Add a form heading
-	 *
-	 * @param	string			$heading			The heading html
-	 * @return	this
-	 */
-	public function addHeading( $heading, $parent_name=NULL )
-	{
-		$this->addHtml( $this->getPlugin()->getTemplateContent( 'form/heading', array( 'heading' => $heading ) ), $parent_name );
-		return $this;
-	}
-	
-	/**
-	 * Add some arbitrary html to the form
-	 *
-	 * @param	string			$html_content			The html content to add
-	 * @param	string			$parent_name	The parent element to add to
-	 * @return	this
-	 */
-	public function addHtml( $html_content, $parent_name=NULL )
-	{
-		$name = md5( $html_content . uniqid() );
-		$this->addField( $name, 'html', array( 'html_content' => $html_content ), $parent_name );
-		
-		return $this;
+		return $this->fieldRefs[ $field['name'] ];
 	}
 	
 	/**
