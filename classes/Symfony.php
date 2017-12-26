@@ -63,6 +63,7 @@ class Symfony extends Singleton
 			
 			$formTypeExtension = new \Modern\Wordpress\Helpers\Form\SymfonyForm\FormTypeExtension();
 			$choiceTypeExtension = new \Modern\Wordpress\Helpers\Form\SymfonyForm\ChoiceTypeExtension();
+			$buttonTypeExtension = new \Modern\Wordpress\Helpers\Form\SymfonyForm\ButtonTypeExtension();
 
 			$formFactory = \Symfony\Component\Form\Forms::createFormFactoryBuilder()
 				->addExtension( $csrfExtension )
@@ -70,6 +71,7 @@ class Symfony extends Singleton
 				->addExtension( $httpFoundationExtension )
 				->addTypeExtension( $formTypeExtension )
 				->addTypeExtension( $choiceTypeExtension )
+				->addTypeExtension( $buttonTypeExtension )
 				->getFormFactory();
 				
 			$this->setFormFactory( $formFactory );
