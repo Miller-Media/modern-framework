@@ -22,5 +22,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="wrap">
+	<h1><?php echo $title ?></h1>
 	<?php echo $form->render() ?>
 </div>

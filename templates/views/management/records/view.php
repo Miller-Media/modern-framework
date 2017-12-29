@@ -26,8 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 ?>
 
-<!-- html content -->
-<h2><?php echo $title ?></h2>
-<div>
+
+<div class="wrap">
+	<h1><?php echo $title ?></h1>
 	<?php echo $content ?>
 </div>

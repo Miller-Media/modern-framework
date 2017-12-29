@@ -57,3 +57,7 @@
 	-webkit-box-shadow: none;
 	box-shadow: none;
 }
+
+.wp-list-table .mwp-table-row-actions {
+	margin-top: 4px;
+}

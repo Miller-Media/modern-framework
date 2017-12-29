@@ -13,14 +13,15 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
-$active = true;
+$initial_tab = isset( $form->vars['attr']['initial-tab'] ) && isset( $form[ $form->vars['attr']['initial-tab'] ] ) ? $form->vars['attr']['initial-tab'] : NULL;
+$default_active = $initial_tab ? false : true;
 
-foreach( $form as $child ) {
+foreach( $form as $child_name => $child ) {
 	$classes = isset( $child->vars['attr']['class'] ) ? explode(' ', $child->vars['attr']['class'] ) : array();
 	$classes[] = 'tab-pane';
-	if ( $active ) {
+	if ( $default_active or $child_name == $initial_tab ) {
 		$classes[] = 'active';
-		$active = false;
+		$default_active = false;
 		$child->active = true;
 	}
 	$child->vars['attr']['role'] = 'tabpanel';

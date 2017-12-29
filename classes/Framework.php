@@ -94,9 +94,8 @@ class Framework extends Plugin
 	 */
 	public function getRequest()
 	{
-		if ( ! isset( $this->request ) )
-		{
-			$this->request = \Symfony\Component\HttpFoundation\Request::createFromGlobals();
+		if ( ! isset( $this->request ) ) {
+			$this->request = new \Symfony\Component\HttpFoundation\Request( stripslashes_deep( $_GET ), stripslashes_deep( $_POST ), array(), stripslashes_deep( $_COOKIE ), $_FILES, $_SERVER );
 		}
 		
 		return $this->request;

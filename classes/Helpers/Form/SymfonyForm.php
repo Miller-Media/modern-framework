@@ -353,29 +353,30 @@ class SymfonyForm extends Form
 	/**
 	 * Add a form heading
 	 *
+	 * @param	string			$name				The field name
 	 * @param	string			$heading			The heading html
 	 * @param	string			$parent_name		The parent element to add to
 	 * @param	string|NULL		$insert_name		The name of a field around which this field should be inserted
 	 * @param	string			$insert_position	The position at which to insert this field if using $insert_name 
 	 * @return	object								The added form element
 	 */
-	public function addHeading( $heading, $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
+	public function addHeading( $name, $heading, $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
 	{
-		return $this->addHtml( $this->getPlugin()->getTemplateContent( 'form/heading', array( 'heading' => $heading ) ), $parent_name, $insert_name, $insert_position );
+		return $this->addHtml( $name, $this->getPlugin()->getTemplateContent( 'form/heading', array( 'heading' => $heading ) ), $parent_name, $insert_name, $insert_position );
 	}
 	
 	/**
 	 * Add some arbitrary html to the form
 	 *
+	 * @param	string			$name				The field name
 	 * @param	string			$html_content		The html content to add
 	 * @param	string			$parent_name		The parent element to add to
 	 * @param	string|NULL		$insert_name		The name of a field around which this field should be inserted
 	 * @param	string			$insert_position	The position at which to insert this field if using $insert_name 
 	 * @return	object								The added form element
 	 */
-	public function addHtml( $html_content, $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
+	public function addHtml( $name, $html_content, $parent_name=NULL, $insert_name=NULL, $insert_position='after' )
 	{
-		$name = md5( $html_content . uniqid() );
 		return $this->addField( $name, 'html', array( 'html_content' => $html_content ), $parent_name, $insert_name, $insert_position );
 	}
 	
@@ -398,6 +399,12 @@ class SymfonyForm extends Form
 		/* Automatically add a NonBlank constraint to required fields */
 		if ( ! isset( $options['constraints'] ) and isset( $options['required'] ) and $options['required'] ) {
 			$options['constraints'] = array( 'NonBlank' );
+		}
+		
+		if ( $type == 'codemirror' ) {
+			$type = 'textarea';
+			$options['row_attr'] = ( isset( $options['row_attr'] ) ? $options['row_attr'] : array() ) + array( 'data-view-model' => 'mwp-rules' );
+			$options['attr'] = ( isset( $options['attr'] ) ? $options['attr'] : array() ) + array( 'data-bind' => 'codemirror: { lineNumbers: true, mode: \'application/x-httpd-php\' }' );
 		}
 		
 		$field = $this->applyFilters( 'field', array( 
@@ -441,7 +448,7 @@ class SymfonyForm extends Form
 		 * Automatically wrap certain fields with bootstrap classes for display purposes unless asked not to
 		 */
 		$wrap_bootstrap = isset( $field['options']['wrap_bootstrap'] ) ? $field['options']['wrap_bootstrap'] : in_array( $field['type'], array(
-			'text', 'textarea', 'email', 'integer', 'money', 'number', 'password', 'url', 'choice', 'date', 'checkbox', 'radio', 'file'
+			'text', 'textarea', 'email', 'integer', 'money', 'number', 'password', 'url', 'choice', 'date', 'checkbox', 'radio', 'file', 'date', 'time', 'datetime', 'birthday'
 		) );
 		
 		unset( $field['options']['wrap_bootstrap'] );
@@ -457,10 +464,18 @@ class SymfonyForm extends Form
 				$field['options']['choice_prefix'] = ( isset( $field['options']['choice_prefix'] ) ? $field['options']['choice_prefix'] : '' ) . (( isset( $field['options']['multiple'] ) and $field['options']['multiple'] == true ) ? '<div class="checkbox">' : '<div class="radio">');
 				$field['options']['choice_suffix'] = '</div>' . ( isset( $field['options']['choice_suffix'] ) ? $field['options']['choice_suffix'] : '' );
 			} else {
-				if ( ! in_array( $field['type'], array( 'checkbox', 'radio' ) ) ) {
+				if ( ! in_array( $field['type'], array( 'checkbox', 'radio', 'date', 'time', 'datetime', 'birthday' ) ) ) {
 					$field['options']['attr']['class'] = ( isset( $field['options']['attr']['class'] ) ? $field['options']['attr']['class'] . ' ' : '' ) . 'form-control';
 				}
 			}
+		}
+		
+		/**
+		 * Translate toggles 
+		 */
+		if ( isset( $options['toggles'] ) ) {
+			$field['options']['attr']['form-toggles'] = $options['toggles'];
+			$field['options']['attr']['form-type'] = $field['type'];
 		}
 		
 		/* Adding a child element requires us to get the reference to the parent element */
@@ -476,7 +491,12 @@ class SymfonyForm extends Form
 			try {
 				$builder = $builder->get( $field['parent_name'] . '_tabs' );
 			} catch ( \InvalidArgumentException $e ) {
-				$builder->add( $field['parent_name'] . '_tabs', static::getFieldClass( 'tab' ), array( 'attr' => array( 'class' => 'mwp-form-tabs' ) ) );
+				$builder->add( $field['parent_name'] . '_tabs', static::getFieldClass( 'tab' ), array( 
+					'attr' => array( 
+						'class' => 'mwp-form-tabs', 
+						'initial-tab' => isset( $_REQUEST[ $field['parent_name'] . '_tab' ] ) ? $_REQUEST[ $field['parent_name'] . '_tab' ] : $field['name'], 
+					) 
+				));
 				$builder = $builder->get( $field['parent_name'] . '_tabs' );
 			}			
 		}

@@ -97,6 +97,71 @@ class ActiveRecordTable extends \WP_List_Table
 	 */
 	public $handlers = array();
 	
+	/**
+	 * @var	Modern\Wordpress\Plugin
+	 */
+	protected $plugin;
+	
+	/**
+	 * @var	string
+	 */
+	public $tableTemplate;
+	
+	/**
+	 * @var	string
+	 */
+	public $rowTemplate;
+	
+	/**
+	 * @var	string
+	 */
+	public $rowActionsTemplate = 'views/management/records/row_actions';
+	
+	/**
+	 * @var	ActiveRecordController
+	 */
+	protected $controller;
+	
+	/**
+	 * Set the controller
+	 */
+	public function setController( $controller )
+	{
+		$this->controller = $controller;
+	}
+	
+	/**
+	 * Get the controller
+	 */
+	public function getController()
+	{
+		return $this->controller;
+	}
+	
+	/**
+	 * Set the plugin
+	 */
+	public function setPlugin( $plugin )
+	{
+		$this->plugin = $plugin;
+	}
+	
+	/**
+	 * Get the plugin
+	 */
+	public function getPlugin()
+	{
+		if ( ! isset( $this->plugin ) ) {
+			$recordClass = $this->activeRecordClass;
+			$pluginClass = $recordClass::$plugin_class;
+			if ( class_exists( $pluginClass ) and is_subclass_of( $pluginClass, 'Modern\Wordpress\Plugin' ) ) {
+				$this->plugin = $pluginClass::instance();
+			}
+		}
+		
+		return $this->plugin;
+	}
+	
     /**
      * REQUIRED. Set up a constructor that references the parent constructor. We 
      * use the parent reference to set some default configs.
@@ -113,8 +178,87 @@ class ActiveRecordTable extends \WP_List_Table
 				'ajax'      => true
 			), 
 			$args 
-		));        
+		));
     }
+	
+	/**
+	 * Get a list of all, hidden and sortable columns, with filter applied
+	 *
+	 * @return array
+	 */
+	public function get_column_info() 
+	{
+		return parent::get_column_info();
+	}
+	
+	/**
+	 * Generates content for a single row of the table
+	 *
+	 * @since 3.1.0
+	 * @access public
+	 *
+	 * @param object $item The current item
+	 */
+	public function single_row( $item ) 
+	{
+		if ( $this->rowTemplate ) {
+			echo $this->getPlugin()->getTemplateContent( $this->rowTemplate, array( 'table' => $this, 'item' => $item ) );
+		} else {
+			parent::single_row( $item );
+		}
+	}
+	
+	/**
+	 * Display the table
+	 *
+	 * @since 3.1.0
+	 * @access public
+	 */
+	public function display() 
+	{
+		if ( $this->tableTemplate ) {
+			echo $this->getPlugin()->getTemplateContent( $this->tableTemplate, array( 'table' => $this ) );
+		} else {
+			parent::display();
+		}
+	}
+	
+	/**
+	 * Generates and display row actions links for the list table.
+	 *
+	 * @since 4.3.0
+	 * @access protected
+	 *
+	 * @param object $item        The item being acted upon.
+	 * @param string $column_name Current column name.
+	 * @param string $primary     Primary column name.
+	 * @return string The row actions HTML, or an empty string if the current column is the primary column.
+	 */
+	protected function handle_row_actions( $item, $column_name, $primary ) 
+	{		
+		if ( $column_name === $primary and $this->getController() ) {
+			return $this->getControllerActionsHTML( $item );
+		}
+		
+		return parent::handle_row_actions( $item, $column_name, $primary );
+ 	}
+	
+	/**
+	 * Get the row actions for an item
+	 *
+	 * @param	array		$item 			The item being acted upon
+	 * @return	string
+	 */
+	public function getControllerActionsHTML( $item )
+	{
+		if ( $controller = $this->getController() ) {
+			try {
+				$recordClass = $this->activeRecordClass;
+				$record = $recordClass::load( $item[ $recordClass::$prefix . $recordClass::$key ] );
+				return $this->getPlugin()->getTemplateContent( $this->rowActionsTemplate, array( 'controller' => $controller, 'record' => $record, 'table' => $this, 'actions' => $record->getControllerActions() ) );
+			} catch( \OutOfRangeException $e ) { }
+		}
+	}
 	
 	/**
 	 * Recommended. This method is called when the parent class can't find a method
@@ -431,8 +575,7 @@ class ActiveRecordTable extends \WP_List_Table
 		/**
 		 * Register our pagination options & calculations.
 		 */
-		$this->set_pagination_args( array
-		(
+		$this->set_pagination_args( array(
 			'total_items' => $total_items,
 			'per_page'    => $this->perPage,
 			'total_pages' => ceil( $total_items / $per_page ),
@@ -450,5 +593,5 @@ class ActiveRecordTable extends \WP_List_Table
 		$this->display();
 		return ob_get_clean();
 	}
-
+	
 }

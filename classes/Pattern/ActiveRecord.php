@@ -14,7 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
-use \Modern\Wordpress\Framework;
+use Modern\Wordpress\Framework;
+use Modern\Wordpress\Helpers\ActiveRecordTable;
 
 /**
  * An active record design pattern
@@ -53,6 +54,42 @@ abstract class ActiveRecord
 	public static $site_specific = FALSE;
 	
 	/**
+	 * @var	string
+	 */
+	public static $plugin_class = 'Modern\Wordpress\Framework';
+	
+	/**
+	 * @var	string
+	 */
+	public static $lang_singular = 'Record';
+	
+	/**
+	 * @var	string
+	 */
+	public static $lang_plural = 'Records';
+	
+	/**
+	 * @var	string
+	 */
+	public static $lang_view = 'View';
+
+	/**
+	 * @var	string
+	 */
+	public static $lang_create = 'Create';
+
+	/**
+	 * @var	string
+	 */
+	public static $lang_edit = 'Edit';
+	
+	/**
+	 * @var	string
+	 */
+	public static $lang_delete = 'Delete';
+	
+
+	/**
 	 * @var	string		WP DB Prefix of loaded record
 	 */
 	public $_wpdb_prefix;
@@ -61,6 +98,46 @@ abstract class ActiveRecord
 	 * @var	array		Record data
 	 */
 	protected $_data = array();
+		
+	/**
+	 * Get the 'create record' page title
+	 * 
+	 * @return	string
+	 */
+	public static function createTitle()
+	{
+		return __( static::$lang_create . ' ' . static::$lang_singular );
+	}
+	
+	/**
+	 * Get the 'view record' page title
+	 * 
+	 * @return	string
+	 */
+	public function viewTitle()
+	{
+		return __( static::$lang_view . ' ' . static::$lang_singular );
+	}
+	
+	/**
+	 * Get the 'edit record' page title
+	 * 
+	 * @return	string
+	 */
+	public function editTitle()
+	{
+		return __( static::$lang_edit . ' ' . static::$lang_singular );
+	}
+	
+	/**
+	 * Get the 'delete record' page title
+	 * 
+	 * @return	string
+	 */
+	public function deleteTitle()
+	{
+		return __( static::$lang_delete . ' ' . static::$lang_singular );
+	}
 	
 	/**
 	 * Property getter
@@ -171,6 +248,26 @@ abstract class ActiveRecord
 			/* Set the value */
 			$this->_data[ static::$prefix . $property ] = $value;
 		}
+	}
+	
+	/**
+	 * Check if a data property is set
+	 *
+	 * @return	bool
+	 */
+	public function __isset( $name )
+	{
+		return $this->__get( $name ) !== NULL;
+	}
+	
+	/**
+	 * Check if a data property is set
+	 *
+	 * @return	void
+	 */
+	public function __unset( $name )
+	{
+		unset( $this->_data[ $name ] );
 	}
 	
 	/** 
@@ -386,13 +483,40 @@ abstract class ActiveRecord
 	}
 	
 	/**
+	 * Get controller actions
+	 *
+	 * @return	array
+	 */
+	public function getControllerActions()
+	{
+		return array(
+			'edit' => array(
+				'title' => __( static::$lang_edit . ' ' . static::$lang_singular ),
+				'icon' => 'glyphicon glyphicon-pencil',
+				'params' => array(
+					'do' => 'edit',
+					'id' => $this->id,
+				),
+			),
+			'delete' => array(
+				'title' => __( static::$lang_delete . ' ' . static::$lang_singular ),
+				'icon' => 'glyphicon glyphicon-trash',
+				'params' => array(
+					'do' => 'delete',
+					'id' => $this->id,
+				),
+			)
+		);
+	}
+	
+	/**
 	 * Create a table for viewing active records
 	 *
-	 * @return	Modern\Wordpress\Helpers\ActiveRecordTable
+	 * @return	ActiveRecordTable
 	 */
 	public static function createDisplayTable()
 	{
-		$table = new \Modern\Wordpress\Helpers\ActiveRecordTable;
+		$table = new ActiveRecordTable;
 		$table->activeRecordClass = get_called_class();
 		return $table;
 	}

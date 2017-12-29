@@ -54,7 +54,8 @@
 				var element = $(this);
 				if ( ! element.data( 'toggles-applied' ) ) {
 					formsController.doToggles( element );
-					element.on( 'change', function() { formsController.doToggles( element ); });
+					var changeUpdate = function() { formsController.doToggles( element ); };
+					element.is('div') ? element.find('input').on( 'change', changeUpdate ) : element.on( 'change', changeUpdate );
 					element.data( 'toggles-applied', true );
 				}
 			});
@@ -71,6 +72,12 @@
 			var value_toggles = JSON.parse( element.attr('form-toggles') );
 			var toggles = {	selected: { show: [], hide: [] }, other: { show: [], hide: [] } };
 			
+			var current_value = $.isArray( element.val() ) ? element.val() : [ element.val() ];
+			
+			if ( element.is('div') ) {
+				current_value = $.map( element.find( ':selected,:checked' ), function( el ) { return $(el).val().toString(); } );
+			}
+			
 			/**
 			 * If an input value toggles another field to 'show', we wanto to hide it if that value
 			 * is not currently selected. So we need to sort everything out to know what needs to
@@ -81,7 +88,7 @@
 				_.each( ['show','hide'], function( action ) {
 					if ( typeof actions[action] !== 'undefined' ) {
 						var selectors = $.isArray( actions[action] ) ? actions[action] : [ actions[action] ];
-						var arr = toggles[ ( element.val() === value ? 'selected' : 'other' ) ][ action ];
+						var arr = toggles[ ( current_value.indexOf( (value).toString() ) >= 0 ? 'selected' : 'other' ) ][ action ];
 						arr.push.apply( arr, selectors );
 					}
 				});				

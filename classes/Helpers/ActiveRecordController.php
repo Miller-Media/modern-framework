@@ -28,7 +28,7 @@ class ActiveRecordController
 	/**
 	 * @var	string
 	 */
-	public static $recordClass;
+	public $recordClass;
 	
 	/**
 	 * @var	array
@@ -42,10 +42,6 @@ class ActiveRecordController
 	 */
 	public function getPlugin()
 	{
-		if ( ! isset( $this->plugin ) ) {
-			$this->plugin = \Modern\Wordpress\Framework::instance();
-		}
-		
 		return $this->plugin;
 	}
 	
@@ -63,15 +59,17 @@ class ActiveRecordController
 	/**
 	 * Constructor
 	 *
+	 * @param	string		$recordClass			The active record class
 	 * @param	array		$options				Optional configuration options
 	 * @return	void
 	 */
-	public function __construct( $options=array() )
+	public function __construct( $recordClass, $options=array() )
 	{
+		$this->recordClass = $recordClass;
+		$pluginClass = $recordClass::$plugin_class;
+		
+		$this->setPlugin( $pluginClass::instance() );
 		$this->options = $options;
-		if ( isset( $options['adminPage'] ) ) {
-			$this->registerAdminPage( $options['adminPage'] );
-		}
 	}
 	
 	/**
@@ -88,9 +86,9 @@ class ActiveRecordController
 	{
 		$adminPage = new \Wordpress\AdminPage;
 		
-		$adminPage->title = isset( $options['title'] ) ? $options['title'] : array_pop( explode( '\\', static::$recordClass ) ) . ' Management';
+		$adminPage->title = isset( $options['title'] ) ? $options['title'] : array_pop( explode( '\\', $this->recordClass ) ) . ' Management';
 		$adminPage->menu  = isset( $options['menu'] ) ? $options['menu'] : $adminPage->title;
-		$adminPage->slug  = isset( $options['slug'] ) ? $options['slug'] : sanitize_title( str_replace( '\\', '-', static::$recordClass ) );
+		$adminPage->slug  = isset( $options['slug'] ) ? $options['slug'] : sanitize_title( str_replace( '\\', '-', $this->recordClass ) );
 		$adminPage->capability = isset( $options['capability'] ) ? $options['capability'] : $adminPage->capability;
 		$adminPage->icon = isset( $options['icon'] ) ? $options['icon'] : $adminPage->icon;
 		$adminPage->position = isset( $options['position'] ) ? $options['position'] : NULL;
@@ -110,9 +108,11 @@ class ActiveRecordController
 	 */
 	public function getActionButtons()
 	{
+		$recordClass = $this->recordClass;
+		
 		return array( 
 			'new' => array(
-				'title' => __( 'Create New', 'mwp-framework' ),
+				'title' => __( $recordClass::$lang_create . ' ' . $recordClass::$lang_singular ),
 				'href' => $this->getUrl( array( 'do' => 'new' ) ),
 				'class' => 'btn btn-primary',
 			)
@@ -134,10 +134,11 @@ class ActiveRecordController
 	 *
 	 * @return	Modern\Wordpress\Helpers\ActiveRecordTable
 	 */
-	public function getDisplayTable()
+	public function createDisplayTable()
 	{
-		$class = static::$recordClass;
-		$table = $class::createDisplayTable();
+		$recordClass = $this->recordClass;
+		$table = $recordClass::createDisplayTable();
+		$table->setController( $this );
 		$plugin = $this->getPlugin();
 		$controller = $this;
 		
@@ -146,25 +147,20 @@ class ActiveRecordController
 		}
 		else
 		{
-			foreach( $class::$columns as $key => $opts ) {
+			foreach( $recordClass::$columns as $key => $opts ) {
 				if ( is_array( $opts ) ) {
-					$table->columns[ $class::$prefix . $key ] = $key;
+					$table->columns[ $recordClass::$prefix . $key ] = $key;
 				}
 				else
 				{
-					$table->columns[ $class::$prefix . $opts ] = $opts;
+					$table->columns[ $recordClass::$prefix . $opts ] = $opts;
 				}
 			}
 		}
 		
-		/** Record row buttons **/
-		if ( ! isset( $this->options['templates']['row_buttons'] ) or $this->options['templates']['row_buttons'] !== FALSE ) 
-		{
-			$buttons_template = isset( $this->options['templates']['row_buttons'] ) ? $this->options['templates']['row_buttons'] : 'views/management/records/row_buttons';
-			$table->columns[ 'buttons' ] = '';
-			$table->handlers[ 'buttons' ] = function( $row ) use ( $class, $controller, $plugin, $buttons_template ) {
-				return $plugin->getTemplateContent( $buttons_template, array( 'plugin' => $plugin, 'class' => $class, 'row' => $row, 'controller' => $controller ) );				
-			};
+		/** Record row actions **/
+		if ( isset( $this->options['templates']['row_actions'] ) ) {
+			$table->rowActionsTemplate = $this->options['templates']['row_actions'];
 		}
 		
 		if ( isset( $this->options['sortable'] ) ) {
@@ -215,7 +211,7 @@ class ActiveRecordController
 	 */
 	public function do_index()
 	{
-		$table = $this->getDisplayTable();
+		$table = $this->createDisplayTable();
 		$where = isset( $this->options['where'] ) ? $this->options['where'] : array('1=1');
 		
 		$table->read_inputs();
@@ -227,72 +223,75 @@ class ActiveRecordController
 	/**
 	 * View an active record
 	 * 
-	 * @param	int			$record_id				The active record id
+	 * @param	ActiveRecord			$record				The active record
 	 * @return	void
 	 */
-	public function do_view( $record_id=NULL )
+	public function do_view( $record=NULL )
 	{
-		$class = static::$recordClass;
-		$record_id = $record_id ?: ( isset( $_REQUEST[ 'id' ] ) ? $_REQUEST[ 'id' ] : 0 );
-		$record = NULL;
+		$class = $this->recordClass;
 		
-		if ( $record_id )
+		if ( ! $record )
 		{
 			try
 			{
-				$record = $class::load( $record_id );
+				$record = $class::load( $_REQUEST[ 'id' ] );
 			}
-			catch( \OutOfRangeException $e ) { }
+			catch( \OutOfRangeException $e ) {
+ 				echo $this->getPlugin()->getTemplateContent( 'component/error', array( 'message' => __( 'The record could not be loaded. Class: ' . $this->recordClass . ' ' . ', ID: ' . ( (int) $_REQUEST['id'] ), 'mwp-framework' ) ) );
+				return;
+			}
 		}
 		
-		echo $this->getPlugin()->getTemplateContent( 'views/management/records/view', array( 'plugin' => $this->getPlugin(), 'controller' => $this, 'record' => $record ) );
+		echo $this->getPlugin()->getTemplateContent( 'views/management/records/view', array( 'title' => $record->viewTitle(), 'plugin' => $this->getPlugin(), 'controller' => $this, 'record' => $record ) );
 	}
 
 	/**
 	 * Create a new active record
 	 * 
-	 * @param	int			$record_id				The active record id
+	 * @param	ActiveRecord			$record				The active record id
 	 * @return	void
 	 */
-	public function do_new()
+	public function do_new( $record=NULL )
 	{
 		$controller = $this;
-		$class = static::$recordClass;		
-		$form = $class::getForm();
+		$class = $this->recordClass;
+		$record = $record ?: new $class;
+		
+		$form = $class::getForm( $record );
 		
 		if ( $form->isValidSubmission() ) 
 		{
-			$record = new $class;
 			$record->processForm( $form->getValues() );			
 			$record->save();
 			
-			$form->processComplete( function() use ( $controller ) {
+			$form->processComplete( function() use ( $controller, $record ) {
 				wp_redirect( $controller->getUrl() );
 			});
 		}
 		
-		echo $this->getPlugin()->getTemplateContent( 'views/management/records/create', array( 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this ) );
+		echo $this->getPlugin()->getTemplateContent( 'views/management/records/create', array( 'title' => $class::createTitle(), 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this ) );
 	}
 	
 	/**
 	 * Edit an active record
 	 * 
-	 * @param	int			$record_id				The active record id
+	 * @param	ActiveRecord|NULL			$record				The active record
 	 * @return	void
 	 */
-	public function do_edit( $record_id=NULL )
+	public function do_edit( $record=NULL )
 	{
 		$controller = $this;
-		$class = static::$recordClass;
-		$record_id = $_REQUEST['id'];
+		$class = $this->recordClass;
 		
-		try
-		{
-			$record = $class::load( $record_id );
-		}
-		catch( \OutOfRangeException $e ) { 
-			echo $this->getPlugin()->getTemplateContent( 'component/error', array( 'message' => __( 'The record could not be found.', 'mwp-framework' ) ) );
-			return;
+		if ( ! $record ) {
+			try
+			{
+				$record = $class::load( $_REQUEST['id'] );
+			}
+			catch( \OutOfRangeException $e ) { 
+ 				echo $this->getPlugin()->getTemplateContent( 'component/error', array( 'message' => __( 'The record could not be loaded. Class: ' . $this->recordClass . ' ' . ', ID: ' . ( (int) $_REQUEST['id'] ), 'mwp-framework' ) ) );
+				return;
+			}
 		}
 		
 		$form = $class::getForm( $record );
@@ -307,43 +306,45 @@ class ActiveRecordController
 			});
 		}
 		
-		echo $this->getPlugin()->getTemplateContent( 'views/management/records/edit', array( 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this, 'record' => $record ) );
+		echo $this->getPlugin()->getTemplateContent( 'views/management/records/edit', array( 'title' => $record->editTitle(), 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this, 'record' => $record ) );
 	}
 
 	/**
 	 * Delete an active record
 	 * 
-	 * @param	int			$record_id				The active record id
+	 * @param	ActiveRecord|NULL			$record				The active record
 	 * @return	void
 	 */
-	public function do_delete( $record_id=NULL )
+	public function do_delete( $record=NULL )
 	{
 		$controller = $this;
-		$class = static::$recordClass;
-		$record_id = $_REQUEST['id'];
+		$class = $this->recordClass;
 		
-		try
-		{
-			$record = $class::load( $record_id );
-			$form = $record->getDeleteForm();
-			
-			if ( $form->isValidSubmission() )
+		if ( ! $record ) {
+			try
 			{
-				if ( $form->getForm()->getClickedButton()->getName() == 'confirm' ) {
-					$record->delete();
-				}
-				
-				$form->processComplete( function() use ( $controller ) {
-					wp_redirect( $controller->getUrl() );
-				});
+				$record = $class::load( $_REQUEST['id'] );
+			}
+			catch( \OutOfRangeException $e ) { 
+ 				echo $this->getPlugin()->getTemplateContent( 'component/error', array( 'message' => __( 'The record could not be loaded. Class: ' . $this->recordClass . ' ' . ', ID: ' . ( (int) $_REQUEST['id'] ), 'mwp-framework' ) ) );
+				return;
 			}
 		}
-		catch( \OutOfRangeException $e ) { 
-			echo $this->getPlugin()->getTemplateContent( 'component/error', array( 'message' => __( 'The record could not be found.', 'mwp-framework' ) ) );
-			return;
-		}
 		
-		echo $this->getPlugin()->getTemplateContent( 'views/management/records/delete', array( 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this, 'record' => $record ) );
+		$form = $record->getDeleteForm();
+		
+		if ( $form->isValidSubmission() )
+		{
+			if ( $form->getForm()->getClickedButton()->getName() == 'confirm' ) {
+				$record->delete();
+			}
+			
+			$form->processComplete( function() use ( $controller ) {
+				wp_redirect( $controller->getUrl() );
+			});
+		}
+	
+		echo $this->getPlugin()->getTemplateContent( 'views/management/records/delete', array( 'title' => $record->deleteTitle(), 'form' => $form, 'plugin' => $this->getPlugin(), 'controller' => $this, 'record' => $record ) );
 	}	
 	
 }

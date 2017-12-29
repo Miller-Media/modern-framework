@@ -43,6 +43,7 @@ class FormTypeExtension extends AbstractTypeExtension
     public function configureOptions( OptionsResolver $resolver )
     {
         $resolver->setDefaults(array(
+			'required' => false,
 			'description' => '',
             'row_attr' => array(),
             'prefix' => '',
