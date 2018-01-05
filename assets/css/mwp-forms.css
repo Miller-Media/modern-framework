@@ -61,3 +61,33 @@
 .wp-list-table .mwp-table-row-actions {
 	margin-top: 4px;
 }
+
+.mwp-form .ui-sortable-helper,
+.wp-list-table .ui-sortable-helper {
+	box-shadow: none;
+	-moz-box-shadow: none;
+	-webkit-box-shadow: none;
+}
+
+.mwp-form .ui-sortable-handle,
+.wp-list-table .ui-sortable-handle {
+	cursor: grab;
+}
+
+.mwp-form .ui-sortable-helper.ui-sortable-handle,
+.wp-list-table .ui-sortable-helper.ui-sortable-handle,
+.mwp-form .ui-sortable-helper .ui-sortable-handle,
+.wp-list-table .ui-sortable-helper .ui-sortable-handle {
+	cursor: grabbing;
+}
+
+.mwp-form .mwp-sortable-placeholder,
+.wp-list-table .mwp-sortable-placeholder {
+	background-color: transparent !important;
+	background-image: repeating-linear-gradient(45deg,
+      rgba(0,0,0,0.1) 0px, 
+      rgba(0,0,0,0.1) 5px, 
+      transparent 5px, 
+      transparent 10px);
+	min-height: 65px;
+}

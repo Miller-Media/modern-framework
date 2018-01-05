@@ -708,6 +708,17 @@ abstract class ActiveRecord
 	}
 	
 	/**
+	 * Flush a record from the multiton store
+	 */
+	public function flush()
+	{
+		$row_key = static::$prefix . static::$key;
+		$id = $this->_data[ $row_key ];
+		
+		unset( static::$multitons[ $id ] );
+	}
+	
+	/**
 	 * Delete a record
 	 *
 	 * @return	bool

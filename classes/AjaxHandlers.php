@@ -70,6 +70,23 @@ class AjaxHandlers extends \Modern\Wordpress\Pattern\Singleton
 	 */
 	public function resequenceRecords()
 	{
-		wp_send_json( $_REQUEST );
+		check_ajax_referer( 'mwp-ajax-nonce', 'nonce' );
+		
+		if ( current_user_can( 'administrator' ) ) 
+		{
+			$recordClass = wp_unslash( $_POST['class'] );
+			if ( class_exists( $recordClass ) and is_subclass_of( $recordClass, 'Modern\Wordpress\Pattern\ActiveRecord' ) and isset( $recordClass::$sequence_col ) ) {
+				$sequence_col = $recordClass::$sequence_col;			
+				foreach( $_POST['sequence'] as $index => $record_id ) {
+					$record = $recordClass::load( $record_id );
+					$record->$sequence_col = $index;
+					$record->save();
+					$record->flush();
+					unset( $record );
+				}
+				
+				wp_send_json( array( 'success' => true ) );
+			}
+		}
 	}
 }

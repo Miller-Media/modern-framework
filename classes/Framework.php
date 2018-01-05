@@ -365,6 +365,7 @@ class Framework extends Plugin
 		wp_register_script( 'mwp', $this->fileUrl( 'assets/js/mwp.framework.js' ), array( 'jquery', 'underscore', 'backbone', 'knockout' ) );
 		wp_localize_script( 'mwp', 'mw_localized_data', array(
 			'ajaxurl' => admin_url( 'admin-ajax.php' ),
+			'ajaxnonce' => wp_create_nonce( 'mwp-ajax-nonce' ),
 		));
 
 		/* Forms */

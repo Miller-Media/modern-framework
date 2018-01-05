@@ -52,9 +52,9 @@
 			var sortedArray = sortableElement.sortable( 'toArray' );
 			
 			$.post( this.local.ajaxurl, {
+				nonce: this.local.ajaxnonce,
 				action: 'mwp_resequence_records',
 				class: config.class,
-				column: config.column,
 				sequence: sortedArray
 			});
 		},
@@ -134,10 +134,12 @@
 			init: function( element, valueAccessor ) 
 			{
 				var config = ko.unwrap( valueAccessor() );
-				
 				if ( typeof $.fn.sortable !== 'undefined' ) 
 				{
 					var sortableElement = config.find ? $(element).find(config.find) : $(element);
+					var options = $.extend( {
+						placeholder: 'mwp-sortable-placeholder'
+					}, config.options || {} );
 					
 					var updateCallback = config.callback || function( event, ui, sortableElement, config ) {
 						var formsController = mwp.controller.get( 'mwp-forms-controller' );
@@ -145,7 +147,7 @@
 					};
 					
 					try {
-						sortableElement.sortable( config.options );
+						sortableElement.sortable( options );
 						sortableElement.on( 'sortupdate', function( event, ui ) {
 							if ( typeof updateCallback === 'function' ) {
 								updateCallback( event, ui, sortableElement, config );
