@@ -134,6 +134,9 @@ call_user_func( function() {
 					if ( is_admin() ) {
 						$framework->attach( \Modern\Wordpress\Controller\Tasks::instance() );
 					}
+					
+					$ajaxHandlers = \Modern\Wordpress\AjaxHandlers::instance();
+					$framework->attach( $ajaxHandlers );
 
 					$settings = \Modern\Wordpress\Settings::instance();
 					$framework->addSettings( $settings );

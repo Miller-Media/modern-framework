@@ -335,11 +335,59 @@
 	
 	if ( typeof ko !== 'undefined' )
 	{
-		ko.bindingHandlers.stopBinding = {
-			init: function() {
-				return { controlsDescendantBindings: true };
+		/**
+		 * Custom knockout bindings
+		 */
+		_.extend( ko.bindingHandlers, 
+		{
+			/**
+			 * Bind an arbitrary callback
+			 */
+			init: {
+				init: function( element, valueAccessor, allBindingsAccessor ) {
+					var callback = ko.utils.unwrapObservable( valueAccessor() );
+					if ( typeof callback == 'function' ) {
+						callback.call( element, allBindingsAccessor );
+					}
+				}
+			},
+			
+			/**
+			 * Bind an arbitrary callback
+			 */
+			callback: {
+				update: function( element, valueAccessor, allBindingsAccessor ) {
+					var callback = ko.utils.unwrapObservable( valueAccessor() );
+					if ( typeof callback == 'function' ) {
+						callback.call( element, allBindingsAccessor );
+					}
+				}
+			},
+			
+			/**
+			 * jQuery proxy
+			 */
+			jquery: {
+				update: function( element, valueAccessor, allBindingsAccessor ) {
+					var options = ko.utils.unwrapObservable( valueAccessor() );
+					var el = $(element);
+					$.each( options, function( key, props ) {
+						if ( typeof el[key] == 'function' ) {
+							el[key](props);
+						}
+					});
+				}
+			},
+			
+			/**
+			 * Protect from further binding
+			 */
+			stopBinding: {
+				init: function() {
+					return { controlsDescendantBindings: true };
+				}
 			}
-		};
+		});
 
 		ko.virtualElements.allowedBindings.stopBinding = true;
 		

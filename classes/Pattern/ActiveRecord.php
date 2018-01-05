@@ -88,6 +88,15 @@ abstract class ActiveRecord
 	 */
 	public static $lang_delete = 'Delete';
 	
+	/**
+	 * @var	string
+	 */
+	public static $sequence_col;
+	 
+	/**
+	 * @var	string
+	 */
+	public static $parent_col;
 
 	/**
 	 * @var	string		WP DB Prefix of loaded record
@@ -98,7 +107,7 @@ abstract class ActiveRecord
 	 * @var	array		Record data
 	 */
 	protected $_data = array();
-		
+	
 	/**
 	 * Get the 'create record' page title
 	 * 
@@ -516,8 +525,8 @@ abstract class ActiveRecord
 	 */
 	public static function createDisplayTable()
 	{
-		$table = new ActiveRecordTable;
-		$table->activeRecordClass = get_called_class();
+		$table = new ActiveRecordTable( array( 'recordClass' => get_called_class() ) );
+		
 		return $table;
 	}
 	
@@ -718,9 +727,11 @@ abstract class ActiveRecord
 				unset( static::$multitons[ $id ] );
 				return TRUE;
 			}
+			else
+			{
+				throw new \ErrorException( $db->last_result );
+			}
 		}
-		
-		return FALSE;
 	}
 	
 	/**

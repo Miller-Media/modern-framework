@@ -18,7 +18,7 @@
  */
 
 namespace Modern\Wordpress\Helpers; 
- 
+
 if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
@@ -46,6 +46,48 @@ use Modern\Wordpress\Framework;
  */
 class ActiveRecordTable extends \WP_List_Table
 {
+
+	/**
+	 * Various information about the current table.
+	 *
+	 */
+	public $_args;
+
+	/**
+	 * Various information needed for displaying the pagination.
+	 *
+	 */
+	public $_pagination_args = array();
+
+	/**
+	 * The current screen.
+	 *
+	 */
+	public $screen;
+
+	/**
+	 * Cached bulk actions.
+	 *
+	 */
+	public $_actions;
+
+	/**
+	 * Cached pagination output.
+	 *
+	 */
+	public $_pagination;
+
+	/**
+	 * The view switcher modes.
+	 *
+	 */
+	public $modes = array();
+
+	/**
+	 * Stores the value returned by ->get_column_info().
+	 *
+	 */
+	public $_column_headers;
 
 	/**
 	 * @var string			Active Record Classname
@@ -105,12 +147,12 @@ class ActiveRecordTable extends \WP_List_Table
 	/**
 	 * @var	string
 	 */
-	public $tableTemplate;
+	public $tableTemplate = 'views/management/records/table';
 	
 	/**
 	 * @var	string
 	 */
-	public $rowTemplate;
+	public $rowTemplate = 'views/management/records/table_row';
 	
 	/**
 	 * @var	string
@@ -121,6 +163,21 @@ class ActiveRecordTable extends \WP_List_Table
 	 * @var	ActiveRecordController
 	 */
 	protected $controller;
+	
+	/**
+	 * @var	string
+	 */
+	public $viewModel = 'mwp-forms-controller';
+	
+	/**
+	 * @var	string
+	 */
+	public $sequencingColumn;
+	
+	/**
+	 * @var	string
+	 */
+	public $parentColumn;
 	
 	/**
 	 * Set the controller
@@ -168,17 +225,26 @@ class ActiveRecordTable extends \WP_List_Table
      */
     public function __construct( $args=array() )
 	{
+		$lang_singular = 'record';
+		$lang_plural = 'records';
+		
+		if ( isset( $args['recordClass'] ) ) {
+			$this->activeRecordClass = $args['recordClass'];
+			if ( class_exists( $args['recordClass'] ) ) {
+				$lang_singular = strtolower( $args['recordClass']::$lang_singular );
+				$lang_plural = strtolower( $args['recordClass']::$lang_plural );
+			}
+		}
+		
 		//Set parent defaults
-		parent::__construct( array_merge
-		( 
-			array
-			(
-				'singular'  => 'item',
-				'plural'    => 'items',
+		parent::__construct( array_merge( 
+			array(
+				'singular'  => $lang_singular,
+				'plural'    => $lang_plural,
 				'ajax'      => true
 			), 
 			$args 
-		));
+		));		
     }
 	
 	/**
@@ -201,11 +267,25 @@ class ActiveRecordTable extends \WP_List_Table
 	 */
 	public function single_row( $item ) 
 	{
+		$recordClass = $this->activeRecordClass;
+		
 		if ( $this->rowTemplate ) {
 			echo $this->getPlugin()->getTemplateContent( $this->rowTemplate, array( 'table' => $this, 'item' => $item ) );
 		} else {
 			parent::single_row( $item );
 		}
+	}
+	
+	/**
+	 * Generates the columns for a single row of the table
+	 *
+	 * @since 3.1.0
+	 * @access protected
+	 *
+	 * @param object $item The current item
+	 */
+	public function single_row_columns( $item ) {
+		return parent::single_row_columns( $item );
 	}
 	
 	/**
@@ -224,6 +304,26 @@ class ActiveRecordTable extends \WP_List_Table
 	}
 	
 	/**
+	 * Generate the table navigation above or below the table
+	 *
+	 * @since 3.1.0
+	 * @access protected
+	 * @param string $which
+	 */
+	public function display_tablenav( $which ) {
+		return parent::display_tablenav( $which );
+	}
+	
+	/**
+	 * Get a list of CSS classes for the WP_List_Table table tag.
+	 *
+	 * @return array List of CSS classes for the table tag.
+	 */
+	public function get_table_classes() {
+		return parent::get_table_classes();
+	}
+	
+	/**
 	 * Generates and display row actions links for the list table.
 	 *
 	 * @since 4.3.0
@@ -234,28 +334,37 @@ class ActiveRecordTable extends \WP_List_Table
 	 * @param string $primary     Primary column name.
 	 * @return string The row actions HTML, or an empty string if the current column is the primary column.
 	 */
-	protected function handle_row_actions( $item, $column_name, $primary ) 
-	{		
+	public function handle_row_actions( $item, $column_name, $primary ) 
+	{
+		$default_row_actions = parent::handle_row_actions( $item, $column_name, $primary );
+		
 		if ( $column_name === $primary and $this->getController() ) {
-			return $this->getControllerActionsHTML( $item );
+			return $this->getControllerActionsHTML( $item, $default_row_actions );
 		}
 		
-		return parent::handle_row_actions( $item, $column_name, $primary );
+		return $default_row_actions;
  	}
 	
 	/**
 	 * Get the row actions for an item
 	 *
-	 * @param	array		$item 			The item being acted upon
+	 * @param	array		$item 						The item being acted upon
+	 * @param	string		$default_row_actions		The default provided core row actions
 	 * @return	string
 	 */
-	public function getControllerActionsHTML( $item )
+	public function getControllerActionsHTML( $item, $default_row_actions='' )
 	{
 		if ( $controller = $this->getController() ) {
 			try {
 				$recordClass = $this->activeRecordClass;
 				$record = $recordClass::load( $item[ $recordClass::$prefix . $recordClass::$key ] );
-				return $this->getPlugin()->getTemplateContent( $this->rowActionsTemplate, array( 'controller' => $controller, 'record' => $record, 'table' => $this, 'actions' => $record->getControllerActions() ) );
+				return $this->getPlugin()->getTemplateContent( $this->rowActionsTemplate, array( 
+					'controller' => $controller, 
+					'record' => $record, 
+					'table' => $this, 
+					'actions' => $record->getControllerActions(), 
+					'default_row_actions' => $default_row_actions,
+				));
 			} catch( \OutOfRangeException $e ) { }
 		}
 	}
@@ -432,8 +541,7 @@ class ActiveRecordTable extends \WP_List_Table
 				try
 				{
 					$item = $class::load( $item_id );
-					if ( is_callable( array( $item, $action ) ) )
-					{
+					if ( is_callable( array( $item, $action ) ) ) {
 						call_user_func( array( $item, $action ) );
 					}
 				}
@@ -580,6 +688,38 @@ class ActiveRecordTable extends \WP_List_Table
 			'per_page'    => $this->perPage,
 			'total_pages' => ceil( $total_items / $per_page ),
 		) );
+	}
+
+	/**
+	 * Get the view model attr
+	 */
+	public function getViewModelAttr()
+	{
+		if ( $this->viewModel ) {
+			return ' data-view-model="' . $this->viewModel . '"';
+		}
+		
+		return '';
+	}
+	
+	/**
+	 * Get the sequencing data bind attribute 
+	 * 
+	 * @return	string
+	 */
+	public function getSequencingBindAttr( $func='sequenceableRecords', $options=array() )
+	{
+		if ( $this->sequencingColumn ) {
+			return ' data-bind="' . $func . ': ' . esc_attr( json_encode( array( 
+				'class' => $this->activeRecordClass, 
+				'column' => $this->sequencingColumn, 
+				'parent' => $this->parentColumn,
+				'options' => $options ?: null,
+			))) . 
+			'"';
+		}
+		
+		return '';
 	}
 	
 	/**

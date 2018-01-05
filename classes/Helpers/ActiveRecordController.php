@@ -69,7 +69,14 @@ class ActiveRecordController
 		$pluginClass = $recordClass::$plugin_class;
 		
 		$this->setPlugin( $pluginClass::instance() );
-		$this->options = $options;
+		
+		$sequence_col = isset( $recordClass::$sequence_col ) ? $recordClass::$prefix . $recordClass::$sequence_col : NULL;
+		$parent_col = isset( $recordClass::$parent_col ) ? $recordClass::$prefix . $recordClass::$parent_col : NULL;
+		
+		$this->options = array_merge( array( 
+			'sequencingColumn' => $sequence_col,
+			'parentColumn' => $parent_col,
+		), $options );		
 	}
 	
 	/**
@@ -106,15 +113,15 @@ class ActiveRecordController
 	 *
 	 * @return	array
 	 */
-	public function getActionButtons()
+	public function getActions()
 	{
 		$recordClass = $this->recordClass;
 		
 		return array( 
 			'new' => array(
 				'title' => __( $recordClass::$lang_create . ' ' . $recordClass::$lang_singular ),
-				'href' => $this->getUrl( array( 'do' => 'new' ) ),
-				'class' => 'btn btn-primary',
+				'params' => array( 'do' => 'new' ),
+				'attr' => array( 'class' => 'btn btn-primary' ),
 			)
 		);
 	}
@@ -124,71 +131,87 @@ class ActiveRecordController
 	 *
 	 * @return	string
 	 */
-	public function getActionsHtml()
+	public function getActionsHtml( $actions=null )
 	{
-		return $this->getPlugin()->getTemplateContent( 'views/management/records/table_actions', array( 'plugin' => $plugin, 'class' => $class, 'controller' => $this, 'buttons' => $this->getActionButtons() ) );
+		$actions = $actions ?: $this->getActions();
+		
+		return $this->getPlugin()->getTemplateContent( 'views/management/records/table_actions', array( 'plugin' => $plugin, 'class' => $class, 'controller' => $this, 'actions' => $actions ) );
 	}
 	
 	/**
 	 * Get the active record display table
 	 *
+	 * @param	array			$override_options			Default override options
 	 * @return	Modern\Wordpress\Helpers\ActiveRecordTable
 	 */
-	public function createDisplayTable()
+	public function createDisplayTable( $override_options=array() )
 	{
+		$options     = array_merge( $this->options, $override_options );
 		$recordClass = $this->recordClass;
-		$table = $recordClass::createDisplayTable();
-		$table->setController( $this );
-		$plugin = $this->getPlugin();
-		$controller = $this;
+		$table       = $recordClass::createDisplayTable();
+		$plugin      = $this->getPlugin();
+		$controller  = $this;
 		
-		if ( isset( $this->options['columns'] ) ) {
-			$table->columns = $this->options['columns'];
+		$table->setController( $controller );
+		
+		if ( isset( $options['viewModel'] ) ) {
+			$table->viewModel = $options['viewModel'];
+		}
+		
+		if ( isset( $options['columns'] ) ) {
+			$table->columns = $options['columns'];
 		}
 		else
 		{
 			foreach( $recordClass::$columns as $key => $opts ) {
 				if ( is_array( $opts ) ) {
 					$table->columns[ $recordClass::$prefix . $key ] = $key;
-				}
-				else
-				{
+				} else {
 					$table->columns[ $recordClass::$prefix . $opts ] = $opts;
 				}
 			}
 		}
 		
 		/** Record row actions **/
-		if ( isset( $this->options['templates']['row_actions'] ) ) {
-			$table->rowActionsTemplate = $this->options['templates']['row_actions'];
+		if ( isset( $options['templates']['row_actions'] ) ) {
+			$table->rowActionsTemplate = $options['templates']['row_actions'];
 		}
 		
-		if ( isset( $this->options['sortable'] ) ) {
-			$table->sortableColumns = $this->options['sortable'];
+		if ( isset( $options['sortable'] ) ) {
+			$table->sortableColumns = $options['sortable'];
 		}
 		
-		if ( isset( $this->options['searchable'] ) ) {
-			$table->searchableColumns = $this->options['searchable'];
+		if ( isset( $options['searchable'] ) ) {
+			$table->searchableColumns = $options['searchable'];
 		}
 		
-		if ( isset( $this->options['bulk_actions'] ) ) {
-			$table->bulkActions = $this->options['bulk_actions'];
+		if ( isset( $options['bulk_actions'] ) ) {
+			$table->bulkActions = $options['bulk_actions'];
 		} else {
 			$table->bulkActions = array(
 				'delete' => 'Delete'
 			);
 		}
 		
-		if ( isset( $this->options['sort_by'] ) ) {
-			$table->sortBy = $this->options['sort_by'];
-		} 
-		
-		if ( isset( $this->options['sort_order'] ) ) {
-			$table->sortOrder = $this->options['sort_order'];
+		if ( isset( $options['sort_by'] ) ) {
+			$table->sortBy = $options['sort_by'];
 		}
 		
-		if ( isset( $this->options['handlers'] ) ) {
-			$table->handlers = array_merge( $table->handlers, $this->options['handlers'] );
+		if ( isset( $options['sort_order'] ) ) {
+			$table->sortOrder = $options['sort_order'];
+		}
+		
+		if ( isset( $options['sequencingColumn'] ) ) {
+			$table->sequencingColumn = $options['sequencingColumn'];
+			if ( isset( $options['parentColumn'] ) ) {
+				$table->parentColumn = $options['parentColumn'];
+			}
+			$table->sortBy = $options['sequencingColumn'];
+			$table->sortOrder = 'ASC';
+		}
+		
+		if ( isset( $options['handlers'] ) ) {
+			$table->handlers = array_merge( $table->handlers, $options['handlers'] );
 		}
 		
 		return $table;
@@ -198,6 +221,7 @@ class ActiveRecordController
 	 * Get the controller url
 	 *
 	 * @param	array			$args			Optional query args
+	 * @return	string
 	 */
 	public function getUrl( $args=array() )
 	{
@@ -217,7 +241,7 @@ class ActiveRecordController
 		$table->read_inputs();
 		$table->prepare_items( $where );
 		
-		echo $this->getPlugin()->getTemplateContent( 'views/management/records/table', array( 'plugin' => $this->getPlugin(), 'controller' => $this, 'table' => $table ) );
+		echo $this->getPlugin()->getTemplateContent( 'views/management/records/table_wrapper', array( 'plugin' => $this->getPlugin(), 'controller' => $this, 'table' => $table ) );
 	}
 	
 	/**
@@ -335,7 +359,7 @@ class ActiveRecordController
 		
 		if ( $form->isValidSubmission() )
 		{
-			if ( $form->getForm()->getClickedButton()->getName() == 'confirm' ) {
+			if ( $form->getForm()->getClickedButton()->getName() === 'confirm' ) {
 				$record->delete();
 			}
 			

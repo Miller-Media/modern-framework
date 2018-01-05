@@ -10,10 +10,11 @@
  *
  * @param	Plugin		$this		The plugin instance which is loading this template
  *
- * @param	ActiveRecordController		$controller		The active record controller
- * @param	ActiveRecord				$record			The active record 
- * @param	ActiveRecordTable			$table			The display table
- * @param	array						$actions		The record actions
+ * @param	ActiveRecordController		$controller				The active record controller
+ * @param	ActiveRecord				$record					The active record 
+ * @param	ActiveRecordTable			$table					The display table
+ * @param	array						$actions				The record actions
+ * @param	string						$default_row_actions	The core default row actions
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -38,3 +39,5 @@ if ( ! defined( 'ABSPATH' ) ) {
 	</a>
 	<?php endforeach ?>
 </div>
+
+<?php echo $default_row_actions ?>

@@ -2,7 +2,7 @@
 /**
  * Plugin HTML Template
  *
- * Created:  December 13, 2017
+ * Created:  January 4, 2018
  *
  * @package  Modern Framework for Wordpress
  * @author   Kevin Carwile
@@ -10,8 +10,6 @@
  *
  * @param	Plugin		$this		The plugin instance which is loading this template
  *
- * @param	Modern\Wordpress\Plugin								$plugin			The plugin that created the controller
- * @param	Modern\Wordpress\Helpers\ActiveRecordController		$controller		The active record controller
  * @param	Modern\Wordpress\Helpers\ActiveRecordTable			$table			The active record display table
  */
 
@@ -19,16 +17,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die( 'Access denied.' );
 }
 
+$singular = $table->_args['singular'];
 ?>
 
-<div class="wrap">
+<?php $table->display_tablenav( 'top' ); ?>
+<?php $table->screen->render_screen_reader_content( 'heading_list' ); ?>
 
-	<h1><?php echo $controller->adminPage->title ?></h1>
+<table class="wp-list-table <?php echo implode( ' ', $table->get_table_classes() ); ?>" <?php echo $table->getViewModelAttr() ?>>
+	<thead>
+	<tr>
+		<?php $table->print_column_headers(); ?>
+	</tr>
+	</thead>
 
-	<?php echo $controller->getActionsHtml() ?>
-	
-	<form method="post">
-		<?php echo $table->getDisplay() ?>
-	</form>
-	
-</div>
+	<tbody id="the-list"<?php if ( $singular ) { echo " data-wp-lists='list:$singular'"; } ?> <?php echo $table->getSequencingBindAttr() ?>>
+		<?php $table->display_rows_or_placeholder(); ?>
+	</tbody>
+
+	<tfoot>
+	<tr>
+		<?php $table->print_column_headers( false ); ?>
+	</tr>
+	</tfoot>
+
+</table>
+
+<?php $table->display_tablenav( 'bottom' ); ?>

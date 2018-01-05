@@ -368,7 +368,7 @@ class Framework extends Plugin
 		));
 
 		/* Forms */
-		wp_register_script( 'mwp-forms-controller', $this->fileUrl( 'assets/js/mwp-forms-controller.js' ), array( 'mwp' ) );
+		wp_register_script( 'mwp-forms-controller', $this->fileUrl( 'assets/js/mwp-forms-controller.js' ), array( 'mwp', 'jquery-ui-sortable' ) );
 		wp_enqueue_style( 'mwp-forms-css', $this->fileUrl( 'assets/css/mwp-forms.css' ) );
 		
 		if ( is_admin() ) {

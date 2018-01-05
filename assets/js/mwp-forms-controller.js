@@ -22,7 +22,7 @@
 	 * Forms Controller
 	 *
 	 */
-	var formsController = mwp.controller( 'mwp-forms-controller', 
+	mwp.controller.model( 'mwp-forms-controller', 
 	{
 		
 		/**
@@ -32,11 +32,30 @@
 		 */
 		init: function()
 		{
-			var ajaxurl = formsController.local.ajaxurl;			
+			var self = this;
+			var ajaxurl = this.local.ajaxurl;			
+			
 			this.viewModel = {};
 			
 			mwp.on( 'views.ready', function() {
-				formsController.applyToggles();
+				self.applyToggles();
+			});
+		},
+		
+		/**
+		 * Resequence records
+		 *
+		 */
+		resequenceRecords: function( event, ui, sortableElement, config )
+		{
+			var self = this;
+			var sortedArray = sortableElement.sortable( 'toArray' );
+			
+			$.post( this.local.ajaxurl, {
+				action: 'mwp_resequence_records',
+				class: config.class,
+				column: config.column,
+				sequence: sortedArray
 			});
 		},
 		
@@ -48,13 +67,14 @@
 		 */
 		applyToggles: function( scope ) 
 		{
+			var self = this;
 			scope = scope ? $(scope) : $(document);
 			
 			scope.find('.mwp-form [form-toggles]').each( function() {				
 				var element = $(this);
 				if ( ! element.data( 'toggles-applied' ) ) {
-					formsController.doToggles( element );
-					var changeUpdate = function() { formsController.doToggles( element ); };
+					self.doToggles( element );
+					var changeUpdate = function() { self.doToggles( element ); };
 					element.is('div') ? element.find('input').on( 'change', changeUpdate ) : element.on( 'change', changeUpdate );
 					element.data( 'toggles-applied', true );
 				}
@@ -104,6 +124,40 @@
 	
 	});
 	
-	
+	/**
+	 * Add forms related knockout bindings
+	 *
+	 */
+	$.extend( ko.bindingHandlers, 
+	{
+		sequenceableRecords: {
+			init: function( element, valueAccessor ) 
+			{
+				var config = ko.unwrap( valueAccessor() );
+				
+				if ( typeof $.fn.sortable !== 'undefined' ) 
+				{
+					var sortableElement = config.find ? $(element).find(config.find) : $(element);
+					
+					var updateCallback = config.callback || function( event, ui, sortableElement, config ) {
+						var formsController = mwp.controller.get( 'mwp-forms-controller' );
+						formsController.resequenceRecords( event, ui, sortableElement, config );
+					};
+					
+					try {
+						sortableElement.sortable( config.options );
+						sortableElement.on( 'sortupdate', function( event, ui ) {
+							if ( typeof updateCallback === 'function' ) {
+								updateCallback( event, ui, sortableElement, config );
+							}
+						});
+					}
+					catch(e) {
+						console.log( e );
+					}
+				}
+			}
+		}
+	});	
 })( jQuery );
  

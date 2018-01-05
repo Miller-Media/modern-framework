@@ -12,7 +12,7 @@
  *
  * @param	Modern\Wordpress\Plugin								$plugin			The plugin that created the controller
  * @param	Modern\Wordpress\Helpers\ActiveRecordController		$controller		The active record controller
- * @param	array												$buttons		Buttons to display
+ * @param	array												$actions		Actions to display
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -22,7 +22,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <div class="mwp-bootstrap" style="text-align:right">
-	<?php foreach( $buttons as $button ) : ?>
-	<a href="<?php echo $button['href'] ?>" class="<?php echo $button['class']?>"><?php echo $button['title'] ?></a>
-	<?php endforeach ?>
-</div>
+	<?php foreach ( $actions as $action ) : ?>
+	<a <?php 
+		if ( isset( $action['attr'] ) ) {
+			foreach( $action['attr'] as $k => $v ) {
+				if ( is_array( $v ) ) { $v = json_encode( $v ); } printf( '%s="%s" ', $k, esc_attr( $v ) );
+			}
+		}
+	?> href="<?php echo $controller->getUrl( isset( $action['params'] ) ? $action['params'] : array() ) ?>">
+		<?php if ( isset( $action['icon'] ) ) : ?>
+			<i class="<?php echo $action['icon'] ?>"></i>
+		<?php endif ?>
+		<?php echo $action['title'] ?>
+	</a>
+	<?php endforeach ?></div>
