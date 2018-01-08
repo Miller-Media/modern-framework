@@ -57,6 +57,26 @@ class ActiveRecordController
 	}
 	
 	/**
+	 * Default controller configuration
+	 *
+	 * @return	array
+	 */
+	public function getDefaultConfig()
+	{
+		$recordClass = $this->recordClass;
+		
+		$sequence_col = isset( $recordClass::$sequence_col ) ? $recordClass::$prefix . $recordClass::$sequence_col : NULL;
+		$parent_col = isset( $recordClass::$parent_col ) ? $recordClass::$prefix . $recordClass::$parent_col : NULL;
+		
+		return array(
+			'tableConfig' => array(
+				'sequencingColumn' => $sequence_col,
+				'parentColumn' => $parent_col,
+			),
+		);
+	}
+	
+	/**
 	 * Constructor
 	 *
 	 * @param	string		$recordClass			The active record class
@@ -67,16 +87,8 @@ class ActiveRecordController
 	{
 		$this->recordClass = $recordClass;
 		$pluginClass = $recordClass::$plugin_class;
-		
 		$this->setPlugin( $pluginClass::instance() );
-		
-		$sequence_col = isset( $recordClass::$sequence_col ) ? $recordClass::$prefix . $recordClass::$sequence_col : NULL;
-		$parent_col = isset( $recordClass::$parent_col ) ? $recordClass::$prefix . $recordClass::$parent_col : NULL;
-		
-		$this->options = array_merge( array( 
-			'sequencingColumn' => $sequence_col,
-			'parentColumn' => $parent_col,
-		), $options );		
+		$this->options = array_merge( apply_filters( 'mwp_controller_default_config', $this->getDefaultConfig(), $recordClass ), $options );		
 	}
 	
 	/**
@@ -146,7 +158,7 @@ class ActiveRecordController
 	 */
 	public function createDisplayTable( $override_options=array() )
 	{
-		$options     = array_merge( $this->options, $override_options );
+		$options     = array_merge( ( isset( $this->options['tableConfig'] ) ? $this->options['tableConfig'] : array() ), $override_options );
 		$recordClass = $this->recordClass;
 		$table       = $recordClass::createDisplayTable();
 		$plugin      = $this->getPlugin();
@@ -236,7 +248,7 @@ class ActiveRecordController
 	public function do_index()
 	{
 		$table = $this->createDisplayTable();
-		$where = isset( $this->options['where'] ) ? $this->options['where'] : array('1=1');
+		$where = isset( $this->options['tableConfig']['where'] ) ? $this->options['tableConfig']['where'] : array('1=1');
 		
 		$table->read_inputs();
 		$table->prepare_items( $where );

@@ -58,10 +58,6 @@
 	box-shadow: none;
 }
 
-.wp-list-table .mwp-table-row-actions {
-	margin-top: 4px;
-}
-
 .mwp-form .ui-sortable-helper,
 .wp-list-table .ui-sortable-helper {
 	box-shadow: none;

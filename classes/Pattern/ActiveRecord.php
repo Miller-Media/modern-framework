@@ -149,6 +149,17 @@ abstract class ActiveRecord
 	}
 	
 	/**
+ 	 * Get plugin
+	 *
+	 * @return	\Modern\Wordpress\Plugin
+	 */
+	public function getPlugin()
+	{
+		$pluginClass = static::$plugin_class;
+		return $pluginClass::instance();
+	}
+	
+	/**
 	 * Property getter
 	 *
 	 * @param	string		$property		The property to get
@@ -670,7 +681,7 @@ abstract class ActiveRecord
 	/**
 	 * Save the record
 	 *
-	 * @return	bool
+	 * @return	bool|WP_Error
 	 */
 	public function save()
 	{
@@ -684,7 +695,7 @@ abstract class ActiveRecord
 			
 			if ( $db->insert( $this->get_db_prefix() . static::$table, $this->_data, $format ) === FALSE )
 			{
-				return FALSE;
+				return new \WP_Error( 'sql_error', $db->last_error );
 			}
 			else
 			{
@@ -700,7 +711,7 @@ abstract class ActiveRecord
 			
 			if ( $db->update( $this->get_db_prefix() . static::$table, $this->_data, array( $row_key => $this->_data[ $row_key ] ), $format, $where_format ) === FALSE )
 			{
-				return FALSE;
+				return new \WP_Error( 'sql_error', $db->last_error );
 			}
 			
 			return TRUE;
@@ -721,7 +732,7 @@ abstract class ActiveRecord
 	/**
 	 * Delete a record
 	 *
-	 * @return	bool
+	 * @return	bool|WP_Error
 	 */
 	public function delete()
 	{
@@ -740,7 +751,7 @@ abstract class ActiveRecord
 			}
 			else
 			{
-				throw new \ErrorException( $db->last_result );
+				return new \WP_Error( 'sql_error', $db->last_error );
 			}
 		}
 	}

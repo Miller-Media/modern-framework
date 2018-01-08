@@ -140,6 +140,26 @@ class ActiveRecordTable extends \WP_List_Table
 	public $handlers = array();
 	
 	/**
+	 * @var	bool
+	 */
+	public $displayTopNavigation = true;
+	
+	/**
+	 * @var	bool
+	 */
+	public $displayBottomNavigation = true;
+	
+	/**
+	 * @var	bool
+	 */
+	public $displayTopHeaders = true;
+	
+	/**
+	 * @var	bool
+	 */
+	public $displayBottomHeaders = false;	
+	
+	/**
 	 * @var	Modern\Wordpress\Plugin
 	 */
 	protected $plugin;
@@ -178,6 +198,11 @@ class ActiveRecordTable extends \WP_List_Table
 	 * @var	string
 	 */
 	public $parentColumn;
+	
+	/**
+	 * @var string
+	 */
+	public $actionsColumn;
 	
 	/**
 	 * Set the controller
@@ -289,6 +314,16 @@ class ActiveRecordTable extends \WP_List_Table
 	}
 	
 	/**
+	 * Message to be displayed when there are no items
+	 *
+	 * @since 3.1.0
+	 * @access public
+	 */
+	public function no_items() {
+		_e( 'No ' . ( $this->_args['plural'] ?: 'items' ) . ' found.' );
+	}
+	
+	/**
 	 * Display the table
 	 *
 	 * @since 3.1.0
@@ -315,12 +350,43 @@ class ActiveRecordTable extends \WP_List_Table
 	}
 	
 	/**
+	 * @var	array
+	 */
+	public $tableClasses = array( 'widefat', 'fixed', 'striped' );
+	
+	/**
 	 * Get a list of CSS classes for the WP_List_Table table tag.
 	 *
 	 * @return array List of CSS classes for the table tag.
 	 */
 	public function get_table_classes() {
-		return parent::get_table_classes();
+		return $this->tableClasses;
+	}
+	
+	/**
+	 * Add table css class
+	 *
+	 * @param	string		$classname			The classname to add
+	 * @return	void
+	 */
+	public function addTableClass( $classname )
+	{
+		if ( ! in_array( $classname, $this->tableClasses ) ) {
+			$this->tableClasses[] = $classname;
+		}
+	}
+	
+	/**
+	 * Remove a table css class
+	 *
+	 * @param	string		$classname			The classname to remove
+	 * @return	void
+	 */
+	public function removeTableClass( $classname )
+	{
+		$tableClasses = array_flip( $this->tableClasses );
+		unset( $tableClasses[$classname] );
+		$this->tableClasses = array_flip( $tableClasses );
 	}
 	
 	/**
@@ -338,9 +404,12 @@ class ActiveRecordTable extends \WP_List_Table
 	{
 		$default_row_actions = parent::handle_row_actions( $item, $column_name, $primary );
 		
-		if ( $column_name === $primary and $this->getController() ) {
-			return $this->getControllerActionsHTML( $item, $default_row_actions );
-		}
+		if ( $this->getController() ) {		
+			$button_col = $this->actionsColumn ?: $primary;
+			if ( $column_name === $button_col and $this->getController() ) {
+				$default_row_actions .= $this->getControllerActionsHTML( $item, $default_row_actions );
+			}
+		} 
 		
 		return $default_row_actions;
  	}
@@ -504,6 +573,130 @@ class ActiveRecordTable extends \WP_List_Table
 	}
 	
 	/**
+	 * Display the pagination.
+	 *
+	 * @since 3.1.0
+	 * @access protected
+	 *
+	 * @param string $which
+	 */
+	protected function pagination( $which ) {
+		if ( empty( $this->_pagination_args ) ) {
+			return;
+		}
+
+		$total_items = $this->_pagination_args['total_items'];
+		$total_pages = $this->_pagination_args['total_pages'];
+		$infinite_scroll = false;
+		if ( isset( $this->_pagination_args['infinite_scroll'] ) ) {
+			$infinite_scroll = $this->_pagination_args['infinite_scroll'];
+		}
+
+		if ( 'top' === $which && $total_pages > 1 ) {
+			$this->screen->render_screen_reader_content( 'heading_pagination' );
+		}
+
+		$output = '<span class="displaying-num">' . sprintf( _n( '%s ' . ( $this->_args['singular'] ?: 'item' ), '%s ' . ( $this->_args['plural'] ?: 'items' ), $total_items ), number_format_i18n( $total_items ) ) . '</span>';
+
+		$current = $this->get_pagenum();
+		$removable_query_args = wp_removable_query_args();
+
+		$current_url = set_url_scheme( 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
+
+		$current_url = remove_query_arg( $removable_query_args, $current_url );
+
+		$page_links = array();
+
+		$total_pages_before = '<span class="paging-input">';
+		$total_pages_after  = '</span></span>';
+
+		$disable_first = $disable_last = $disable_prev = $disable_next = false;
+
+ 		if ( $current == 1 ) {
+			$disable_first = true;
+			$disable_prev = true;
+ 		}
+		if ( $current == 2 ) {
+			$disable_first = true;
+		}
+ 		if ( $current == $total_pages ) {
+			$disable_last = true;
+			$disable_next = true;
+ 		}
+		if ( $current == $total_pages - 1 ) {
+			$disable_last = true;
+		}
+
+		if ( $disable_first ) {
+			$page_links[] = '<span class="tablenav-pages-navspan" aria-hidden="true">&laquo;</span>';
+		} else {
+			$page_links[] = sprintf( "<a class='first-page' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
+				esc_url( remove_query_arg( 'paged', $current_url ) ),
+				__( 'First page' ),
+				'&laquo;'
+			);
+		}
+
+		if ( $disable_prev ) {
+			$page_links[] = '<span class="tablenav-pages-navspan" aria-hidden="true">&lsaquo;</span>';
+		} else {
+			$page_links[] = sprintf( "<a class='prev-page' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
+				esc_url( add_query_arg( 'paged', max( 1, $current-1 ), $current_url ) ),
+				__( 'Previous page' ),
+				'&lsaquo;'
+			);
+		}
+
+		if ( 'bottom' === $which ) {
+			$html_current_page  = $current;
+			$total_pages_before = '<span class="screen-reader-text">' . __( 'Current Page' ) . '</span><span id="table-paging" class="paging-input"><span class="tablenav-paging-text">';
+		} else {
+			$html_current_page = sprintf( "%s<input class='current-page' id='current-page-selector' type='text' name='paged' value='%s' size='%d' aria-describedby='table-paging' /><span class='tablenav-paging-text'>",
+				'<label for="current-page-selector" class="screen-reader-text">' . __( 'Current Page' ) . '</label>',
+				$current,
+				strlen( $total_pages )
+			);
+		}
+		$html_total_pages = sprintf( "<span class='total-pages'>%s</span>", number_format_i18n( $total_pages ) );
+		$page_links[] = $total_pages_before . sprintf( _x( '%1$s of %2$s', 'paging' ), $html_current_page, $html_total_pages ) . $total_pages_after;
+
+		if ( $disable_next ) {
+			$page_links[] = '<span class="tablenav-pages-navspan" aria-hidden="true">&rsaquo;</span>';
+		} else {
+			$page_links[] = sprintf( "<a class='next-page' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
+				esc_url( add_query_arg( 'paged', min( $total_pages, $current+1 ), $current_url ) ),
+				__( 'Next page' ),
+				'&rsaquo;'
+			);
+		}
+
+		if ( $disable_last ) {
+			$page_links[] = '<span class="tablenav-pages-navspan" aria-hidden="true">&raquo;</span>';
+		} else {
+			$page_links[] = sprintf( "<a class='last-page' href='%s'><span class='screen-reader-text'>%s</span><span aria-hidden='true'>%s</span></a>",
+				esc_url( add_query_arg( 'paged', $total_pages, $current_url ) ),
+				__( 'Last page' ),
+				'&raquo;'
+			);
+		}
+
+		$pagination_links_class = 'pagination-links';
+		if ( ! empty( $infinite_scroll ) ) {
+			$pagination_links_class = ' hide-if-js';
+		}
+		$output .= "\n<span class='$pagination_links_class'>" . join( "\n", $page_links ) . '</span>';
+
+		if ( $total_pages ) {
+			$page_class = $total_pages < 2 ? ' one-page' : '';
+		} else {
+			$page_class = ' no-pages';
+		}
+		$this->_pagination = "<div class='tablenav-pages{$page_class}'>$output</div>";
+
+		echo $this->_pagination;
+	}
+
+	/**
 	 * Optional. If you need to include bulk actions in your list table, this is
 	 * the place to define them. Bulk actions are an associative array in the format
 	 * 'slug'=>'Visible Title'
@@ -536,7 +729,7 @@ class ActiveRecordTable extends \WP_List_Table
 		if ( $action and array_key_exists( $action, $this->bulkActions ) )
 		{
 			$class = $this->activeRecordClass;
-			foreach( $_POST[ 'item' ] as $item_id )
+			foreach( $_POST[ $this->_args['singular'] ] as $item_id )
 			{
 				try
 				{

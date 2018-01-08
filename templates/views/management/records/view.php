@@ -8,16 +8,10 @@
  * @author   Kevin Carwile
  * @since    {build_version}
  *
- * Here is an example of how to get the contents of this template while 
- * providing the values of the $title and $content variables:
- * ```
- * $content = $plugin->getTemplateContent( 'views/management/records/view', array( 'title' => 'Some Custom Title', 'content' => 'Some custom content' ) ); 
- * ```
- * 
- * @param	Plugin		$this		The plugin instance which is loading this template
- *
- * @param	string		$title		The provided title
- * @param	string		$content	The provided content
+ * @param	string												$title			The provided title
+ * @param	Modern\Wordpress\Plugin								$plugin			The plugin associated with the active records/view
+ * @param	Modern\Wordpress\Helpers\ActiveRecordController		$controller		The associated controller displaying this view
+ * @param	Modern\Wordpress\Pattern\ActiveRecordController		$record			The active record to display
  */
 
 if ( ! defined( 'ABSPATH' ) ) {

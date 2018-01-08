@@ -138,15 +138,40 @@ abstract class Form
 	}
 	
 	/**
+	 * @var	array
+	 */
+	public $completeCallbacks = array();
+	
+	/**
+	 * Add a form processing complete callback
+	 *
+	 * @param	callable		$callback			A function name, closure, or callable
+	 * @return	void
+	 */
+	public function onComplete( $callback )
+	{
+		if ( is_callable( $callback ) ) {
+			$this->completeCallbacks[] = $callback;
+		}
+	}
+	
+	/**
 	 * Signal that the processing of a successful form submission is complete, allowing hooks to run
 	 *
-	 * @param	callback		$callback			An executable callback to filter and run
+	 * @param	callback		$final_callback			An executable callback to filter and run
 	 * @return	mixed
 	 */
-	public function processComplete( $callback )
+	public function processComplete( $final_callback=NULL )
 	{
-		$callback = $this->applyFilters( 'processed', $callback );
-		return call_user_func( $callback );
+		$final_callback = $this->applyFilters( 'process_complete', $final_callback );
+		
+		foreach( $this->completeCallbacks as $_callback ) {
+			call_user_func( $_callback );
+		}
+		
+		if( is_callable( $final_callback ) ) {
+			return call_user_func( $final_callback );
+		}
 	}
 	
 	/**

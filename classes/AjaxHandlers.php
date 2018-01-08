@@ -79,7 +79,7 @@ class AjaxHandlers extends \Modern\Wordpress\Pattern\Singleton
 				$sequence_col = $recordClass::$sequence_col;			
 				foreach( $_POST['sequence'] as $index => $record_id ) {
 					$record = $recordClass::load( $record_id );
-					$record->$sequence_col = $index;
+					$record->$sequence_col = $index + 1;
 					$record->save();
 					$record->flush();
 					unset( $record );

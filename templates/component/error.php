@@ -27,6 +27,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 ?>
 
 <!-- html content -->
-<div class="mwp-bootstrap">
-  <p class="bg-danger"><?php echo $message ?></p>
+<div class="wrap mwp-bootstrap">
+  <div class="alert alert-danger">Error: <?php echo $message ?> (Code: <?php echo $code ?>)</div>
 </div>
