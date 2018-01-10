@@ -511,16 +511,33 @@ abstract class ActiveRecord
 	{
 		return array(
 			'edit' => array(
-				'title' => __( static::$lang_edit . ' ' . static::$lang_singular ),
+				'title' => __( static::$lang_edit ),
 				'icon' => 'glyphicon glyphicon-pencil',
+				'attr' => array( 
+					'title' => __( static::$lang_edit . ' ' . static::$lang_singular ),
+				),
 				'params' => array(
 					'do' => 'edit',
 					'id' => $this->id,
 				),
 			),
+			'view' => array(
+				'title' => __( static::$lang_view ),
+				'icon' => 'glyphicon glyphicon-eye-open',
+				'attr' => array( 
+					'title' => __( static::$lang_view . ' ' . static::$lang_singular ),
+				),
+				'params' => array(
+					'do' => 'view',
+					'id' => $this->id,
+				),
+			),
 			'delete' => array(
-				'title' => __( static::$lang_delete . ' ' . static::$lang_singular ),
+				'title' => __( static::$lang_delete ),
 				'icon' => 'glyphicon glyphicon-trash',
+				'attr' => array( 
+					'title' => __( static::$lang_edit . ' ' . static::$lang_singular ),
+				),
 				'params' => array(
 					'do' => 'delete',
 					'id' => $this->id,
@@ -532,11 +549,16 @@ abstract class ActiveRecord
 	/**
 	 * Create a table for viewing active records
 	 *
+	 * @param	array				$args			Table construct arguments
 	 * @return	ActiveRecordTable
 	 */
-	public static function createDisplayTable()
+	public static function createDisplayTable( $args=array() )
 	{
-		$table = new ActiveRecordTable( array( 'recordClass' => get_called_class() ) );
+		$table = new ActiveRecordTable( array_merge( array( 
+			'recordClass' => get_called_class(),
+			'singular' => strtolower( static::$lang_singular ),
+			'plural' => strtolower( static::$lang_plural ),
+		), $args ) );
 		
 		return $table;
 	}
@@ -550,7 +572,10 @@ abstract class ActiveRecord
 	public static function getForm( $record=null )
 	{
 		$name = strtolower( str_replace( '\\', '_', get_called_class() ) ) . '_form';
-		$form = Framework::instance()->createForm( $name );
+		$pluginClass = static::$plugin_class;
+		$plugin = $pluginClass::instance();
+		
+		$form = $plugin->createForm( $name );
 		
 		return $form;
 	}
