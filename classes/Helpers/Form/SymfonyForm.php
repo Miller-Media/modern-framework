@@ -398,7 +398,7 @@ class SymfonyForm extends Form
 		
 		/* Automatically add a NonBlank constraint to required fields */
 		if ( ! isset( $options['constraints'] ) and isset( $options['required'] ) and $options['required'] ) {
-			$options['constraints'] = array( 'NonBlank' );
+			$options['constraints'] = array( 'NotBlank' );
 		}
 		
 		if ( $type == 'codemirror' ) {
