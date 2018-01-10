@@ -73,9 +73,7 @@
 			scope.find('.mwp-form [form-toggles]').each( function() {				
 				var element = $(this);
 				if ( ! element.data( 'toggles-applied' ) ) {
-					self.doToggles( element );
-					var changeUpdate = function() { self.doToggles( element ); };
-					element.is('div') ? element.find('input').on( 'change', changeUpdate ) : element.on( 'change', changeUpdate );
+					element.on( 'change', function() { self.doToggles( element ); } ).trigger( 'change' );
 					element.data( 'toggles-applied', true );
 				}
 			});
@@ -92,11 +90,7 @@
 			var value_toggles = JSON.parse( element.attr('form-toggles') );
 			var toggles = {	selected: { show: [], hide: [] }, other: { show: [], hide: [] } };
 			
-			var current_value = $.isArray( element.val() ) ? element.val() : [ element.val() ];
-			
-			if ( element.is('div') ) {
-				current_value = $.map( element.find( ':selected,:checked' ), function( el ) { return $(el).val().toString(); } );
-			}
+			var current_value = this.getElementValue( element );
 			
 			/**
 			 * If an input value toggles another field to 'show', we wanto to hide it if that value
@@ -120,6 +114,27 @@
 			_.each( toggles.selected.show, function( selector ) { $(selector).show(); } );
 			_.each( toggles.selected.hide, function( selector ) { $(selector).hide(); } );
 			
+		},
+		
+		/**
+		 * Get the value for a toggling element
+		 *
+		 * @param	jQuery			element				The element with the toggles settings
+		 * @return	array
+		 */
+		getElementValue: function( element )
+		{
+			var current_value = $.isArray( element.val() ) ? element.val() : [ element.val() ];
+			
+			if ( element.is('div[form-type="choice"]') ) {
+				current_value = $.map( element.find( ':selected,:checked' ), function( el ) { return $(el).val().toString(); } );
+			}
+			
+			if ( element.is('input[type="checkbox"]') ) {
+				current_value = element.is(':checked') ? [ element.val() ] : [];
+			}
+			
+			return current_value;
 		}
 	
 	});
