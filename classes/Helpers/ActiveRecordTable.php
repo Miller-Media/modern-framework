@@ -250,26 +250,13 @@ class ActiveRecordTable extends \WP_List_Table
      */
     public function __construct( $args=array() )
 	{
-		$lang_singular = 'record';
-		$lang_plural = 'records';
-		
 		if ( isset( $args['recordClass'] ) ) {
 			$this->activeRecordClass = $args['recordClass'];
-			if ( class_exists( $args['recordClass'] ) ) {
-				$lang_singular = strtolower( $args['recordClass']::$lang_singular );
-				$lang_plural = strtolower( $args['recordClass']::$lang_plural );
-			}
+			unset( $args['recordClass'] );
 		}
 		
 		//Set parent defaults
-		parent::__construct( array_merge( 
-			array(
-				'singular'  => $lang_singular,
-				'plural'    => $lang_plural,
-				'ajax'      => true
-			), 
-			$args 
-		));		
+		parent::__construct( $args );		
     }
 	
 	/**

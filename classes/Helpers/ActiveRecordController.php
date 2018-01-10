@@ -103,9 +103,11 @@ class ActiveRecordController
 	 */
 	public function registerAdminPage( $options=array() )
 	{
+		$recordClass = $this->recordClass;
+		
 		$adminPage = new \Wordpress\AdminPage;
 		
-		$adminPage->title = isset( $options['title'] ) ? $options['title'] : array_pop( explode( '\\', $this->recordClass ) ) . ' Management';
+		$adminPage->title = isset( $options['title'] ) ? $options['title'] : ( isset( $recordClass::$lang_plural ) ? __( $recordClass::$lang_plural ) : array_pop( explode( '\\', $this->recordClass ) ) . ' Management' );
 		$adminPage->menu  = isset( $options['menu'] ) ? $options['menu'] : $adminPage->title;
 		$adminPage->slug  = isset( $options['slug'] ) ? $options['slug'] : sanitize_title( str_replace( '\\', '-', $this->recordClass ) );
 		$adminPage->capability = isset( $options['capability'] ) ? $options['capability'] : $adminPage->capability;
@@ -153,14 +155,15 @@ class ActiveRecordController
 	/**
 	 * Get the active record display table
 	 *
-	 * @param	array			$override_options			Default override options
+	 * @param	array			$table_options					Table options that override default configuration
 	 * @return	Modern\Wordpress\Helpers\ActiveRecordTable
 	 */
-	public function createDisplayTable( $override_options=array() )
+	public function createDisplayTable( $table_options=array() )
 	{
-		$options     = array_merge( ( isset( $this->options['tableConfig'] ) ? $this->options['tableConfig'] : array() ), $override_options );
+		$options     = array_merge( ( isset( $this->options['tableConfig'] ) ? $this->options['tableConfig'] : array() ), $table_options );
+		$table_args  = array_merge( array( 'ajax' => true ), ( isset( $options['constructor'] ) ? $options['constructor'] : array() ) );
 		$recordClass = $this->recordClass;
-		$table       = $recordClass::createDisplayTable();
+		$table       = $recordClass::createDisplayTable( $table_args );
 		$plugin      = $this->getPlugin();
 		$controller  = $this;
 		
@@ -177,16 +180,11 @@ class ActiveRecordController
 		{
 			foreach( $recordClass::$columns as $key => $opts ) {
 				if ( is_array( $opts ) ) {
-					$table->columns[ $recordClass::$prefix . $key ] = $key;
+					$table->columns[ $recordClass::$prefix . $key ] = ucwords( str_replace( '_', ' ', $key ) );
 				} else {
-					$table->columns[ $recordClass::$prefix . $opts ] = $opts;
+					$table->columns[ $recordClass::$prefix . $opts ] = ucwords( str_replace( '_', ' ', $opts ) );
 				}
 			}
-		}
-		
-		/** Record row actions **/
-		if ( isset( $options['templates']['row_actions'] ) ) {
-			$table->rowActionsTemplate = $options['templates']['row_actions'];
 		}
 		
 		if ( isset( $options['sortable'] ) ) {
@@ -224,6 +222,19 @@ class ActiveRecordController
 		
 		if ( isset( $options['handlers'] ) ) {
 			$table->handlers = array_merge( $table->handlers, $options['handlers'] );
+		}
+		
+		/** Templates **/
+		if ( isset( $options['tableTemplate'] ) ) {
+			$table->tableTemplate = $options['tableTemplate'];
+		}
+
+		if ( isset( $options['rowTemplate'] ) ) {
+			$table->rowTemplate = $options['rowTemplate'];
+		}
+
+		if ( isset( $options['rowActionsTemplate'] ) ) {
+			$table->rowActionsTemplate = $options['rowActionsTemplate'];
 		}
 		
 		return $table;
