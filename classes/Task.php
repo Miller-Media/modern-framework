@@ -346,19 +346,19 @@ class Task extends ActiveRecord
 		/* Only action provided */
 		if ( $tag === NULL )
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d AND task_completed=0", $action, get_current_blog_id() ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_blog_id=%d AND task_completed=0 AND task_running=0", $action, get_current_blog_id() ) );
 		}
 		
 		/* Only tag provided */
 		elseif ( $action === NULL )
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d AND task_completed=0", $tag, get_current_blog_id() ) );		
+			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_tag=%s AND task_blog_id=%d AND task_completed=0 AND task_running=0", $tag, get_current_blog_id() ) );		
 		}
 		
 		/* Both action and tag provided */
 		else
 		{
-			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d AND task_completed=0", $action, $tag, get_current_blog_id() ) );
+			$db->query( $db->prepare( "DELETE FROM  " . $db->base_prefix . static::$table . " WHERE task_action=%s AND task_tag=%s AND task_blog_id=%d AND task_completed=0 AND task_running=0", $action, $tag, get_current_blog_id() ) );
 		}
 	}
 	
@@ -374,7 +374,7 @@ class Task extends ActiveRecord
 	{
 		$db = Framework::instance()->db();
 		
-		$status_clause = "task_completed=0 AND task_fails < 3";
+		$status_clause = "task_completed=0 AND task_fails < 3 AND task_running=0";
 		
 		switch( $status ) 
 		{
