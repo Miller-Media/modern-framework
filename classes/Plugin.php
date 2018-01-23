@@ -94,7 +94,7 @@ abstract class Plugin extends Singleton
 	 */
 	public function _versionUpdateCheck()
 	{
-		if ( ! Framework::instance()->isDev() )
+		if ( ! defined('DIR_TESTDATA') and ! Framework::instance()->isDev() )
 		{
 			$plugin_meta = $this->data( 'plugin-meta' );
 			if ( is_array( $plugin_meta ) and isset( $plugin_meta[ 'version' ] ) and $plugin_meta[ 'version' ] )

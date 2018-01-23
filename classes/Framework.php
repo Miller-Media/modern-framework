@@ -240,6 +240,10 @@ class Framework extends Plugin
 	 */
 	public function attach( $instance )
 	{
+		// Make sure schema is installed for plugins when running tests
+		if ( defined('DIR_TESTDATA') and $instance instanceof Plugin ) {
+			$instance->updateSchema();
+		}
 		
 		$reflClass = new \ReflectionClass( get_class( $instance ) );
 		$vars = array();
