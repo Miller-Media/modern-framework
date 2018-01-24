@@ -115,12 +115,14 @@ class AdminPage extends \Modern\Wordpress\Annotation
 				
 				if ( $annotation->type == 'submenu' )
 				{
-					call_user_func( $add_page_func, $annotation->parent, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, $router_callback, $annotation->icon, $annotation->position );
+					$page_hook = call_user_func( $add_page_func, $annotation->parent, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, $router_callback, $annotation->icon, $annotation->position );
 				}
 				else
 				{
-					call_user_func( $add_page_func, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, $router_callback, $annotation->icon, $annotation->position );
+					$page_hook = call_user_func( $add_page_func, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, $router_callback, $annotation->icon, $annotation->position );
 				}
+				
+				add_action( 'load-' . $page_hook, function() use ( $instance ) { if ( is_callable( array( $instance, 'init' ) ) ) { call_user_func( array( $instance, 'init' ) ); } } );
 			}
 		});
 		
