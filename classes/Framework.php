@@ -672,7 +672,18 @@ class Framework extends Plugin
 		$this->copyPluginFiles( $this->getPath() . '/boilerplate', WP_PLUGIN_DIR . '/' . $plugin_dir, $data );
 		
 		/* Create an alias file for the test suite, etc... */
-		file_put_contents( WP_PLUGIN_DIR . '/' . $plugin_dir . '/' . $data[ 'slug' ] . '.php', "<?php\n\nrequire_once 'plugin.php';" );
+		file_put_contents( WP_PLUGIN_DIR . '/' . $plugin_dir . '/' . $data[ 'slug' ] . '.php', "<?php\n\n
+/* Load framework for tests */
+if ( defined( 'DIR_TESTDATA' ) ) {
+	\$plugin_dir = dirname( dirname( __FILE__ ) );
+	if ( ! file_exists( \$plugin_dir . '/modern-framework/plugin.php' ) ) {
+		die( 'Error: Modern framework must be present in ' . \$plugin_dir . '/modern-framework to run tests on this plugin.' );
+	}
+	
+	require_once \$plugin_dir . '/modern-framework/plugin.php';
+}
+
+require_once 'plugin.php';" );
 		
 		/* Include autoloader so we can instantiate the plugin */
 		include_once WP_PLUGIN_DIR . '/' . $plugin_dir . '/vendor/autoload.php';
