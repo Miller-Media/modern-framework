@@ -243,6 +243,9 @@ class Framework extends Plugin
 		// Make sure schema is installed for plugins when running tests
 		if ( defined('DIR_TESTDATA') and $instance instanceof Plugin ) {
 			$instance->updateSchema();
+			register_shutdown_function( function() use ( $instance ) {
+				$instance->uninstall();
+			});
 		}
 		
 		$reflClass = new \ReflectionClass( get_class( $instance ) );
