@@ -224,13 +224,12 @@ abstract class Plugin extends Singleton
 	public function uninstall()
 	{
 		$build_meta = $this->data( 'build-meta' ) ?: array();
+		$db = Framework::instance()->db();
 		
 		// Remove global tables on uninstall
-		if ( is_array( $build_meta[ 'tables' ] ) )
-		{
-			foreach( $build_meta[ 'tables' ] as $table )
-			{
-				$this->db->query( "DROP TABLE IF EXISTS {$this->db->base_prefix}{$table['name']}" );
+		if ( is_array( $build_meta[ 'tables' ] ) ) {
+			foreach( $build_meta[ 'tables' ] as $table ) {
+				$db->query( "DROP TABLE IF EXISTS {$db->base_prefix}{$table['name']}" );
 			}
 		}
 		
@@ -253,7 +252,7 @@ abstract class Plugin extends Singleton
 						// Drop tables
 						foreach( $build_meta[ 'ms_tables' ] as $table )
 						{
-							$this->db->query( "DROP TABLE IF EXISTS {$this->db->prefix}{$table['name']}" );
+							$db->query( "DROP TABLE IF EXISTS {$db->prefix}{$table['name']}" );
 						}
 						
 						restore_current_blog();
@@ -265,7 +264,7 @@ abstract class Plugin extends Singleton
 				// Update tables under global context
 				foreach( $build_meta[ 'ms_tables' ] as $table )
 				{
-					$this->db->query( "DROP TABLE IF EXISTS {$this->db->base_prefix}{$table['name']}" );
+					$db->query( "DROP TABLE IF EXISTS {$db->base_prefix}{$table['name']}" );
 				}
 			}
 		}		
