@@ -149,7 +149,7 @@ class ActiveRecordController
 	{
 		$actions = $actions ?: $this->getActions();
 		
-		return $this->getPlugin()->getTemplateContent( 'views/management/records/table_actions', array( 'plugin' => $plugin, 'class' => $class, 'controller' => $this, 'actions' => $actions ) );
+		return $this->getPlugin()->getTemplateContent( 'views/management/records/table_actions', array( 'plugin' => $this->getPlugin(), 'controller' => $this, 'actions' => $actions ) );
 	}
 	
 	/**

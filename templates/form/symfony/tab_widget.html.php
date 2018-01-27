@@ -32,7 +32,7 @@ foreach( $form as $child_name => $child ) {
 <div role="form-tabs" <?php echo $view['form']->block($form, 'widget_container_attributes') ?>>
 	<ul class="nav nav-tabs" role="tablist">
 	<?php foreach ($form as $child) : ?>
-		<li role="presentation" <?php if ( $child->active ) { echo 'class="active"'; } ?>><a href="#<?php echo $child->vars['id'] ?>" role="tab" data-toggle="tab"><?php echo $child->vars['title'] ?></a></li>
+		<li role="presentation" <?php if ( isset( $child->active ) and $child->active ) { echo 'class="active"'; } ?>><a href="#<?php echo $child->vars['id'] ?>" role="tab" data-toggle="tab"><?php echo $child->vars['title'] ?></a></li>
 	<?php endforeach; ?>
 	</ul>
 	<div class="tab-content">
