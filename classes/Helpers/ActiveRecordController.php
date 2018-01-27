@@ -313,6 +313,7 @@ class ActiveRecordController
 			
 			$form->processComplete( function() use ( $controller, $record ) {
 				wp_redirect( $controller->getUrl() );
+				exit;
 			});
 		}
 		
@@ -350,6 +351,7 @@ class ActiveRecordController
 			
 			$form->processComplete( function() use ( $controller ) {
 				wp_redirect( $controller->getUrl() );
+				exit;
 			});
 		}
 		
@@ -388,6 +390,7 @@ class ActiveRecordController
 			
 			$form->processComplete( function() use ( $controller ) {
 				wp_redirect( $controller->getUrl() );
+				exit;
 			});
 		}
 	
