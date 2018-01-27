@@ -103,14 +103,11 @@ class AdminPage extends \Modern\Wordpress\Annotation
 			$add_page_func = 'add_' . $annotation->type . '_page';
 			if ( is_callable( $add_page_func ) )
 			{
-				// Route to the correct do_{action} on the controller based on the 'do' request param
-				$router_callback = function() use ( $instance ) 
-				{
-					$action = isset( $_REQUEST[ 'do' ] ) ? $_REQUEST[ 'do' ] : 'index';
-					if( is_callable( array( $instance, 'do_' . $action ) ) )
-					{
-						call_user_func( array( $instance, 'do_' . $action ) );
-					}
+				$output = '';
+
+				/* Output controller screen */
+				$router_callback = function() use ( $instance, &$output ) {
+					echo $output;
 				};
 				
 				if ( $annotation->type == 'submenu' )
@@ -122,7 +119,19 @@ class AdminPage extends \Modern\Wordpress\Annotation
 					$page_hook = call_user_func( $add_page_func, $annotation->title, $annotation->menu, $annotation->capability, $annotation->slug, $router_callback, $annotation->icon, $annotation->position );
 				}
 				
-				add_action( 'load-' . $page_hook, function() use ( $instance ) { if ( is_callable( array( $instance, 'init' ) ) ) { call_user_func( array( $instance, 'init' ) ); } } );
+				/* Run Controller */
+				add_action( 'load-' . $page_hook, function() use ( $instance, &$output ) { 
+					ob_start();
+					if ( is_callable( array( $instance, 'init' ) ) ) { 
+						call_user_func( array( $instance, 'init' ) ); 
+					} 
+					$action = isset( $_REQUEST[ 'do' ] ) ? $_REQUEST[ 'do' ] : 'index';
+					if( is_callable( array( $instance, 'do_' . $action ) ) ) {
+						$output .= call_user_func( array( $instance, 'do_' . $action ) );
+					}
+					$buffered_output = ob_get_clean();
+					$output = $buffered_output . $output;
+				});
 			}
 		});
 		
