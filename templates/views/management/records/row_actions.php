@@ -35,7 +35,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 		<?php if ( isset( $action['icon'] ) ) : ?>
 			<i class="<?php echo $action['icon'] ?>"></i>
 		<?php endif ?>
-		<?php echo $action['title'] ?>
+		<?php echo isset( $action['title'] ) ? $action['title'] : ''; ?>
 	</a>
 	<?php endforeach ?>
 </div>
