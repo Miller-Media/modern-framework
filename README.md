@@ -1,5 +1,7 @@
-Modern Framework for Wordpress
+Modern Framework for Wordpress  v1.X
 ==================================
+
+This version of the framework has been replaced by V2 located [here](https://github.com/codefarma/mwp-framework)
 
 This "plugin" provides a foundation of object oriented design patterns, bootstrap classes, and api abstractions for wordpress that enable very rapid development of new wordpress plugins. It also provides several utilities to auto generate new plugin resources and automatically manage new plugin builds/releases.
 
